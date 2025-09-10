@@ -1,0 +1,470 @@
+/* Siemens Industrial Experience Design System - Layout Optimization */
+
+/* Font dan Ukuran Dasar */
+:root {
+  /* Warna dasar */
+  --siemens-primary: #00205c;
+  --siemens-secondary: #00adee;
+  --siemens-blue-gradient: linear-gradient(135deg, #00205c 0%, #0078d6 100%);
+  --siemens-dark: #001a4b;
+  --siemens-light: #e5f6f6;
+  --siemens-border: #d1dbe4;
+  --siemens-grey: #f5f7fa;
+  --siemens-success: #00b398;
+  --siemens-warning: #ffc107;
+  --siemens-danger: #e60000;
+  
+  /* Ukuran font */
+  --font-size-base: 0.82rem;
+  --font-size-sm: 0.72rem;
+  --font-size-lg: 0.9rem;
+  
+  /* Spacing */
+  --spacing-xs: 0.2rem;
+  --spacing-sm: 0.4rem;
+  --spacing-md: 0.6rem;
+  --spacing-lg: 0.8rem;
+  
+  /* Layout structure */
+  --sidebar-width: 200px;
+  --sidebar-width-collapsed: 0px;
+  --header-height: 48px;
+  --footer-height: 24px;
+  --content-padding-x: 0.8rem;
+  --content-padding-y: 0.8rem;
+  
+  /* Radius */
+  --border-radius-sm: 0.2rem;
+  --border-radius-md: 0.3rem;
+  --border-radius-lg: 0.4rem;
+}
+
+body, html {
+  font-family: Arial, sans-serif;
+  font-size: var(--font-size-base);
+  line-height: 1.35;
+  background-color: #f8f9fc;
+  color: #222;
+}
+
+/* ===== LAYOUT STRUCTURE ===== */
+#layoutSidenav {
+  display: flex;
+  position: fixed;
+  top: var(--header-height);
+  bottom: 0;
+  left: 0;
+  right: 0;
+  overflow: hidden;
+}
+
+/* ===== NAVBAR ===== */
+.sb-topnav {
+  background: var(--siemens-blue-gradient) !important;
+  color: #fff;
+  height: var(--header-height);
+  padding: 0 0.8rem !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1030;
+}
+
+.navbar-brand {
+  color: #fff !important;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  font-size: 1.1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: calc(100vw - 100px);
+}
+
+.navbar-brand img {
+  height: 24px !important;
+  margin-right: 6px;
+}
+
+/* Navbar profile image */
+.navbar-profile-img {
+  width: 32px !important;
+  height: 32px !important;
+  object-fit: cover;
+  border: 2px solid rgba(255,255,255,0.35);
+  box-shadow: 0 0 0 2px rgba(0,0,0,0.08);
+}
+
+/* Align profile dropdown neatly */
+.sb-topnav .nav-item.dropdown .nav-link {
+  padding: 0.25rem 0.5rem;
+  display: flex;
+  align-items: center;
+}
+
+.sb-topnav .nav-item.dropdown .dropdown-toggle::after {
+  margin-left: 0.35rem;
+}
+
+/* ===== SIDEBAR ===== */
+#layoutSidenav_nav {
+  width: var(--sidebar-width);
+  flex-shrink: 0;
+  position: fixed;
+  height: calc(100vh - var(--header-height));
+  z-index: 1020;
+  left: 0;
+  top: var(--header-height);
+  transition: transform 0.3s ease;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+}
+
+.sb-sidenav {
+  background: var(--siemens-grey);
+  color: white;
+  height: calc(100vh - var(--header-height));
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.sb-sidenav-menu {
+  flex-grow: 1;
+  padding-top: 0.4rem;
+}
+
+.sb-sidenav .nav-link {
+  color: rgb(151, 151, 151);
+  padding: 0.5rem 0.8rem;
+  border-radius: 0;
+  margin: 0;
+  font-weight: 500;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  border-left: 3px solid transparent;
+}
+
+.sb-sidenav .nav-link.active, 
+.sb-sidenav .nav-link:hover {
+  background: var(--siemens-blue-gradient);
+  /* background: rgba(255,255,255,0.1); */
+  color: var(--siemens-grey);
+  border-left: 3px solid var(--siemens-secondary);
+}
+
+.sb-nav-link-icon {
+  width: 20px;
+  color: rgb(151, 151, 151);
+  margin-right: 6px;
+  text-align: center;
+}
+
+/* ===== MAIN CONTENT ===== */
+#layoutSidenav_content {
+  margin-left: var(--sidebar-width);
+  width: calc(100% - var(--sidebar-width));
+  flex-grow: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  transition: margin-left 0.3s ease, width 0.3s ease;
+}
+
+.content-wrapper {
+  padding: var(--content-padding-y) var(--content-padding-x);
+  flex-grow: 1;
+  background: rgb(240, 240, 240);
+}
+
+.container-fluid {
+  padding: 0.6rem 0.8rem;
+  width: 100%;
+}
+
+/* ===== SIDEBAR TOGGLED STATE ===== */
+.sb-sidenav-toggled #layoutSidenav_nav {
+  transform: translateX(-100%);
+}
+
+.sb-sidenav-toggled #layoutSidenav_content {
+  margin-left: 0 !important;
+  width: 100% !important;
+}
+
+/* ===== CARD STRUCTURE ===== */
+.card, .filter-panel {
+  border-radius: var(--border-radius-md);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  border: 1px solid var(--siemens-border);
+  background: #fff;
+  margin-bottom: 0.8rem;
+}
+
+.card-header {
+  padding: 0.5rem 0.8rem;
+  background-color: #f8f9fc;
+  border-bottom: 1px solid var(--siemens-border);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+}
+
+.card-body {
+  padding: 0.8rem;
+}
+
+/* ===== DASHBOARD LAYOUT ===== */
+.dashboard-header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.8rem;
+}
+
+.dashboard-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.8rem;
+  margin-bottom: 0.8rem;
+}
+
+.stats-card {
+  background: #fff;
+  border-radius: var(--border-radius-md);
+  padding: 0.8rem;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  border: 1px solid var(--siemens-border);
+}
+
+.stats-card h3 {
+  font-size: var(--font-size-sm);
+  color: #6c757d;
+  margin-bottom: 0.4rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  font-weight: 600;
+}
+
+.stats-card .number {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+/* ===== FORM LAYOUT ===== */
+.form-group {
+  margin-bottom: 0.6rem;
+}
+
+.form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 0.4rem;
+}
+
+.form-col {
+  flex: 1 0 0%;
+  min-width: 200px;
+}
+
+/* ===== TABLE LAYOUT ===== */
+.table-responsive {
+  overflow-x: auto;
+  margin-bottom: 0.8rem;
+}
+
+.table-wrapper {
+  position: relative;
+}
+
+.table-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.6rem;
+}
+
+.table-filter {
+  flex: 0 0 auto;
+}
+
+.table-search {
+  flex: 0 0 auto;
+}
+
+/* ===== FILTER PANEL STRUCTURE ===== */
+.filter-panel {
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.filter-body {
+  padding: 0.8rem;
+  transition: max-height 0.3s ease, padding 0.3s ease;
+}
+
+.filter-panel.collapsed .filter-body {
+  max-height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  overflow: hidden;
+}
+
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  margin-bottom: 0.6rem;
+}
+
+.filter-item {
+  flex: 1 0 200px;
+}
+
+/* ===== RESPONSIVE ADJUSTMENTS ===== */
+@media (max-width: 991.98px) {
+  :root {
+    --sidebar-width: 180px;
+  }
+}
+
+@media (max-width: 767.98px) {
+  :root {
+    --sidebar-width: 200px;
+    --content-padding-x: 0.6rem;
+    --content-padding-y: 0.6rem;
+  }
+  
+  /* Default state pada mobile adalah sidebar tersembunyi */
+  #layoutSidenav_nav {
+    transform: translateX(-100%);
+  }
+  
+  #layoutSidenav_content {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+  
+  /* Saat toggled, tampilkan sidebar */
+  .sb-sidenav-toggled #layoutSidenav_nav {
+    transform: translateX(0);
+  }
+  
+  .dashboard-cards {
+    grid-template-columns: 1fr;
+  }
+  
+  .form-row {
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  
+  .form-col {
+    flex-basis: 100%;
+  }
+}
+
+/* Card grid for responsive layouts */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 0.8rem;
+}
+
+/* Two-column layout for wider screens */
+.two-col-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 767.98px) {
+  .two-col-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Space utilities */
+.mb-sm { margin-bottom: 0.4rem; }
+.mb-md { margin-bottom: 0.8rem; }
+.mb-lg { margin-bottom: 1.2rem; }
+
+.mt-sm { margin-top: 0.4rem; }
+.mt-md { margin-top: 0.8rem; }
+.mt-lg { margin-top: 1.2rem; }
+
+/* Footer */
+footer {
+  height: var(--footer-height);
+  font-size: 0.7rem;
+  background-color: #f5f7fa !important;
+  border-top: 1px solid #e9ecef;
+  padding: 0 !important;
+}
+
+/* Mobile sidebar overlay */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: var(--header-height);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 1015;
+}
+
+/* Tampilkan overlay saat sidebar terbuka di mobile */
+@media (max-width: 767.98px) {
+  .sb-sidenav-toggled .sidebar-overlay {
+    display: block;
+    left: var(--sidebar-width);
+  }
+}
+
+/* Ensure right border on last column for History table */
+/* Header dan body kolom Aksi (kolom ke-10) */
+/* #sejarahTable thead th:nth-child(10),
+#sejarahTable_wrapper .dataTables_scrollHead thead th:nth-child(10) {
+  border-right: 1px solid #dee2e6 !important;
+}
+
+#sejarahTable tbody td:nth-child(10),
+#sejarahTable_wrapper .dataTables_scrollBody tbody td:nth-child(10) {
+  border-right: 1px solid #dee2e6 !important;
+} */
+
+#sejarahTable thead th:nth-child(10) {
+  border-right: 1px solid #0056ad !important;
+}
+
+#sejarahTable tbody td:last-child {
+  border-right: 1px solid #dee2e6 !important;
+}
+
+/* Center header text for History table only */
+#sejarahTable thead th {
+  text-align: center !important;
+}
+
+#sejarahTable thead th {
+    text-align: center;
+}
+
+#sejarahTable thead th:nth-child(6) {
+    text-align: center;
+}
+
+#sejarahTable tbody td:nth-child(6) {
+    text-align: justify !important;
+}
+
+#sejarahTable tbody td {
+    text-align: center;
+}
+

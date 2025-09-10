@@ -1,0 +1,178 @@
+/* DataTables Custom Styling - Compact Layout */
+
+/* Base Styles */
+.dataTables_wrapper .dataTables_length,
+.dataTables_wrapper .dataTables_filter,
+.dataTables_wrapper .dataTables_info,
+.dataTables_wrapper .dataTables_processing,
+.dataTables_wrapper .dataTables_paginate {
+    font-size: 0.8rem;
+}
+
+/* Length Control */
+.dataTables_wrapper .dataTables_length {
+    margin-bottom: 0.4rem;
+    white-space: nowrap;
+}
+
+.dataTables_wrapper .dataTables_length select {
+    padding: 0.15rem 0.5rem 0.15rem 0.2rem;
+    height: 28px;
+    border-radius: 0.2rem;
+    border: 1px solid #ced4da;
+    margin: 0 0.2rem;
+    width: auto;
+    min-width: 50px;
+}
+
+/* Filter Control */
+.dataTables_wrapper .dataTables_filter {
+    margin-bottom: 0.4rem;
+}
+
+.dataTables_wrapper .dataTables_filter input {
+    padding: 0.15rem 0.4rem;
+    height: 28px;
+    border-radius: 0.2rem;
+    border: 1px solid #ced4da;
+    margin-left: 0.3rem;
+    width: auto;
+    min-width: 100px;
+}
+
+/* Pagination */
+.dataTables_wrapper .dataTables_paginate {
+    padding-top: 0.4rem;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+    padding: 0.15rem 0.4rem;
+    font-size: 0.8rem;
+    min-width: 1.5em;
+    margin-left: 2px;
+}
+
+/* Info text */
+.dataTables_wrapper .dataTables_info {
+    padding-top: 0.4rem;
+    font-size: 0.75rem;
+}
+
+/* Table Layout */
+table.dataTable {
+    margin-top: 0.4rem !important;
+    margin-bottom: 0.4rem !important;
+    width: 100% !important;
+    border-collapse: collapse !important;
+}
+
+/* Header and Cell Styling */
+table.dataTable thead th, 
+table.dataTable thead td, 
+table.dataTable tbody th,
+table.dataTable tbody td {
+    padding: 0.35rem !important;
+}
+
+/* Row height */
+table.dataTable tr {
+    height: auto;
+    max-height: 34px;
+}
+
+/* Vertically center content */
+table.dataTable td {
+    vertical-align: middle;
+}
+
+/* Status badge styling */
+.badge {
+    font-size: 0.7rem;
+    padding: 0.2em 0.4em;
+    border-radius: 3px;
+}
+
+/* Text truncation for descriptions */
+.description-cell {
+    max-width: 280px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: normal; /* Ubah ke normal */
+    line-height: 1.4;
+}
+
+/* Link style in description */
+.description-cell a.view-description,
+a.view-description {
+    color: #00adee; /* Warna Siemens secondary */
+    margin-left: 3px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+a.view-description:hover {
+    text-decoration: underline;
+}
+
+/* Compact button in tables */
+table.dataTable .btn {
+    padding: 0.15rem 0.4rem;
+    font-size: 0.75rem;
+}
+
+/* Dropdown menus in tables */
+table.dataTable .dropdown-menu {
+    font-size: 0.8rem;
+    padding: 0.2rem 0;
+}
+
+table.dataTable .dropdown-item {
+    padding: 0.25rem 0.75rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 767.98px) {
+    .dataTables_wrapper .dataTables_length, 
+    .dataTables_wrapper .dataTables_filter {
+        text-align: left;
+        width: 100%;
+        margin-bottom: 0.4rem;
+    }
+    
+    .dataTables_wrapper .dataTables_filter input {
+        width: calc(100% - 40px);
+        max-width: 200px;
+        margin-left: 0.3rem;
+        display: inline-block;
+    }
+    
+    .description-cell {
+        max-width: 130px;
+    }
+    
+    .dataTables_wrapper .dataTables_paginate .paginate_button {
+        padding: 0.1rem 0.3rem;
+    }
+}
+
+/* Fixed height for processing indicator */
+.dataTables_processing {
+    height: 40px !important;
+    margin-top: -20px !important;
+    padding: 0.3rem 0 !important;
+}
+
+/* Row coloring */
+table.dataTable tbody tr.even {
+    background-color: #f9fafb;
+}
+
+table.dataTable tbody tr.odd {
+    background-color: #fff;
+}
+
+/* Row hover effect */
+table.dataTable tbody tr:hover {
+    background-color: #f0f4f9;
+}
