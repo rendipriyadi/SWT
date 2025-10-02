@@ -244,9 +244,34 @@
   }
 
 /* Status badges with icons */
-.status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 2px 8px; font-size: 0.72rem; border-radius: 999px; line-height: 1; }
-.status-assigned  { background:#fff3cd; color:#856404; border:1px solid #ffe49a; }
+.status-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; font-size: 0.7rem; border-radius: 999px; line-height: 1; white-space: nowrap; min-width: fit-content; }
+.status-in-progress { background:#cfe2ff; color:#084298; border:1px solid #9ec5fe; }
 .status-completed { background:#d1f7ec; color:#0f5132; border:1px solid #a7e9d6; }
+
+/* Ensure status badges stay in one line */
+.status-badge {
+  word-break: keep-all;
+  overflow: visible;
+}
+
+/* DataTable specific styling to prevent wrapping */
+.dataTables_wrapper .status-badge {
+  white-space: nowrap !important;
+  display: inline-flex !important;
+}
+
+/* Ensure status column has enough space */
+table.dataTable td:has(.status-badge),
+table.dataTable th:contains('STATUS') {
+  min-width: 110px !important;
+  white-space: nowrap;
+}
+
+/* Alternative selector for status column */
+table.dataTable td[data-order*="Progress"],
+table.dataTable td[data-order*="Completed"] {
+  min-width: 110px !important;
+}
 
 /* Thumbnails hover */
 .thumb-sm { width: 80px; height: 80px; object-fit: cover; border-radius: 6px; transition: transform .15s ease, box-shadow .15s ease; }
@@ -327,7 +352,14 @@
   }
 
   /* Compact variant inside table cells */
-  table td .status-badge { padding: 2px 6px; font-size: 0.68rem; gap: 4px; }
+  table td .status-badge { 
+    padding: 2px 8px; 
+    font-size: 0.65rem; 
+    gap: 3px; 
+    white-space: nowrap; 
+    min-width: fit-content;
+    flex-shrink: 0;
+  }
 
   @media (max-width: 575.98px) {
     .table .description-cell {

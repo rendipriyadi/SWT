@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('[data-status]').forEach(el => {
             const raw = (el.getAttribute('data-status') || '').toLowerCase();
             let variant = '';
-            if (raw === 'ditugaskan' || raw === 'assigned') variant = 'status-assigned';
+            if (raw === 'in progress') variant = 'status-in-progress';
             else if (raw === 'selesai' || raw === 'completed') variant = 'status-completed';
             else if (raw === 'pending') variant = 'status-pending';
             else if (raw === 'danger' || raw === 'critical') variant = 'status-danger';
@@ -26,8 +26,8 @@ document.addEventListener('DOMContentLoaded', function() {
     window.createStatusBadge = function(status) {
         const text = String(status || '');
         const lc = text.toLowerCase();
-        let variant = 'status-pending';
-        if (lc === 'ditugaskan' || lc === 'assigned') variant = 'status-assigned';
+        let variant = 'status-in-progress'; // Default to in-progress for new reports
+        if (lc === 'in progress') variant = 'status-in-progress';
         else if (lc === 'selesai' || lc === 'completed') variant = 'status-completed';
         else if (lc === 'danger' || lc === 'critical') variant = 'status-danger';
         return `<span class="status-badge ${variant}" data-status="${lc}">${text}</span>`;

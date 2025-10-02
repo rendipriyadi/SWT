@@ -67,7 +67,7 @@ class laporanController extends Controller
             'problem_category_id' => $request->problem_category_id,
             'deskripsi_masalah' => $request->deskripsi_masalah,
             'tenggat_waktu' => $request->tenggat_waktu,
-            'status' => 'Ditugaskan',
+            'status' => 'In Progress',
             'Foto' => count($fotoFileNames) > 0 ? $fotoFileNames : null,
         ]);
 
@@ -229,7 +229,7 @@ class laporanController extends Controller
     {
         // Hitung total laporan
         $totalLaporan = laporan::count();
-        $laporanDitugaskan = laporan::where('status', 'Ditugaskan')->count();
+        $laporanInProgress = laporan::where('status', 'In Progress')->count();
         $laporanSelesai = laporan::where('status', 'Selesai')->count();
 
         // Get all areas for filter
@@ -300,12 +300,12 @@ class laporanController extends Controller
     public function storeTindakan(Request $request, $id)
     {
         $rules = [
-            'status' => 'required|string|in:Ditugaskan,Selesai'
+            'status' => 'required|string|in:In Progress,Selesai'
         ];
 
         $messages = [
             'status.required' => 'Status harus dipilih.',
-            'status.in' => 'Status harus salah satu dari: Ditugaskan, Selesai.'
+            'status.in' => 'Status harus salah satu dari: In Progress, Selesai.'
         ];
 
         if ($request->status === 'Selesai') {
@@ -352,7 +352,7 @@ class laporanController extends Controller
     {
         // Inisialisasi query dengan filter default
         $query = laporan::with(['area', 'penanggungJawab', 'penyelesaian', 'problemCategory'])
-            ->where('status', '!=', 'Selesai'); // Semua kecuali status Selesai
+            ->where('status', '!=', 'Selesai'); // Semua kecuali status Selesai (In Progress only)
 
         // Terapkan filter tambahan dari request
         $query = $this->applyFilters($request, $query);
@@ -431,8 +431,8 @@ class laporanController extends Controller
                 return Carbon::parse($laporan->tenggat_waktu)->format('l, j-n-Y');
             })
             ->addColumn('status', function ($laporan) {
-                if ($laporan->status == 'Ditugaskan') {
-                    return '<span class="status-badge status-assigned"><i class="fas fa-exclamation-circle"></i> Assigned</span>';
+                if ($laporan->status == 'In Progress') {
+                    return '<span class="status-badge status-in-progress"><i class="fas fa-cog fa-spin"></i> In Progress</span>';
                 } else if ($laporan->status == 'Selesai') {
                     return '<span class="status-badge status-completed"><i class="fas fa-check-circle"></i> Completed</span>';
                 }
@@ -552,10 +552,10 @@ class laporanController extends Controller
                 return Carbon::parse($laporan->tenggat_waktu)->format('l, j-n-Y');
             })
             ->addColumn('status', function ($laporan) {
-                if ($laporan->status == 'Ditugaskan') {
-                    return '<span class="badge bg-warning">Assigned</span>';
+                if ($laporan->status == 'In Progress') {
+                    return '<span class="status-badge status-in-progress"><i class="fas fa-cog fa-spin"></i> In Progress</span>';
                 } else if ($laporan->status == 'Selesai') {
-                    return '<span class="badge bg-success">Completed</span>';
+                    return '<span class="status-badge status-completed"><i class="fas fa-check-circle"></i> Completed</span>';
                 }
                 return '<span class="badge bg-secondary">' . $laporan->status . '</span>';
             })

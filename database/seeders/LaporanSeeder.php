@@ -31,8 +31,8 @@ class LaporanSeeder extends Seeder
 
         $this->command->info("Generating sample laporan with " . count($problemCategoryIds) . " problem categories...");
 
-        // Generate 30 laporan Ditugaskan
-        for ($i = 0; $i < 30; $i++) {
+        // Generate 60 laporan In Progress
+        for ($i = 0; $i < 60; $i++) {
             $areaId = $faker->randomElement($areaIds);
             $penanggungJawabId = $this->getRandomPenanggungJawabForArea($areaId);
             
@@ -43,25 +43,7 @@ class LaporanSeeder extends Seeder
                 'problem_category_id' => $faker->randomElement($problemCategoryIds),
                 'deskripsi_masalah' => $faker->paragraph(2),
                 'tenggat_waktu' => $faker->dateTimeBetween('now', '+1 month'),
-                'status' => 'Ditugaskan',
-                'created_at' => $faker->dateTimeBetween('-2 months', 'now'),
-                'updated_at' => now()
-            ]);
-        }
-
-        // Generate 30 laporan Proses
-        for ($i = 0; $i < 30; $i++) {
-            $areaId = $faker->randomElement($areaIds);
-            $penanggungJawabId = $this->getRandomPenanggungJawabForArea($areaId);
-            
-            laporan::create([
-                'tanggal' => $faker->dateTimeBetween('-2 months', 'now'),
-                'area_id' => $areaId,
-                'penanggung_jawab_id' => $penanggungJawabId,
-                'problem_category_id' => $faker->randomElement($problemCategoryIds),
-                'deskripsi_masalah' => $faker->paragraph(2),
-                'tenggat_waktu' => $faker->dateTimeBetween('now', '+1 month'),
-                'status' => 'Proses',
+                'status' => 'In Progress',
                 'created_at' => $faker->dateTimeBetween('-2 months', 'now'),
                 'updated_at' => now()
             ]);

@@ -78,7 +78,7 @@ $(document).ready(function() {
                 { 
                     data: 'status', 
                     name: 'status', 
-                    width: '80px',
+                    width: '110px',
                     render: function(data, type, row) {
                         if (type === 'display') {
                             return createStatusBadge(data);
@@ -155,7 +155,7 @@ $(document).ready(function() {
                 { 
                     data: 'status', 
                     name: 'status', 
-                    width: '80px',
+                    width: '110px',
                     render: function(data, type, row) {
                         if (type === 'display') {
                             return createStatusBadge(data);

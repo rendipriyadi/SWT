@@ -35,12 +35,12 @@
         <div class="col-lg-4 col-md-6">
             <div class="stats-card">
                 <div class="d-flex align-items-center">
-                    <div class="stats-icon bg-warning text-white rounded-circle me-3">
-                        <i class="fas fa-clock"></i>
+                    <div class="stats-icon bg-primary text-white rounded-circle me-3">
+                        <i class="fas fa-cog fa-spin"></i>
                     </div>
                     <div>
-                        <h3 class="mb-1">Assigned Reports</h3>
-                        <div class="number text-warning">{{ $laporanDitugaskan }}</div>
+                        <h3 class="mb-1">In Progress Reports</h3>
+                        <div class="number text-primary">{{ $laporanInProgress }}</div>
                     </div>
                 </div>
             </div>
