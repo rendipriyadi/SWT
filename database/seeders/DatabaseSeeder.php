@@ -21,8 +21,10 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $this->call([
-            LaporanSeeder::class,
-            UpdateWarehouseToCombinedSeeder::class,
+            AreaSeeder::class,
+            PenanggungJawabSeeder::class,
+            ProblemCategorySeeder::class,
+            // LaporanSeeder::class, // Commented out - let users start with clean data
         ]);
     }
 }

@@ -4,11 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PenanggungJawab extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
 
     protected $table = 'penanggung_jawab';
     
@@ -16,7 +15,6 @@ class PenanggungJawab extends Model
         'area_id',
         'station',
         'name',
-        'email',
     ];
     
     /**

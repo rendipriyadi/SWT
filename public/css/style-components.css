@@ -2,288 +2,559 @@
 
 /* ===== COLOR STANDARDS ===== */
 :root {
-  /* Brand Colors */
-  --siemens-primary: #00205c;
-  --siemens-secondary: #00adee;
-  --siemens-blue-gradient: linear-gradient(135deg, #00205c 0%, #0078d6 100%);
-  
-  /* Status Colors */
-  --status-ditugaskan: #ffc107; /* Amber for assigned tasks */
-  --status-selesai: #28a745;    /* Green for completed tasks */
-  --status-pending: #17a2b8;    /* Teal for pending */
-  --status-danger: #dc3545;     /* Red for danger/critical */
-  
-  /* UI Colors */
-  --ui-light-bg: #f8f9fc;
-  --ui-border: #d1dbe4;
-  --ui-hover: #f0f4f9;
-}
+    /* Brand Colors */
+    --siemens-primary: #00205c;
+    --siemens-secondary: #00adee;
+    --siemens-blue-gradient: linear-gradient(135deg, #00205c 0%, #0078d6 100%);
 
-/* ===== STATUS BADGES ===== */
-.badge {
-  display: inline-block;
-  padding: 0.35em 0.65em;
-  font-size: 0.75rem;
-  font-weight: 500;
-  line-height: 1;
-  text-align: center;
-  white-space: nowrap;
-  vertical-align: baseline;
-  border-radius: 4px;
-}
+    /* Status Colors */
+    --status-ditugaskan: #ffc107; /* Amber for assigned tasks */
+    --status-selesai: #28a745;    /* Green for completed tasks */
+    --status-pending: #17a2b8;    /* Teal for pending */
+    --status-danger: #dc3545;     /* Red for danger/critical */
 
-/* Status-specific badges */
-.badge-ditugaskan {
-  background-color: var(--status-ditugaskan);
-  color: #212529;
-}
+    /* UI Colors */
+    --ui-light-bg: #f8f9fc;
+    --ui-border: #d1dbe4;
+    --ui-hover: #f0f4f9;
+  }
 
-.badge-selesai {
-  background-color: var(--status-selesai);
-  color: white;
-}
+  /* ===== STATUS BADGES ===== */
+  .badge {
+    display: inline-block;
+    padding: 0.35em 0.65em;
+    font-size: 0.75rem;
+    font-weight: 500;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: 4px;
+  }
 
-.badge-pending {
-  background-color: var(--status-pending);
-  color: white;
-}
+  /* Make badges inside table cells smaller and flexible */
+  table td .badge {
+    font-size: 0.68rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    max-width: 100%;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+  }
 
-.badge-danger {
-  background-color: var(--status-danger);
-  color: white;
-}
+  /* Status-specific badges */
+  .badge-ditugaskan {
+    background-color: var(--status-ditugaskan);
+    color: #212529;
+  }
 
-/* ===== BUTTONS STANDARDIZATION ===== */
-.btn {
-  border-radius: 4px;
-  font-weight: 500;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-}
+  .badge-selesai {
+    background-color: var(--status-selesai);
+    color: white;
+  }
 
-/* Primary button (Siemens blue) */
-.btn-primary {
-  background-color: var(--siemens-primary);
-  border-color: var(--siemens-primary);
-  color: white;
-}
+  .badge-pending {
+    background-color: var(--status-pending);
+    color: white;
+  }
 
-.btn-primary:hover {
-  background-color: #001a4b;
-  border-color: #001a4b;
-}
+  .badge-danger {
+    background-color: var(--status-danger);
+    color: white;
+  }
 
-/* Secondary button */
-.btn-secondary {
-  background-color: #6c757d;
-  border-color: #6c757d;
-  color: white;
-}
+  /* ===== BUTTONS STANDARDIZATION ===== */
+  .btn {
+    border-radius: 4px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
 
-.btn-secondary:hover {
-  background-color: #5a6268;
-  border-color: #5a6268;
-}
+  /* Primary button (Siemens blue) */
+  .btn-primary {
+    background-color: var(--siemens-primary);
+    border-color: var(--siemens-primary);
+    color: white;
+  }
 
-/* Info button (Siemens light blue) */
-.btn-info {
-  background-color: var(--siemens-secondary);
-  border-color: var(--siemens-secondary);
-  color: white;
-}
+  .btn-primary:hover {
+    background-color: #001a4b;
+    border-color: #001a4b;
+  }
 
-.btn-info:hover {
-  background-color: #0099d4;
-  border-color: #0099d4;
-}
+  /* Secondary button */
+  .btn-secondary {
+    background-color: #6c757d;
+    border-color: #6c757d;
+    color: white;
+  }
 
-/* Action buttons */
-.btn-action {
-  padding: 0.25rem 0.5rem;
-  font-size: 0.75rem;
-}
+  .btn-secondary:hover {
+    background-color: #5a6268;
+    border-color: #5a6268;
+  }
 
-/* Icon buttons with consistent spacing */
-.btn i {
-  margin-right: 0.25rem;
-}
+  /* Info button (Siemens light blue) */
+  .btn-info {
+    background-color: var(--siemens-secondary);
+    border-color: var(--siemens-secondary);
+    color: white;
+  }
 
-.btn-icon-only i {
-  margin-right: 0;
-}
+  .btn-info:hover {
+    background-color: #0099d4;
+    border-color: #0099d4;
+  }
 
-/* ===== DROPDOWN MENU STANDARDIZATION ===== */
-.dropdown-menu {
-  padding: 0.25rem 0;
-  margin: 0;
-  border: 1px solid var(--ui-border);
-  border-radius: 4px;
-  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-}
+  /* Action buttons */
+  .btn-action {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+  }
 
-.dropdown-item {
-  padding: 0.5rem 1rem;
-  font-size: 0.85rem;
-  display: flex;
-  align-items: center;
-}
+  /* Icon buttons with consistent spacing */
+  .btn i {
+    margin-right: 0.25rem;
+  }
 
-.dropdown-item i {
-  width: 1rem;
-  margin-right: 0.5rem;
-  text-align: center;
-}
+  .btn-icon-only i {
+    margin-right: 0;
+  }
 
-.dropdown-item:hover {
-  background-color: var(--ui-hover);
-}
+  /* ===== DROPDOWN MENU STANDARDIZATION ===== */
+  .dropdown-menu {
+    padding: 0.25rem 0;
+    margin: 0;
+    border: 1px solid var(--ui-border);
+    border-radius: 4px;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  }
 
-/* ===== TEXT TRUNCATION ===== */
-.text-truncate-container {
-  position: relative;
-}
+  .dropdown-item {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+  }
 
-.text-truncate-line {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  line-height: 1.4;
-}
+  .dropdown-item i {
+    width: 1rem;
+    margin-right: 0.5rem;
+    text-align: center;
+  }
 
-.text-truncate-line-1 {
-  -webkit-line-clamp: 1;
-}
+  .dropdown-item:hover {
+    background-color: var(--ui-hover);
+  }
 
-.text-truncate-line-2 {
-  -webkit-line-clamp: 2;
-}
+  /* ===== TEXT TRUNCATION ===== */
+  .text-truncate-container {
+    position: relative;
+  }
 
-.text-truncate-line-3 {
-  -webkit-line-clamp: 3;
-}
+  .text-truncate-line {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    line-height: 1.4;
+  }
 
-/* ===== MODAL STANDARDIZATION ===== */
-.modal-header {
-  padding: 0.75rem 1rem;
-  background-color: var(--ui-light-bg);
-  border-bottom: 1px solid var(--ui-border);
-}
+  .text-truncate-line-1 {
+    -webkit-line-clamp: 1;
+  }
 
-.modal-footer {
-  padding: 0.75rem 1rem;
-  background-color: var(--ui-light-bg);
-  border-top: 1px solid var(--ui-border);
-}
+  .text-truncate-line-2 {
+    -webkit-line-clamp: 2;
+  }
 
-.modal-body {
-  padding: 1rem;
-}
+  .text-truncate-line-3 {
+    -webkit-line-clamp: 3;
+  }
 
-/* Photo Modal */
-.photo-modal .modal-content {
-  background-color: transparent;
-  border: none;
-}
+  /* ===== MODAL STANDARDIZATION ===== */
+  .modal-header {
+    padding: 0.75rem 1rem;
+    background-color: var(--ui-light-bg);
+    border-bottom: 1px solid var(--ui-border);
+  }
 
-.photo-modal .modal-body {
-  padding: 0;
-}
+  .modal-footer {
+    padding: 0.75rem 1rem;
+    background-color: var(--ui-light-bg);
+    border-top: 1px solid var(--ui-border);
+  }
 
-/* ===== ACTION DROPDOWN BUTTON ===== */
-.action-dropdown .dropdown-toggle {
-  padding: 0.25rem 0.5rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
+  .modal-body {
+    padding: 1rem;
+  }
 
-.action-dropdown .dropdown-toggle::after {
-  margin-left: 0.35em;
-}
+  /* Photo Modal */
+  .photo-modal .modal-content {
+    background-color: transparent;
+    border: none;
+  }
 
-.action-dropdown .dropdown-menu {
-  min-width: 10rem;
-  font-size: 0.85rem;
-}
+  .photo-modal .modal-body {
+    padding: 0;
+  }
 
-/* ===== TABLE CELL STYLING ===== */
-.table .description-cell {
-  max-width: 250px;
-  position: relative;
-  white-space: normal;
-  line-height: 1.4;
-  font-size: 0.85rem;
-}
+  /* ===== ACTION DROPDOWN BUTTON ===== */
+  .action-dropdown .dropdown-toggle {
+    padding: 0.25rem 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #ced4da;
+    background-color: #f8f9fa;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    min-width: 2.5rem;
+  }
 
-.table .description-cell a.view-description {
-  color: var(--siemens-secondary);
-  margin-left: 0.25rem;
-  white-space: nowrap;
-  font-size: 0.8rem;
-  font-weight: 500;
-}
+  .action-dropdown .dropdown-toggle:hover {
+    background-color: #e9ecef;
+    border-color: #adb5bd;
+  }
 
-/* Perbaikan untuk mobile view */
-@media (max-width: 767.98px) {
+  .action-dropdown .dropdown-toggle::after {
+    margin-left: 0.35em;
+  }
+
+  .action-dropdown .dropdown-menu {
+    min-width: 10rem;
+    font-size: 0.85rem;
+  }
+
+  /* Ensure action dropdown fits properly in table cells */
+  table .action-dropdown {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+  }
+
+/* Status badges with icons */
+.status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 2px 8px; font-size: 0.72rem; border-radius: 999px; line-height: 1; }
+.status-assigned  { background:#fff3cd; color:#856404; border:1px solid #ffe49a; }
+.status-completed { background:#d1f7ec; color:#0f5132; border:1px solid #a7e9d6; }
+
+/* Thumbnails hover */
+.thumb-sm { width: 80px; height: 80px; object-fit: cover; border-radius: 6px; transition: transform .15s ease, box-shadow .15s ease; }
+.thumb-sm:hover { transform: scale(1.02); box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+
+/* Modal carousel contrast */
+.photo-modal .modal-content { background: rgba(0,0,0,.6); }
+.photo-modal .carousel-control-prev-icon,
+.photo-modal .carousel-control-next-icon { filter: invert(1) drop-shadow(0 0 2px rgba(0,0,0,.6)); }
+
+  /* ===== DESCRIPTION CONTAINER STYLING ===== */
+  .description-container {
+    position: relative;
+    line-height: 1.4;
+    font-size: 0.85rem;
+  }
+
+  .description-container .short-description {
+    display: inline;
+    color: var(--text-primary);
+  }
+
+  .description-container .view-description {
+    color: var(--primary-color);
+    margin-left: 0.25rem;
+    white-space: nowrap;
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border: none;
+    background: none;
+    padding: 0;
+  }
+
+  .description-container .view-description:hover {
+    color: var(--primary-dark);
+    text-decoration: underline;
+    transform: translateY(-1px);
+  }
+
+  .description-container .view-description:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  .description-container .view-description i {
+    font-size: 0.75rem;
+  }
+
+  /* ===== TABLE CELL STYLING ===== */
   .table .description-cell {
-    max-width: 180px;
+    max-width: 400px;
+    position: relative;
+    white-space: normal;
+    line-height: 1.4;
+    font-size: 0.85rem;
+  }
+
+  .table .description-cell a.view-description {
+    color: var(--siemens-secondary);
+    margin-left: 0.25rem;
+    white-space: nowrap;
+    font-size: 0.8rem;
+    font-weight: 500;
+  }
+
+  /* Perbaikan untuk mobile view */
+  @media (max-width: 767.98px) {
+    .table .description-cell {
+      max-width: 250px;
+    }
+    
+    .description-container .view-description {
+      font-size: 0.75rem;
+    }
+  }
+
+  /* Compact variant inside table cells */
+  table td .status-badge { padding: 2px 6px; font-size: 0.68rem; gap: 4px; }
+
+  @media (max-width: 575.98px) {
+    .table .description-cell {
+      max-width: 200px;
+    }
+    
+    .description-container .view-description {
+      font-size: 0.7rem;
+    }
+  }
+
+  /* Animasi hover untuk link detail */
+  .table .description-cell a.view-description:hover {
+    text-decoration: underline;
+    color: var(--siemens-primary);
+  }
+
+  /* ===== DESCRIPTION MODAL STYLING ===== */
+  .description-content {
+    padding: 0.5rem 0;
+  }
+
+  .description-text {
+    line-height: 1.6;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+
+  .description-modal .modal-content {
+    border: none;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  }
+
+  .description-modal .modal-header {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    color: white;
+    border-bottom: none;
+  }
+
+  .description-modal .modal-header .btn-close {
+    filter: invert(1);
+  }
+
+  .description-modal .modal-body {
+    padding: 1.5rem;
+    background: var(--background-color);
+  }
+
+  .description-modal .modal-footer {
+    background: var(--background-secondary);
+    border-top: 1px solid var(--border-color);
+  }
+
+  /* Dark mode for description modal */
+  :root[data-theme="dark"] .description-modal .modal-content {
+    background-color: #151922 !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+  }
+
+  :root[data-theme="dark"] .description-modal .modal-header {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+    color: #ffffff !important;
+    border-bottom-color: var(--border-color) !important;
+  }
+
+  :root[data-theme="dark"] .description-modal .modal-body {
+    background-color: #151922 !important;
+    color: var(--text-primary) !important;
+  }
+
+  :root[data-theme="dark"] .description-modal .modal-footer {
+    background-color: #151922 !important;
+    border-top-color: var(--border-color) !important;
+  }
+
+  :root[data-theme="dark"] .description-modal .btn-close {
+    filter: invert(1) !important;
+  }
+
+  /* Dark mode for settlement modal */
+  :root[data-theme="dark"] .settlement-modal .modal-content {
+    background-color: #151922 !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+  }
+
+  :root[data-theme="dark"] .settlement-modal .modal-header {
+    background-color: #151922 !important;
+    color: var(--text-primary) !important;
+    border-bottom-color: var(--border-color) !important;
+  }
+
+  :root[data-theme="dark"] .settlement-modal .modal-body {
+    background-color: #151922 !important;
+    color: var(--text-primary) !important;
+  }
+
+  :root[data-theme="dark"] .settlement-modal .modal-footer {
+    background-color: #151922 !important;
+    border-top-color: var(--border-color) !important;
+  }
+
+  :root[data-theme="dark"] .settlement-modal .btn-close {
+    filter: invert(1) !important;
+  }
+
+  /* ===== FILTER PANEL ===== */
+  .filter-panel .card-header {
+    padding: 0.5rem 1rem;
+  }
+
+  .filter-panel .form-label {
+    font-size: 0.8rem;
+    font-weight: 500;
+    margin-bottom: 0.2rem;
+  }
+
+  .filter-toggle-icon {
+    transition: transform 0.3s;
+  }
+
+  .filter-panel.collapsed .filter-toggle-icon {
+    transform: rotate(180deg);
+  }
+
+  /* ===== TOAST STYLING ===== */
+  .toast {
+    background-color: white;
+    border: none;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  }
+
+  .toast-success {
+    border-left: 4px solid var(--status-selesai);
+  }
+
+  .toast-danger {
+    border-left: 4px solid var(--status-danger);
+  }
+
+  .toast-warning {
+    border-left: 4px solid var(--status-ditugaskan);
+  }
+
+  .toast-info {
+    border-left: 4px solid var(--siemens-secondary);
   }
 }
 
-@media (max-width: 575.98px) {
-  .table .description-cell {
-    max-width: 120px;
+/* ===== PROBLEM CATEGORY COLUMN STYLING ===== */
+/* Desktop only - Fixed width for Problem Category column with text wrapping */
+@media (min-width: 992px) {
+  /* Force table to use fixed layout */
+  .table {
+    table-layout: fixed !important;
   }
-}
-
-/* Animasi hover untuk link detail */
-.table .description-cell a.view-description:hover {
-  text-decoration: underline;
-  color: var(--siemens-primary);
-}
-
-/* ===== FILTER PANEL ===== */
-.filter-panel .card-header {
-  padding: 0.5rem 1rem;
-}
-
-.filter-panel .form-label {
-  font-size: 0.8rem;
-  font-weight: 500;
-  margin-bottom: 0.2rem;
-}
-
-.filter-toggle-icon {
-  transition: transform 0.3s;
-}
-
-.filter-panel.collapsed .filter-toggle-icon {
-  transform: rotate(180deg);
-}
-
-/* ===== TOAST STYLING ===== */
-.toast {
-  background-color: white;
-  border: none;
-  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-}
-
-.toast-success {
-  border-left: 4px solid var(--status-selesai);
-}
-
-.toast-danger {
-  border-left: 4px solid var(--status-danger);
-}
-
-.toast-warning {
-  border-left: 4px solid var(--status-ditugaskan);
-}
-
-.toast-info {
-  border-left: 4px solid var(--siemens-secondary);
+  .table th:nth-child(5),
+  .table td:nth-child(5) {
+    width: 160px !important;
+    min-width: 160px !important;
+    max-width: 160px !important;
+    white-space: normal;
+    word-wrap: break-word;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    vertical-align: top;
+    table-layout: fixed;
+  }
+  
+  /* Ensure problem category badges can wrap text */
+  .table td:nth-child(5) .badge {
+    max-width: 150px !important;
+    width: 100% !important;
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+    display: inline-block !important;
+    line-height: 1.3 !important;
+    padding: 0.25rem 0.5rem !important;
+    font-size: 0.75rem !important;
+    text-align: center !important;
+    height: auto !important;
+    min-height: auto !important;
+  }
+  
+  /* Additional specific styling for problem category badges */
+  .table td:nth-child(5) .badge[style*="background-color"] {
+    max-width: 150px !important;
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+    display: inline-block !important;
+    line-height: 1.3 !important;
+    height: auto !important;
+  }
+  
+  /* Force badge wrapping with more specific selectors */
+  .table tbody tr td:nth-child(5) .badge {
+    max-width: 150px !important;
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+    display: inline-block !important;
+    line-height: 1.3 !important;
+    height: auto !important;
+    width: 100% !important;
+  }
+  
+  /* Specific styling for problem-category-badge class */
+  .problem-category-badge {
+    max-width: 150px !important;
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+    display: inline-block !important;
+    line-height: 1.3 !important;
+    height: auto !important;
+    width: 100% !important;
+    font-size: 0.75rem !important;
+    padding: 0.25rem 0.5rem !important;
+    text-align: center !important;
+  }
 }

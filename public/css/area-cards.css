@@ -1,0 +1,107 @@
+/* Area Cards Styling */
+.area-card {
+    transition: all 0.3s ease;
+    border: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.area-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.area-card .card-header {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    border: none;
+    border-radius: 0.5rem 0.5rem 0 0 !important;
+}
+
+.area-card .card-body {
+    padding: 1.5rem;
+}
+
+.area-card .station-item {
+    transition: background-color 0.2s ease;
+    border-radius: 0.25rem;
+    margin-bottom: 0.5rem;
+}
+
+.area-card .station-item:hover {
+    background-color: #f8f9fa;
+}
+
+.area-card .station-item:last-child {
+    border-bottom: none !important;
+    margin-bottom: 0;
+}
+
+.area-card .card-footer {
+    background: rgba(248, 249, 250, 0.5);
+    border-top: 1px solid #e9ecef;
+}
+
+.area-card .btn {
+    border-radius: 0.375rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.area-card .btn:hover {
+    transform: translateY(-1px);
+}
+
+/* Empty State */
+.empty-state {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 0.5rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .area-card .card-body {
+        padding: 1rem;
+    }
+    
+    .area-card .station-item {
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+    
+    .area-card .station-item .text-end {
+        text-align: left !important;
+        margin-top: 0.25rem;
+    }
+}
+
+/* Badge styling */
+.badge {
+    font-weight: 500;
+    letter-spacing: 0.025em;
+}
+
+/* Icon styling */
+.fa-map-marker-alt {
+    opacity: 0.9;
+}
+
+/* Loading state */
+.card-loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* Animation for new cards */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.area-card {
+    animation: fadeInUp 0.5s ease-out;
+}

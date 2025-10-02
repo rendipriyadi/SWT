@@ -109,7 +109,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const modal = document.getElementById('descriptionModal');
         if (!modal) {
             console.error('Modal element not found!');
-            alert('Modal untuk detail deskripsi tidak ditemukan!');
+            alert('Description detail modal not found!');
             return;
         }
         
@@ -117,16 +117,30 @@ document.addEventListener('DOMContentLoaded', function() {
         const modalBody = document.getElementById('descriptionModalBody');
         if (!modalBody) {
             console.error('Modal body element not found!');
-            alert('Element body modal tidak ditemukan!');
+            alert('Modal body element not found!');
             return;
         }
         
-        // Set content and show modal
-        modalBody.textContent = description;
+        // Set content with proper formatting
+        if (description) {
+            // Preserve line breaks and format text
+            const formattedDescription = description
+                .replace(/\n/g, '<br>')
+                .replace(/\r/g, '')
+                .replace(/  /g, '&nbsp;&nbsp;');
+            
+            modalBody.innerHTML = `
+                <div class="description-content">
+                    <div class="description-text">${formattedDescription}</div>
+                </div>
+            `;
+        } else {
+            modalBody.innerHTML = '<div class="text-muted">No description available</div>';
+        }
         
         // Open modal using Bootstrap's API
         // Pastikan modal menjadi anak langsung dari <body> sebelum ditampilkan
-         if (modal.parentElement !== document.body) {
+        if (modal.parentElement !== document.body) {
             document.body.appendChild(modal);
         }
         const bsModal = new bootstrap.Modal(modal);
@@ -241,11 +255,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     });
                 }
             } else {
-                modalBody.html('<div class="alert alert-danger mb-0">Data penyelesaian tidak ditemukan.</div>');
+                modalBody.html('<div class="alert alert-danger mb-0">Completion data not found.</div>');
             }
         }).fail(function(xhr, status, error) {
             console.error('Error:', error);
-            modalBody.html('<div class="alert alert-danger mb-0">Gagal mengambil data penyelesaian. Silakan coba lagi.</div>');
+            modalBody.html('<div class="alert alert-danger mb-0">Failed to retrieve completion data. Please try again.</div>');
         });
     });
     

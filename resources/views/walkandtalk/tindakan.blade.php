@@ -4,7 +4,23 @@
 
 @section('content')
 <div class="container-fluid px-4">
-    <h1 class="mt-4">Completion of Reports</h1>
+    <div class="page-header mb-4">
+        <div>
+            <h1 class="mb-2">Completion of Reports</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="text-decoration-none">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('laporan.index') }}" class="text-decoration-none">Reports</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Completion of Reports</li>
+                </ol>
+            </nav>
+        </div>
+        <div>
+            <a href="{{ route('laporan.index') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Reports
+            </a>
+        </div>
+    </div>
     
     <!-- Tampilkan detail masalah dengan struktur data baru -->
     <div class="card mb-4">
@@ -29,11 +45,18 @@
             <div class="row">
                 <div class="col-md-4">
                     <h6 class="fw-bold">Status:</h6>
-                    <p>{{ $laporan->status }}</p>
+                    @php
+                        $statusMap = [
+                            'Ditugaskan' => 'Assigned',
+                            'Selesai' => 'Completed',
+                        ];
+                        $statusEn = $statusMap[$laporan->status] ?? $laporan->status;
+                    @endphp
+                    <p>{{ $statusEn }}</p>
                 </div>
                 <div class="col-md-4">
                     <h6 class="fw-bold">Problem Category:</h6>
-                    <p>{{ $laporan->kategori_masalah }}</p>
+                    <p>{{ $laporan->problemCategory->name ?? '-' }}</p>
                 </div>
                 <div class="col-md-4">
                     <h6 class="fw-bold">Deadline:</h6>
@@ -46,8 +69,8 @@
                     <p>
                         @if($laporan->penanggungJawab)
                             {{ $laporan->penanggungJawab->name }}
-                        @elseif($laporan->area)
-                            {{ implode(', ', $laporan->area->penanggungJawabs->pluck('name')->toArray()) }}
+                        @elseif($laporan->area && $laporan->area->penanggungJawabs && $laporan->area->penanggungJawabs->count() > 0)
+                            {{ $laporan->area->penanggungJawabs->pluck('name')->join(', ') }}
                         @else
                             -
                         @endif
@@ -74,7 +97,7 @@
                                     data-bs-toggle="modal"
                                     data-bs-target="#modalFotoFull"
                                     data-photos="{{ json_encode(array_map(function($f) { return asset('images/' . $f); }, $laporan->Foto)) }}"
-                                    alt="Foto Masalah"
+                                    alt="Issue Photo"
                                 >
                             </div>
                         @endforeach
@@ -89,8 +112,14 @@
         <form action="{{ route('laporan.storeTindakan', $laporan->id) }}" method="POST" enctype="multipart/form-data">
             @csrf
             <div class="mb-3">
-                <label for="Tanggal" class="form-label">Completion Date:</label>
-                <input type="date" class="form-control @error('Tanggal') is-invalid @enderror" id="Tanggal" name="Tanggal" value="{{ old('Tanggal') }}">
+                <label for="Tanggal" class="form-label fw-semibold">Completion Date <span class="text-danger">*</span></label>
+                <div class="input-group">
+                    <input type="text" class="form-control @error('Tanggal') is-invalid @enderror" id="Tanggal_display" placeholder="dd/mm/yyyy" readonly required>
+                    <input type="hidden" id="Tanggal" name="Tanggal" value="{{ old('Tanggal') }}">
+                    <span class="input-group-text" id="datePickerBtn">
+                        <i class="fas fa-calendar-alt"></i>
+                    </span>
+                </div>
                 @error('Tanggal')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
@@ -99,7 +128,7 @@
             @if(isset($penyelesaian) && $penyelesaian->Tanggal)
                 <div class="mb-3">
                     <label class="form-label">Completion Date:</label>
-                    <p>{{ \Carbon\Carbon::parse($penyelesaian->Tanggal)->locale('id')->isoFormat('dddd, D MMMM YYYY') }}</p>
+                    <p>{{ \Carbon\Carbon::parse($penyelesaian->Tanggal)->locale('en')->isoFormat('dddd, D MMMM YYYY') }}</p>
                 </div>
             @endif
             <div class="mb-3">
@@ -225,11 +254,203 @@ document.addEventListener('DOMContentLoaded', function() {
 @endif
 @endsection
 
+@push('styles')
+<style>
+/* Simple Clean Datepicker */
+.datepicker {
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid #ddd;
+    font-family: Arial, sans-serif;
+    background: #ffffff;
+    overflow: hidden;
+    width: 280px !important;
+    min-width: 280px !important;
+    max-width: 280px !important;
+    position: fixed !important;
+    z-index: 9999 !important;
+}
+
+.datepicker table tr td.active,
+.datepicker table tr td.active:hover,
+.datepicker table tr td.active.disabled,
+.datepicker table tr td.active.disabled:hover {
+    background: #007bff !important;
+    color: white;
+}
+
+.datepicker table tr td.today {
+    background: #f8f9fa !important;
+    color: #000 !important;
+    font-weight: bold;
+}
+
+.datepicker table tr td.today:hover {
+    background: #e9ecef !important;
+}
+
+.datepicker table tr td:hover {
+    background: #f8f9fa !important;
+    color: #000 !important;
+}
+
+.datepicker table tr td.old,
+.datepicker table tr td.new {
+    color: #999;
+}
+
+.datepicker table tr td.disabled,
+.datepicker table tr td.disabled:hover {
+    color: #ccc !important;
+    background: #f8f9fa !important;
+    cursor: not-allowed;
+}
+
+.datepicker table thead tr th {
+    background: #f8f9fa;
+    color: #000;
+    border: none;
+    font-weight: normal;
+    padding: 8px;
+}
+
+.datepicker table thead tr th.prev,
+.datepicker table thead tr th.next {
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.datepicker table thead tr th.prev:hover,
+.datepicker table thead tr th.next:hover {
+    background: #e9ecef;
+}
+
+.datepicker table thead tr th.datepicker-switch {
+    font-size: 14px;
+    font-weight: normal;
+}
+
+.datepicker table thead tr th.dow {
+    background: #f8f9fa;
+    color: #666;
+    font-size: 11px;
+    font-weight: bold;
+    padding: 6px 4px;
+    border-bottom: 1px solid #ddd;
+}
+
+.datepicker table tbody tr td {
+    padding: 4px;
+    transition: none;
+}
+
+.datepicker table {
+    width: 100% !important;
+    table-layout: fixed !important;
+}
+
+.datepicker table tbody tr td.day {
+    width: 32px !important;
+    height: 32px !important;
+    line-height: 24px !important;
+    text-align: center;
+    cursor: pointer;
+    color: #000;
+    font-weight: normal;
+    padding: 4px !important;
+}
+
+.datepicker table tbody tr td.day:hover {
+    background: #f8f9fa !important;
+    color: #000 !important;
+}
+
+.datepicker table tbody tr td.month,
+.datepicker table tbody tr td.year {
+    padding: 8px 6px;
+    text-align: center;
+    cursor: pointer;
+    color: #000;
+    font-weight: normal;
+}
+
+.datepicker table tbody tr td.month:hover,
+.datepicker table tbody tr td.year:hover {
+    background: #f8f9fa !important;
+    color: #000 !important;
+}
+
+.datepicker table tbody tr td.month.active,
+.datepicker table tbody tr td.year.active {
+    background: #007bff !important;
+    color: white !important;
+}
+
+.datepicker table tbody tr td.month.focused,
+.datepicker table tbody tr td.year.focused {
+    background: #f8f9fa !important;
+    color: #000 !important;
+}
+
+.datepicker table tbody tr td.range {
+    background: #e3f2fd !important;
+    color: #000 !important;
+}
+
+.datepicker table tbody tr td.range:hover {
+    background: #bbdefb !important;
+}
+
+.datepicker table tbody tr td.range.start,
+.datepicker table tbody tr td.range.end {
+    background: #007bff !important;
+    color: white !important;
+}
+
+.datepicker table tbody tr td.range.start:hover,
+.datepicker table tbody tr td.range.end:hover {
+    background: #0056b3 !important;
+}
+
+/* Input Group Enhancement */
+.input-group-text {
+    cursor: pointer;
+    background: #f8f9fa;
+    color: #666;
+    border: 1px solid #ced4da;
+    font-weight: normal;
+    transition: all 0.2s ease;
+}
+
+.input-group-text:hover {
+    background: #e9ecef;
+    color: #000;
+    transform: scale(1.02);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Datepicker Dropdown Animation - Simple Fade */
+.datepicker.dropdown-menu {
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+</style>
+@endpush
+
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const statusSelect = document.getElementById('status');
     const tanggalInput = document.getElementById('Tanggal');
+    const tanggalInputDisplay = document.getElementById('Tanggal_display');
     const deskripsiInput = document.getElementById('deskripsi_penyelesaian');
     const fotoInput = document.getElementById('Foto');
 
@@ -245,6 +466,120 @@ document.addEventListener('DOMContentLoaded', function() {
 
     statusSelect.addEventListener('change', updateRequiredFields);
     updateRequiredFields(); // initial
+
+    // --- Bootstrap Datepicker for Completion Date ---
+    if (tanggalInputDisplay) {
+        const dateInputGroup = tanggalInputDisplay.closest('.input-group');
+        
+        // Initialize datepicker on display input
+        $(tanggalInputDisplay).datepicker({
+            format: 'dd/mm/yyyy',
+            autoclose: true,
+            todayHighlight: true,
+            startDate: new Date(),
+            orientation: 'top auto',
+            container: 'body',
+            todayBtn: 'linked',
+            clearBtn: true,
+            language: 'en',
+            weekStart: 1,
+            calendarWeeks: true,
+            showOnFocus: true,
+            toggleActive: true,
+            templates: {
+                leftArrow: '<i class="fas fa-chevron-left"></i>',
+                rightArrow: '<i class="fas fa-chevron-right"></i>'
+            }
+        }).on('changeDate', function(e) {
+            // Validate selected date
+            const selectedDate = e.date;
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            if (selectedDate < today) {
+                $(this).addClass('is-invalid');
+                $(this).attr('data-bs-original-title', 'Completion date cannot be in the past');
+            } else {
+                $(this).removeClass('is-invalid');
+                $(this).removeAttr('data-bs-original-title');
+            }
+            
+            // Convert to Y-m-d format for hidden input
+            const year = selectedDate.getFullYear();
+            const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+            const day = String(selectedDate.getDate()).padStart(2, '0');
+            const formattedDate = `${year}-${month}-${day}`;
+            
+            // Update hidden input with correct format
+            tanggalInput.value = formattedDate;
+        });
+        
+        // Custom positioning function
+        function positionDatepicker() {
+            const datepicker = $('.datepicker');
+            if (datepicker.length) {
+                const inputOffset = dateInputGroup.offset();
+                const inputWidth = dateInputGroup.outerWidth();
+                const inputHeight = dateInputGroup.outerHeight();
+                const datepickerWidth = 320;
+                const datepickerHeight = 350;
+                
+                let left = inputOffset.left + (inputWidth - datepickerWidth) / 2;
+                let top = inputOffset.top - datepickerHeight - 10;
+                
+                const viewportWidth = $(window).width();
+                const viewportHeight = $(window).height();
+                const scrollTop = $(window).scrollTop();
+                
+                if (left < 10) left = 10;
+                if (left + datepickerWidth > viewportWidth - 10) {
+                    left = viewportWidth - datepickerWidth - 10;
+                }
+                
+                if (top < scrollTop + 10) {
+                    top = inputOffset.top + inputHeight + 10;
+                }
+                
+                datepicker.css({
+                    'position': 'fixed',
+                    'left': left + 'px',
+                    'top': top + 'px',
+                    'width': datepickerWidth + 'px',
+                    'z-index': 9999
+                });
+            }
+        }
+        
+        // Show datepicker with custom positioning
+        $(tanggalInputDisplay).on('show', function() {
+            setTimeout(function() {
+                positionDatepicker();
+            }, 10);
+        });
+        
+        // Reposition on scroll and resize
+        $(window).on('scroll resize', function() {
+            if ($('.datepicker').is(':visible')) {
+                positionDatepicker();
+            }
+        });
+        
+        // Trigger datepicker when input group text is clicked
+        $('#datePickerBtn').on('click', function() {
+            $(tanggalInputDisplay).datepicker('show');
+        });
+        
+        // Load existing value if any
+        if (tanggalInput.value) {
+            const existingDate = new Date(tanggalInput.value);
+            if (!isNaN(existingDate.getTime())) {
+                const day = String(existingDate.getDate()).padStart(2, '0');
+                const month = String(existingDate.getMonth() + 1).padStart(2, '0');
+                const year = existingDate.getFullYear();
+                tanggalInputDisplay.value = `${day}/${month}/${year}`;
+            }
+        }
+    }
     
     // Foto preview dan kamera
     const previewContainer = document.getElementById('foto-preview-container');
@@ -282,7 +617,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     video: true 
                 });
             } catch (err) {
-                alert('Tidak dapat mengakses kamera. Pastikan Anda memberikan izin.');
+                alert('Cannot access the camera. Please grant camera permission.');
                 stopCamera();
                 return;
             }

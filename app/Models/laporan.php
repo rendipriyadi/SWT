@@ -18,7 +18,7 @@ class laporan extends Model
         'departemen_supervisor_id', // Tetap menyimpan untuk backward compatibility
         'area_id',                  // Kolom baru
         'penanggung_jawab_id',      // Kolom baru
-        'kategori_masalah',
+        'problem_category_id',      // Kolom baru untuk relationship
         'deskripsi_masalah',
         'tenggat_waktu',
         'status',
@@ -64,12 +64,18 @@ class laporan extends Model
     // Relasi baru untuk area
     public function area()
     {
-        return $this->belongsTo(Area::class);
+        return $this->belongsTo(Area::class, 'area_id');
     }
     
     // Relasi baru untuk penanggung jawab
     public function penanggungJawab()
     {
-        return $this->belongsTo(PenanggungJawab::class);
+        return $this->belongsTo(PenanggungJawab::class, 'penanggung_jawab_id');
+    }
+
+    // Relasi untuk problem category
+    public function problemCategory()
+    {
+        return $this->belongsTo(ProblemCategory::class, 'problem_category_id');
     }
 }

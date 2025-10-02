@@ -11,17 +11,17 @@
     <div class="card-body filter-body p-0">
         <form id="filterForm" class="p-2">
             <div class="row g-2">
-                <!-- Rentang Tanggal -->
+                <!-- Date Range -->
                 <div class="col-md-6 col-lg-3 mb-1">
                     <label class="form-label small mb-1">Report Date</label>
                     <div class="input-group input-group-sm">
                         <input type="date" class="form-control form-control-sm filter-control" id="start_date" name="start_date">
-                        <span class="input-group-text py-0">s/d</span>
+                        <span class="input-group-text py-0">to</span>
                         <input type="date" class="form-control form-control-sm filter-control" id="end_date" name="end_date">
                     </div>
                 </div>
 
-                <!-- Kategori Masalah -->
+                <!-- Problem Category -->
                 <div class="col-md-6 col-lg-3 mb-1">
                     <label class="form-label small mb-1">Problem Categoriesh</label>
                     <select class="form-select form-select-sm filter-control" id="kategori" name="kategori">
@@ -31,7 +31,7 @@
                     </select>
                 </div>
 
-                <!-- Tenggat Waktu -->
+                <!-- Deadline (Month) -->
                 <div class="col-md-6 col-lg-3 mb-1">
                     <label class="form-label small mb-1">Deadline</label>
                     <select class="form-select form-select-sm filter-control" id="tenggat_bulan" name="tenggat_bulan">

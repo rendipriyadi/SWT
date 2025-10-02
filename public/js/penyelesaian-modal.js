@@ -73,11 +73,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     });
                 }
             } else {
-                modalBody.html('<div class="alert alert-danger mb-0">Data penyelesaian tidak ditemukan.</div>');
+                modalBody.html('<div class="alert alert-danger mb-0">Completion data not found.</div>');
             }
         }).fail(function(xhr, status, error) {
             console.error('Error:', error);
-            modalBody.html('<div class="alert alert-danger mb-0">Gagal mengambil data penyelesaian. Silakan coba lagi.</div>');
+            modalBody.html('<div class="alert alert-danger mb-0">Failed to retrieve completion data. Please try again.</div>');
         });
     });
 });

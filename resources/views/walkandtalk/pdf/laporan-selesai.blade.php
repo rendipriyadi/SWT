@@ -16,6 +16,13 @@
             max-width: 150px;
             margin-bottom: 10px;
         }
+        .brand {
+            font-size: 26px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            color: #009999;
+            margin-bottom: 6px;
+        }
         .title {
             font-size: 18px;
             font-weight: bold;
@@ -29,12 +36,16 @@
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 20px;
+            table-layout: fixed; /* Fixed layout untuk kontrol lebar kolom */
         }
         th, td {
             border: 1px solid #ddd;
             padding: 8px;
             text-align: left;
             vertical-align: top;
+            word-wrap: break-word;
+            word-break: break-word;
+            overflow-wrap: break-word;
         }
         th {
             background-color: #f4f4f4;
@@ -75,13 +86,20 @@
         }
         /* Memperbaiki tampilan untuk deskripsi panjang */
         .deskripsi-cell {
-            font-size: 11px;
-            line-height: 1.4;
+            font-size: 10px;
+            line-height: 1.3;
+            word-wrap: break-word;
+            word-break: break-word;
+            overflow-wrap: break-word;
+            white-space: normal;
         }
         .deskripsi-text {
             display: block;
             margin-bottom: 8px; /* Jarak antara teks dan foto */
             word-wrap: break-word;
+            word-break: break-word;
+            overflow-wrap: break-word;
+            white-space: normal;
         }
         /* Grid layout untuk banyak foto */
         .foto-grid {
@@ -95,7 +113,7 @@
 </head>
 <body>
     <div class="header">
-        <img src="{{ public_path('images/logo.png') }}" class="logo">
+        <div class="brand">SIEMENS</div>
         <div class="title">LAPORAN SAFETY WALK AND TALK</div>
         <div class="subtitle">Periode: {{ $periode }}</div>
     </div>
@@ -103,23 +121,23 @@
     <table>
         <thead>
             <tr>
-                <th width="3%">No</th>
-                <th width="7%">Tanggal Laporan</th>
-                <th width="7%">Tanggal Selesai</th>
-                <th width="15%">Area/Station</th>
-                <th width="13%">Kategori</th>
-                <th width="27%">Masalah</th>
-                <th width="27%">Penyelesaian</th>
+                <th width="5%">No</th>
+                <th width="12%">Report Date</th>
+                <th width="12%">Completion Date</th>
+                <th width="18%">Area/Station</th>
+                <th width="15%">Category</th>
+                <th width="20%">Problem</th>
+                <th width="18%">Solution</th>
             </tr>
         </thead>
         <tbody>
             @foreach($laporan as $index => $item)
             <tr>
                 <td>{{ $index + 1 }}</td>
-                <td>{{ $item->created_at->locale('id')->isoFormat('dddd, D MMMM YYYY') }}</td>
+                <td>{{ $item->created_at->format('l, j-n-Y') }}</td>
                 <td>
                     @if($item->penyelesaian && $item->penyelesaian->Tanggal)
-                        {{ \Carbon\Carbon::parse($item->penyelesaian->Tanggal)->locale('id')->isoFormat('dddd, D MMMM YYYY') }}
+                        {{ \Carbon\Carbon::parse($item->penyelesaian->Tanggal)->format('l, j-n-Y') }}
                     @else
                         -
                     @endif
@@ -138,7 +156,7 @@
                         -
                     @endif
                 </td>
-                <td>{{ $item->kategori_masalah }}</td>
+                <td>{{ $item->problemCategory->name ?? '-' }}</td>
                 <td class="deskripsi-cell">
                     <span class="deskripsi-text">{{ $item->deskripsi_masalah }}</span>
                     @if(!empty($item->validPhotos))

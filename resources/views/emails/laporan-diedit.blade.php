@@ -35,9 +35,9 @@
                                 Laporan yang ditugaskan kepada Anda telah diperbarui dengan detail sebagai berikut:
                             </p>
                             <ul style="padding-left: 20px; margin-top: 10px; color: black;">
-                                <li><strong>Kategori:</strong> {{ $laporan->kategori_masalah }}</li>
+                                <li><strong>Kategori:</strong> {{ $laporan->problemCategory->name ?? '-' }}</li>
                                 <li><strong>Deskripsi:</strong> {{ \Illuminate\Support\Str::limit($laporan->deskripsi_masalah, 150, '...') }}</li>
-                                <li><strong>Tenggat Waktu:</strong> {{ \Carbon\Carbon::parse($laporan->tenggat_waktu)->locale('id')->isoFormat('dddd, D MMMM YYYY') }}</li>
+                                <li><strong>Tenggat Waktu:</strong> {{ \Carbon\Carbon::parse($laporan->tenggat_waktu)->locale('en')->isoFormat('dddd, D MMMM YYYY') }}</li>
                                 <li><strong>Area:</strong> {{ $laporan->area ? $laporan->area->name : '-' }}</li>
                                 @if($laporan->penanggungJawab)
                                     <li><strong>Station:</strong> {{ $laporan->penanggungJawab->station }}</li>

@@ -2,71 +2,40 @@
  * Helper functions to standardize status badges throughout the application
  */
 document.addEventListener('DOMContentLoaded', function() {
-    // Apply consistent styling to all status badges
+    // Normalize and style all status badges
     function initStatusBadges() {
-        document.querySelectorAll('.badge[data-status]').forEach(badge => {
-            const status = badge.getAttribute('data-status').toLowerCase();
-            
-            // Clear any existing classes
-            badge.classList.remove(
-                'badge-primary', 
-                'badge-success', 
-                'badge-info', 
-                'badge-warning', 
-                'badge-danger',
-                'badge-ditugaskan',
-                'badge-selesai',
-                'badge-pending'
-            );
-            
-            // Apply standard class
-            switch(status) {
-                case 'ditugaskan':
-                    badge.classList.add('badge-ditugaskan');
-                    break;
-                case 'selesai':
-                    badge.classList.add('badge-selesai');
-                    break;
-                case 'pending':
-                    badge.classList.add('badge-pending');
-                    break;
-                case 'danger':
-                case 'critical':
-                    badge.classList.add('badge-danger');
-                    break;
-                default:
-                    badge.classList.add('badge-secondary');
-            }
+        document.querySelectorAll('[data-status]').forEach(el => {
+            const raw = (el.getAttribute('data-status') || '').toLowerCase();
+            let variant = '';
+            if (raw === 'ditugaskan' || raw === 'assigned') variant = 'status-assigned';
+            else if (raw === 'selesai' || raw === 'completed') variant = 'status-completed';
+            else if (raw === 'pending') variant = 'status-pending';
+            else if (raw === 'danger' || raw === 'critical') variant = 'status-danger';
+
+            // Ensure base class
+            el.classList.add('status-badge');
+
+            // Remove old variants and apply new
+            el.classList.remove('badge-ditugaskan','badge-selesai','badge-pending','badge-danger','badge','bg-warning','bg-success','bg-info');
+            ['status-assigned','status-completed','status-pending','status-danger'].forEach(c => el.classList.remove(c));
+            if (variant) el.classList.add(variant);
         });
     }
 
-    // Create a badge for status
+    // Create a badge for status (preferred renderer)
     window.createStatusBadge = function(status) {
-        const statusLC = status.toLowerCase();
-        let badgeClass = 'badge-secondary';
-        
-        switch(statusLC) {
-            case 'ditugaskan':
-                badgeClass = 'badge-ditugaskan';
-                break;
-            case 'selesai':
-                badgeClass = 'badge-selesai';
-                break;
-            case 'pending':
-                badgeClass = 'badge-pending';
-                break;
-            case 'danger':
-            case 'critical':
-                badgeClass = 'badge-danger';
-                break;
-        }
-        
-        return `<span class="badge ${badgeClass}" data-status="${statusLC}">${status}</span>`;
+        const text = String(status || '');
+        const lc = text.toLowerCase();
+        let variant = 'status-pending';
+        if (lc === 'ditugaskan' || lc === 'assigned') variant = 'status-assigned';
+        else if (lc === 'selesai' || lc === 'completed') variant = 'status-completed';
+        else if (lc === 'danger' || lc === 'critical') variant = 'status-danger';
+        return `<span class="status-badge ${variant}" data-status="${lc}">${text}</span>`;
     }
 
     // Initialize badges on page load
     initStatusBadges();
-    
+
     // Re-initialize badges after AJAX updates (DataTables)
     if (typeof $.fn.dataTable !== 'undefined') {
         $(document).on('draw.dt', function() {

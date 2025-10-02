@@ -1,17 +1,17 @@
 @extends('layouts.main')
 
-@section('title', 'Perbarui Laporan')
+@section('title', 'Update Report')
 
 @section('content')
 <div class="container-fluid px-4">
-    <h1 class="mt-4">Edit Laporan</h1>
+    <h1 class="mt-4">Edit Report</h1>
     <div class="card p-4">
         <form action="{{ route('laporan.update', $laporan->id) }}" method="POST" enctype="multipart/form-data">
             @csrf
             @method('PUT')
 
             <div class="mb-3">
-                <label for="Foto" class="form-label">Tambah Foto Baru:</label>
+                <label for="Foto" class="form-label">Add New Photos:</label>
                 <input type="file" class="form-control @error('Foto.*') is-invalid @enderror" id="Foto" name="Foto[]" multiple>
                 @error('Foto.*')
                     <div class="invalid-feedback">{{ $message }}</div>
@@ -21,22 +21,22 @@
                 @enderror
                 
                 <div id="foto-preview-container" class="mt-2 d-flex flex-wrap gap-2"></div>
-                <button type="button" class="btn btn-secondary mt-2" id="openCameraBtn">Ambil Foto</button>
+                <button type="button" class="btn btn-secondary mt-2" id="openCameraBtn">Take Photo</button>
                 <div id="cameraContainer" style="display:none; margin-top:10px;">
                     <video id="video" autoplay playsinline style="width:100%; max-width:350px; border:1px solid #ccc; border-radius:8px;"></video>
                     <canvas id="canvas" style="display:none;"></canvas>
                     <div class="mt-2">
                         <button type="button" class="btn btn-primary" id="captureBtn">
-                            <i class="fas fa-camera me-1"></i>Ambil Foto
+                            <i class="fas fa-camera me-1"></i>Capture Photo
                         </button>
                         <button type="button" class="btn btn-outline-secondary" id="closeCameraBtn">
-                            <i class="fas fa-times me-1"></i>Tutup Kamera
+                            <i class="fas fa-times me-1"></i>Close Camera
                         </button>
                     </div>
                 </div>
                 
                 <div class="mt-3">
-                    <label class="form-label">Foto yang Sudah Ada:</label>
+                    <label class="form-label">Existing Photos:</label>
                     <div class="d-flex flex-wrap gap-2">
                         @if(!empty($laporan->Foto) && is_array($laporan->Foto))
                             @foreach($laporan->Foto as $key => $foto)
@@ -49,7 +49,7 @@
                                 </div>
                             @endforeach
                         @else
-                            <p class="text-muted">Tidak ada foto</p>
+                            <p class="text-muted">No photos</p>
                         @endif
                     </div>
                 </div>
@@ -59,7 +59,7 @@
             <div class="mb-3">
                 <label for="area_id" class="form-label">Area:</label>
                 <select class="form-select @error('area_id') is-invalid @enderror" id="area_id" name="area_id" required>
-                    <option value="">Pilih Area</option>
+                    <option value="">Select Area</option>
                     @foreach($areas as $area)
                         <option value="{{ $area->id }}" {{ $laporan->area_id == $area->id ? 'selected' : '' }}>{{ $area->name }}</option>
                     @endforeach
@@ -71,9 +71,9 @@
 
             <!-- Station Dropdown (akan diisi dinamis berdasarkan area) -->
             <div class="mb-3">
-                <label for="penanggung_jawab_id" class="form-label">Station: <small class="text-muted">(Opsional)</small></label>
+                <label for="penanggung_jawab_id" class="form-label">Station: <small class="text-muted">(Optional)</small></label>
                 <select class="form-select @error('penanggung_jawab_id') is-invalid @enderror" id="penanggung_jawab_id" name="penanggung_jawab_id" data-selected="{{ $laporan->penanggung_jawab_id }}">
-                    <option value="">Pilih Station</option>
+                    <option value="">Select Station</option>
                     <!-- Options will be populated dynamically based on selected area -->
                 </select>
                 @error('penanggung_jawab_id')
@@ -83,24 +83,27 @@
 
             <!-- Penanggung Jawab Display -->
             <div class="mb-3">
-                <label for="supervisor" class="form-label">Penanggung Jawab:</label>
+                <label for="supervisor" class="form-label">Supervisor:</label>
                 <input type="text" class="form-control" id="supervisor" readonly>
             </div>
 
             <div class="mb-3">
-                <label for="kategori_masalah" class="form-label">Kategori Masalah:</label>
-                <select class="form-select @error('kategori_masalah') is-invalid @enderror" id="kategori_masalah" name="kategori_masalah" required>
-                    <option value="">Pilih Kategori</option>
-                    <option value="Safety: Potensi Bahaya" {{ $laporan->kategori_masalah == 'Safety: Potensi Bahaya' ? 'selected' : '' }}>Safety: Potensi Bahaya</option>
-                    <option value="5S: Ringkas, Rapi, Resik, Rawat, dan Rajin" {{ $laporan->kategori_masalah == '5S: Ringkas, Rapi, Resik, Rawat, dan Rajin' ? 'selected' : '' }}>5S: Ringkas, Rapi, Resik, Rawat, dan Rajin</option>
+                <label for="problem_category_id" class="form-label">Problem Category:</label>
+                <select class="form-select @error('problem_category_id') is-invalid @enderror" id="problem_category_id" name="problem_category_id" required>
+                    <option value="">Select Category</option>
+                    @foreach($problemCategories as $category)
+                        <option value="{{ $category->id }}" {{ $laporan->problem_category_id == $category->id ? 'selected' : '' }}>
+                            {{ $category->name }}
+                        </option>
+                    @endforeach
                 </select>
-                @error('kategori_masalah')
+                @error('problem_category_id')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
             </div>
 
             <div class="mb-3">
-                <label for="deskripsi_masalah" class="form-label">Deskripsi Masalah:</label>
+                <label for="deskripsi_masalah" class="form-label">Problem Description:</label>
                 <textarea class="form-control @error('deskripsi_masalah') is-invalid @enderror" id="deskripsi_masalah" name="deskripsi_masalah" rows="3" required>{{ $laporan->deskripsi_masalah }}</textarea>
                 @error('deskripsi_masalah')
                     <div class="invalid-feedback">{{ $message }}</div>
@@ -108,23 +111,13 @@
             </div>
 
             <div class="mb-3">
-                <label for="tenggat_waktu" class="form-label">Tenggat Waktu:</label>
+                <label for="tenggat_waktu" class="form-label">Deadline:</label>
                 <input type="date" class="form-control @error('tenggat_waktu') is-invalid @enderror" id="tenggat_waktu" name="tenggat_waktu" value="{{ \Carbon\Carbon::parse($laporan->tenggat_waktu)->format('Y-m-d') }}" required>
                 @error('tenggat_waktu')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
             </div>
 
-            <div class="mb-3">
-                <label for="status" class="form-label">Status:</label>
-                <select class="form-select @error('status') is-invalid @enderror" id="status" name="status" required>
-                    <option value="Ditugaskan" {{ $laporan->status == 'Ditugaskan' ? 'selected' : '' }}>Ditugaskan</option>
-                    <option value="Selesai" {{ $laporan->status == 'Selesai' ? 'selected' : '' }}>Selesai</option>
-                </select>
-                @error('status')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
-            </div>
 
             <button type="submit" class="btn btn-primary mt-4">Update</button>
         </form>
@@ -171,7 +164,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         video: true 
                     });
                 } catch (err) {
-                    alert('Tidak dapat mengakses kamera. Pastikan browser memiliki izin mengakses kamera.');
+                    alert('Cannot access camera. Please ensure browser has camera permission.');
                     openCameraBtn.style.display = 'inline-block';
                     cameraContainer.style.display = 'none';
                 }

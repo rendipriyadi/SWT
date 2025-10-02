@@ -5,7 +5,9 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use App\Models\laporan;
 use App\Models\Penyelesaian;
-use App\Models\DepartemenSupervisor;
+use App\Models\Area;
+use App\Models\PenanggungJawab;
+use App\Models\ProblemCategory;
 use Carbon\Carbon;
 use Faker\Factory as Faker;
 
@@ -17,65 +19,91 @@ class LaporanSeeder extends Seeder
     public function run(): void
     {
         $faker = Faker::create('id_ID');
-        $departemenIds = DepartemenSupervisor::pluck('id')->toArray();
-        $kategoriMasalah = [
-            'Safety: Potensi bahaya',
-            'Seiri: Barang yang tidak diperlukan',
-            'Seiton: Barang tersusun dengan tidak rapi',
-            'Seiso: Kebersihan',
-            'Seiketsu: Tidak mengikuti SOP',
-            'Shitsuke: Evaluasi'
-        ];
+        
+        $areaIds = Area::pluck('id')->toArray();
+        $penanggungJawabIds = PenanggungJawab::pluck('id')->toArray();
+        $problemCategoryIds = ProblemCategory::pluck('id')->toArray();
 
-        // Generate 50 laporan Ditugaskan
-        for ($i = 0; $i < 50; $i++) {
+        if (empty($areaIds) || empty($penanggungJawabIds) || empty($problemCategoryIds)) {
+            $this->command->error('Please run AreaSeeder, PenanggungJawabSeeder, and ProblemCategorySeeder first!');
+            return;
+        }
+
+        $this->command->info("Generating sample laporan with " . count($problemCategoryIds) . " problem categories...");
+
+        // Generate 30 laporan Ditugaskan
+        for ($i = 0; $i < 30; $i++) {
+            $areaId = $faker->randomElement($areaIds);
+            $penanggungJawabId = $this->getRandomPenanggungJawabForArea($areaId);
+            
             laporan::create([
-                'Tanggal' => $faker->dateTimeBetween('-3 months', 'now'),
-                'departemen_supervisor_id' => $faker->randomElement($departemenIds),
-                'kategori_masalah' => $faker->randomElement($kategoriMasalah),
-                'deskripsi_masalah' => $faker->paragraph(),
+                'tanggal' => $faker->dateTimeBetween('-2 months', 'now'),
+                'area_id' => $areaId,
+                'penanggung_jawab_id' => $penanggungJawabId,
+                'problem_category_id' => $faker->randomElement($problemCategoryIds),
+                'deskripsi_masalah' => $faker->paragraph(2),
                 'tenggat_waktu' => $faker->dateTimeBetween('now', '+1 month'),
                 'status' => 'Ditugaskan',
-                'created_at' => $faker->dateTimeBetween('-3 months', 'now'),
+                'created_at' => $faker->dateTimeBetween('-2 months', 'now'),
                 'updated_at' => now()
             ]);
         }
 
-        // Generate 50 laporan Proses
-        for ($i = 0; $i < 50; $i++) {
+        // Generate 30 laporan Proses
+        for ($i = 0; $i < 30; $i++) {
+            $areaId = $faker->randomElement($areaIds);
+            $penanggungJawabId = $this->getRandomPenanggungJawabForArea($areaId);
+            
             laporan::create([
-                'Tanggal' => $faker->dateTimeBetween('-3 months', 'now'),
-                'departemen_supervisor_id' => $faker->randomElement($departemenIds),
-                'kategori_masalah' => $faker->randomElement($kategoriMasalah),
-                'deskripsi_masalah' => $faker->paragraph(),
+                'tanggal' => $faker->dateTimeBetween('-2 months', 'now'),
+                'area_id' => $areaId,
+                'penanggung_jawab_id' => $penanggungJawabId,
+                'problem_category_id' => $faker->randomElement($problemCategoryIds),
+                'deskripsi_masalah' => $faker->paragraph(2),
                 'tenggat_waktu' => $faker->dateTimeBetween('now', '+1 month'),
                 'status' => 'Proses',
-                'created_at' => $faker->dateTimeBetween('-3 months', 'now'),
+                'created_at' => $faker->dateTimeBetween('-2 months', 'now'),
                 'updated_at' => now()
             ]);
         }
 
-        // Generate 50 laporan Selesai dengan Penyelesaian
-        for ($i = 0; $i < 50; $i++) {
+        // Generate 40 laporan Selesai dengan Penyelesaian
+        for ($i = 0; $i < 40; $i++) {
+            $areaId = $faker->randomElement($areaIds);
+            $penanggungJawabId = $this->getRandomPenanggungJawabForArea($areaId);
+            $createdAt = $faker->dateTimeBetween('-2 months', '-1 week');
+            
             $laporan = laporan::create([
-                'Tanggal' => $faker->dateTimeBetween('-3 months', 'now'),
-                'departemen_supervisor_id' => $faker->randomElement($departemenIds),
-                'kategori_masalah' => $faker->randomElement($kategoriMasalah),
-                'deskripsi_masalah' => $faker->paragraph(),
-                'tenggat_waktu' => $faker->dateTimeBetween('now', '+1 month'),
+                'tanggal' => $createdAt,
+                'area_id' => $areaId,
+                'penanggung_jawab_id' => $penanggungJawabId,
+                'problem_category_id' => $faker->randomElement($problemCategoryIds),
+                'deskripsi_masalah' => $faker->paragraph(2),
+                'tenggat_waktu' => $faker->dateTimeBetween($createdAt, '+1 month'),
                 'status' => 'Selesai',
-                'created_at' => $faker->dateTimeBetween('-3 months', 'now'),
+                'created_at' => $createdAt,
                 'updated_at' => now()
             ]);
 
             // Buat penyelesaian untuk setiap laporan selesai
             Penyelesaian::create([
                 'laporan_id' => $laporan->id,
-                'Tanggal' => $faker->dateTimeBetween($laporan->created_at, 'now'),
-                'deskripsi_penyelesaian' => $faker->paragraph(),
-                'created_at' => now(),
+                'tanggal' => $faker->dateTimeBetween($laporan->created_at, 'now'),
+                'deskripsi_penyelesaian' => $faker->paragraph(2),
+                'created_at' => $faker->dateTimeBetween($laporan->created_at, 'now'),
                 'updated_at' => now()
             ]);
         }
     }
+
+
+    /**
+     * Get random penanggung jawab for specific area
+     */
+    private function getRandomPenanggungJawabForArea($areaId)
+    {
+        $penanggungJawabIds = PenanggungJawab::where('area_id', $areaId)->pluck('id')->toArray();
+        return $penanggungJawabIds[array_rand($penanggungJawabIds)];
+    }
+
 }

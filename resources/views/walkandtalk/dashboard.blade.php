@@ -1,253 +1,461 @@
 @extends('layouts.main')
 
-@section('title', 'Beranda Utama')
+@section('title', 'Main Dashboard')
 
 @section('content')
 <div class="container-fluid">
     <!-- Header -->
-    <div class="dashboard-header">
-        <h1 class="mb-0 fs-5">Dashboard</h1>
-        <div class="mx-2 text-muted d-none d-md-block">|</div>
-        <div class="datetime fs-6 mb-0 text-secondary"></div>
-    </div>
-
-    <!-- Filter Panel -->
-    <div class="mb-2">
-        @include('components.filter-panel', ['areas' => $areas, 'showStatusFilter' => false])
-    </div>
-
-    <!-- Statistik Cards -->
-    <div class="dashboard-cards mb-2">
-        <div class="stats-card card-blue">
-            <h3>TOTAL REPORTS</h3>
-            <div class="number">{{ $totalLaporan }}</div>
+    <div class="dashboard-header mb-4">
+        <div>
+            <h1 class="mb-1">Dashboard</h1>
+            <p class="text-muted mb-0">Safety Walk and Talk Management System</p>
         </div>
-        <div class="stats-card card-yellow">
-            <h3>ASSIGNED REPORTS</h3>
-            <div class="number">{{ $laporanDitugaskan }}</div>
-        </div>
-        <div class="stats-card card-red">
-            <h3>COMPLETED REPORTS</h3>
-            <div class="number">{{ $laporanSelesai }}</div>
+        <div class="datetime fs-6 text-secondary">
+            <i class="fas fa-clock me-1"></i>
+            <span id="currentDateTime"></span>
         </div>
     </div>
 
-    <!-- Table -->
+
+    <!-- Statistics Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-4 col-md-6">
+            <div class="stats-card">
+                <div class="d-flex align-items-center">
+                    <div class="stats-icon bg-primary text-white rounded-circle me-3">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <div>
+                        <h3 class="mb-1">Total Reports</h3>
+                        <div class="number text-primary">{{ $totalLaporan }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6">
+            <div class="stats-card">
+                <div class="d-flex align-items-center">
+                    <div class="stats-icon bg-warning text-white rounded-circle me-3">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div>
+                        <h3 class="mb-1">Assigned Reports</h3>
+                        <div class="number text-warning">{{ $laporanDitugaskan }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6">
+            <div class="stats-card">
+                <div class="d-flex align-items-center">
+                    <div class="stats-icon bg-success text-white rounded-circle me-3">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div>
+                        <h3 class="mb-1">Completed Reports</h3>
+                        <div class="number text-success">{{ $laporanSelesai }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="row g-4 mb-4">
+        <!-- Grafik Garis - Laporan per Bulan -->
+        <div class="col-lg-8">
     <div class="card">
-        <div class="card-body p-2">
-            <div class="table-responsive">
-                <table id="laporanTable" class="table table-bordered table-striped table-hover w-100 small" data-url="{{ route('dashboard.datatables') }}">
-                </table>
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-line me-2"></i>
+                        Monthly Reporting In Last 12 Months
+                    </h5>
             </div>
+                <div class="card-body">
+                    <canvas id="laporanPerBulanChart" height="300"></canvas>
+            </div>
+          </div>
         </div>
-    </div>
-</div>
 
-<!-- Modals -->
-<div class="modal-container">
-    <!-- Modal Preview Foto Full -->
-    <div class="modal fade" id="modalFotoFull" tabindex="-1" aria-labelledby="modalFotoFullLabel" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content bg-transparent border-0">
-          <div class="modal-body text-center p-0">
-            <div id="photoCarousel" class="carousel slide">
-              <div class="carousel-inner"></div>
-              <button class="carousel-control-prev" type="button" data-bs-target="#photoCarousel" data-bs-slide="prev">
-                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                <span class="visually-hidden">Previous</span>
-              </button>
-              <button class="carousel-control-next" type="button" data-bs-target="#photoCarousel" data-bs-slide="next">
-                <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                <span class="visually-hidden">Next</span>
-              </button>
-            </div>
+        <!-- Grafik Pie - Category per Bulan -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>
+                        This Month Problem Report
+                    </h5>
+    </div>
+                <div class="card-body">
+                    <canvas id="categoryPerBulanChart" height="300"></canvas>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Modal untuk Deskripsi Masalah Lengkap -->
-    <div class="modal fade description-modal" id="descriptionModal" tabindex="-1" aria-labelledby="descriptionModalLabel" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header py-2">
-            <h5 class="modal-title fs-6" id="descriptionModalLabel">Detail Deskripsi Masalah</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body small" id="descriptionModalBody">
-            <!-- Content will be loaded dynamically -->
-          </div>
-          <div class="modal-footer py-1">
-            <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Tutup</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Modal Penyelesaian -->
-    <div class="modal fade" id="modalPenyelesaian" tabindex="-1" aria-labelledby="modalPenyelesaianLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header py-2">
-                    <h5 class="modal-title fs-6" id="modalPenyelesaianLabel">Detail Penyelesaian</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <!-- Grafik Batang - Area yang Melapor per Bulan -->
+    <div class="row g-4 mb-4">
+        <div class="col-12">
+    <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        Monthly Area Reporting In Last 12 Months
+                    </h5>
                 </div>
-                <div class="modal-body small" id="modalPenyelesaianBody">
-                    <!-- Content will be loaded dynamically -->
-                </div>
-                <div class="modal-footer py-1">
-                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                <div class="card-body">
+                    <canvas id="areaPerBulanChart" height="400"></canvas>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Modals removed on dashboard to avoid unused code -->
 @endsection
 
 @push('scripts')
+<!-- Chart.js CDN -->
+<script src="{{ asset('js/chart.js') }}"></script>
+
 <script>
-function ensureFilterButton() {
-    var filterBtn = $('#filterIconBtn');
-    if (filterBtn.length && $('.dataTables_filter').length) {
-        if (!$.contains($('.dataTables_filter')[0], filterBtn[0])) {
-            $('.dataTables_filter label').before(filterBtn.show());
-        } else {
-            filterBtn.show();
-        }
+// Update datetime every second
+function updateDateTime() {
+    const now = new Date();
+    
+    // English month names
+    const months = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    
+    // English day names
+    const days = [
+        'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
+    ];
+    
+    const dayName = days[now.getDay()];
+    const monthName = months[now.getMonth()];
+    const day = now.getDate();
+    const year = now.getFullYear();
+    const hours = now.getHours().toString().padStart(2, '0');
+    const minutes = now.getMinutes().toString().padStart(2, '0');
+    const seconds = now.getSeconds().toString().padStart(2, '0');
+    
+    const formattedDateTime = `${dayName}, ${day} ${monthName} ${year} ${hours}:${minutes}:${seconds}`;
+    
+    const el = document.getElementById('currentDateTime');
+    if (el) {
+        el.textContent = formattedDateTime;
     }
 }
 
-$(document).ready(function() {
-    const originalUrl = $('#laporanTable').data('url');
-    
-    window.refreshTable = function(filters = null) {
-        if ($.fn.DataTable.isDataTable('#laporanTable')) {
-            $('#laporanTable').DataTable().destroy();
-        }
-        let ajaxUrl = originalUrl;
-        if (filters) {
-            const params = new URLSearchParams();
-            if (filters.start_date) params.append('start_date', filters.start_date);
-            if (filters.end_date) params.append('end_date', filters.end_date);
-            if (filters.area_id) params.append('area_id', filters.area_id);
-            if (filters.penanggung_jawab_id) params.append('penanggung_jawab_id', filters.penanggung_jawab_id);
-            if (filters.kategori) params.append('kategori', filters.kategori);
-            if (filters.status) params.append('status', filters.status);
-            if (filters.tenggat_bulan) params.append('tenggat_bulan', filters.tenggat_bulan);
-            ajaxUrl = `${originalUrl}?${params.toString()}`;
-        }
-        
-        var table = $('#laporanTable').DataTable({
-            processing: true,
-            serverSide: true,
-            ajax: ajaxUrl,
-            columns: [
-                {data: 'DT_RowIndex', name: 'DT_RowIndex', title: 'No', orderable: false, searchable: false, className: 'text-center', width: '30px'},
-                {data: 'Tanggal', name: 'Tanggal', title: 'Date', width: '90px'},
-                {data: 'foto', name: 'foto', title: 'Photo', orderable: false, searchable: false, className: 'text-center', width: '100px'},
-                {data: 'departemen', name: 'area.name', title: 'Area/Station', width: '110px'}, 
-                {data: 'kategori_masalah', name: 'kategori_masalah', title: 'Category', orderable: false, width: '90px'},
-                {
-                    data: 'deskripsi_masalah', 
-                    name: 'deskripsi_masalah', 
-                    title: 'Description',
-                    className: 'text-center',
-                    render: function(data, type, row) {
-                        if (type === 'display' && data.length > 50) {
-                            return '<div class="description-cell">' + data.substr(0, 50) + '... <a href="#" class="view-description" data-description="' + data.replace(/"/g, '&quot;') + '">detail</a></div>';
-                        }
-                        return data;
+// Update datetime on page load and every second (only if element exists)
+if (document.getElementById('currentDateTime')) {
+updateDateTime();
+setInterval(updateDateTime, 1000);
+}
+
+// Chart data from PHP
+const laporanPerBulanData = @json($laporanPerBulan);
+const areaPerBulanData = @json($areaPerBulan);
+const categoryPerBulanData = @json($categoryPerBulan);
+
+// Debug logging removed in production
+
+// Helper function to get month names
+function getMonthName(monthNumber) {
+    const months = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    return months[monthNumber - 1] || '';
+}
+
+// Helper function to get last 12 months
+function getLast12Months() {
+    const months = [];
+    for (let i = 11; i >= 0; i--) {
+        const date = new Date();
+        date.setMonth(date.getMonth() - i);
+        // getMonth() returns 0-11, but we need 1-12 for database comparison
+        const monthNumber = date.getMonth() + 1;
+        months.push({
+            name: getMonthName(monthNumber),
+            number: monthNumber
+        });
+    }
+    return months;
+}
+
+// 1. Grafik Garis - Laporan per Bulan
+const laporanPerBulanCtx = document.getElementById('laporanPerBulanChart').getContext('2d');
+const monthsData = getLast12Months();
+const laporanPerBulanChart = new Chart(laporanPerBulanCtx, {
+    type: 'line',
+    data: {
+        labels: monthsData.map(m => m.name),
+        datasets: [{
+            label: 'Total Report',
+            data: (() => {
+                const data = new Array(12).fill(0);
+                laporanPerBulanData.forEach(item => {
+                    // Find the correct month index in our months array
+                    const monthIndex = monthsData.findIndex(m => m.number === item.bulan);
+                    if (monthIndex >= 0 && monthIndex < 12) {
+                        data[monthIndex] = item.total;
                     }
-                },
-                {data: 'tenggat_waktu', name: 'tenggat_waktu', title: 'Deadline', width: '90px'},
-                {data: 'status', name: 'status', title: 'Status', width: '80px'},
-                {data: 'penyelesaian', name: 'penyelesaian', title: 'Completion', orderable: false, searchable: false, className: 'text-center', width: '50px'},
-                {
-                    data: 'aksi', 
-                    name: 'aksi', 
-                    title: 'Action',
-                    orderable: false, 
-                    searchable: false,
-                    className: 'text-center',
-                    width: '65px'
-                }
-            ],
-            order: [[1, 'desc']],
-            language: {
-                processing: "Memuat...",
-                search: "Search:",
-                lengthMenu: "Display _MENU_",
-                info: "_START_ / _TOTAL_",
-                infoEmpty: "0 data",
-                infoFiltered: "(dari _MAX_)",
-                zeroRecords: "Data Not Found",
-                paginate: {
-                    first: "Awal",
-                    last: "Akhir",
-                    next: "»",
-                    previous: "«"
+                });
+                return data;
+            })(),
+            borderColor: '#007bff',
+            backgroundColor: 'rgba(0, 123, 255, 0.1)',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4,
+            pointBackgroundColor: '#007bff',
+            pointBorderColor: '#ffffff',
+            pointBorderWidth: 2,
+            pointRadius: 6,
+            pointHoverRadius: 8
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: true,
+                position: 'top'
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                grid: {
+                    color: 'rgba(0,0,0,0.1)'
                 }
             },
-            dom: '<"row"<"col-md-6"l><"col-md-6 text-end"f>>rtip',
-            drawCallback: function(settings) {
-                // Adjust rows to be more compact
-                $(this).find('tbody tr').addClass('align-middle');
+            x: {
+                grid: {
+                    color: 'rgba(0,0,0,0.1)'
+                }
             }
-        });
-
-        table.on('draw.dt', function() {
-            ensureFilterButton();
-        });
-    };
-
-    refreshTable();
-    ensureFilterButton();
-    $('.dataTables_filter').addClass('d-flex align-items-center gap-2 justify-content-end');
-    $('.dataTables_filter label').addClass('mb-0');
+        },
+        interaction: {
+            intersect: false,
+            mode: 'index'
+        }
+    }
 });
+
+// 2. Grafik Pie - Category per Bulan
+const categoryPerBulanCtx = document.getElementById('categoryPerBulanChart').getContext('2d');
+
+// Check if we have data
+if (categoryPerBulanData && categoryPerBulanData.length > 0) {
+    const categoryPerBulanChart = new Chart(categoryPerBulanCtx, {
+        type: 'doughnut',
+        data: {
+            labels: categoryPerBulanData.map(item => item.problem_category ? item.problem_category.name : 'No Category'),
+            datasets: [{
+                data: categoryPerBulanData.map(item => item.total),
+                backgroundColor: categoryPerBulanData.map(item => item.problem_category ? item.problem_category.color : '#C9CBCF'),
+                borderWidth: 2,
+                borderColor: '#ffffff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true
+                    }
+                }
+            }
+        }
+    });
+} else {
+    // Show "No Data" message
+    const categoryPerBulanChart = new Chart(categoryPerBulanCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['No Data'],
+            datasets: [{
+                data: [1],
+                backgroundColor: ['#e9ecef'],
+                borderWidth: 2,
+                borderColor: '#ffffff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true
+                    }
+                }
+            }
+        }
+    });
+}
+
+// 3. Grafik Batang - Area yang Melapor per Bulan
+const areaPerBulanCtx = document.getElementById('areaPerBulanChart').getContext('2d');
+
+// Prepare data for grouped bar chart
+const areaNames = [...new Set(areaPerBulanData.map(item => item.area_name))];
+
+const areaPerBulanChart = new Chart(areaPerBulanCtx, {
+    type: 'bar',
+    data: {
+        labels: monthsData.map(m => m.name),
+        datasets: areaNames.map((areaName, index) => {
+            const colors = [
+                '#E74C4C', '#36A2EB', '#FFCE56', '#4BC0C0',
+                '#9966FF', '#FF9F40', '#FF6384', '#C9CBCF'
+            ];
+            return {
+                label: areaName,
+                data: monthsData.map((monthData, monthIndex) => {
+                    const item = areaPerBulanData.find(d =>
+                        d.area_name === areaName && d.bulan === monthData.number
+                    );
+                    return item ? item.total : 0;
+                }),
+                backgroundColor: colors[index % colors.length],
+                borderColor: colors[index % colors.length],
+                borderWidth: 1
+            };
+        })
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: true,
+                position: 'top'
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                stacked: false,
+                grid: {
+                    color: 'rgba(0,0,0,0.1)'
+                }
+            },
+            x: {
+                stacked: false,
+                grid: {
+                    color: 'rgba(0,0,0,0.1)'
+                }
+            }
+        }
+    }
+});
+
+// Chart initialization is complete
+console.log('Dashboard charts initialized successfully');
+
+// Dashboard charts are ready
 </script>
 @endpush
 
 <style>
-.filter-body {
-    padding: 0.8rem;
-    transition: all 0.3s ease;
-    overflow: hidden;
-    max-height: 1000px;
-}
-.filter-panel.collapsed .filter-body {
-    max-height: 0 !important;
-    padding: 0 !important;
-    overflow: hidden;
+/* Stats Icon Styling */
+.stats-icon {
+    width: 3rem;
+    height: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
 }
 
-Card Colors
-.card-blue .number { color: #0d6efd; }
-.card-yellow .number { color: #ffc107; }
-.card-red .number { color: #dc3545; } 
-
-#laporanTable thead th {
-    text-align: center;
+/* Dashboard Header Styling */
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 1rem;
 }
 
-#laporanTable thead th:nth-child(6) {
-    text-align: center;
+.dashboard-header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
 }
 
-#laporanTable tbody td:nth-child(6) {
-    text-align: justify !important;
+.dashboard-header p {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    margin: 0;
 }
 
-#laporanTable tbody td {
-    text-align: center;
+/* Chart Card Styling */
+.card {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
 }
 
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+    padding: 1rem 1.25rem;
+}
 
-/* SIEMENS Design System - Clean and Minimal Layout */
+.card-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #495057;
+    margin: 0;
+}
 
-/* Font dan Ukuran Dasar */
-/* SIEMENS Design System - Clean and Minimal Layout */
+.card-body {
+    padding: 1.25rem;
+}
 
-/* Font dan Ukuran Dasar*/
+/* Chart Container */
+canvas {
+    max-height: 400px;
+}
 
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .dashboard-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .dashboard-header h1 {
+        font-size: 1.5rem;
+    }
+    
+    .stats-icon {
+        width: 2.5rem;
+        height: 2.5rem;
+        font-size: 1rem;
+    }
+
+    .card-body {
+        padding: 1rem;
+    }
+
+    canvas {
+        max-height: 300px;
+    }
+}
 </style>

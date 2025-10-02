@@ -50,7 +50,7 @@ $(document).ready(function() {
                 { data: 'Tanggal', name: 'Tanggal', width: '90px' },
                 { data: 'foto', name: 'foto', orderable: false, searchable: false, width: '50px', className: 'text-center' },
                 { data: 'departemen', name: 'area.name', width: '110px' },
-                { data: 'kategori_masalah', name: 'kategori_masalah', orderable: false, width: '90px' },
+                { data: 'problem_category', name: 'problemCategory.name', orderable: false, width: '90px' },
                 { 
                     data: 'deskripsi_masalah', 
                     name: 'deskripsi_masalah', 
@@ -128,7 +128,7 @@ $(document).ready(function() {
                 { data: 'Tanggal', name: 'Tanggal', width: '90px' },
                 { data: 'foto', name: 'foto', orderable: false, searchable: false, width: '50px', className: 'text-center' },
                 { data: 'departemen', name: 'area.name', width: '110px' },
-                { data: 'kategori_masalah', name: 'kategori_masalah', orderable: false, width: '90px' },
+                { data: 'problem_category', name: 'problemCategory.name', orderable: false, width: '90px' },
                 { 
                     data: 'deskripsi_masalah', 
                     name: 'deskripsi_masalah',

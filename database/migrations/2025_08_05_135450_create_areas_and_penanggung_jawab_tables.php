@@ -16,7 +16,6 @@ return new class extends Migration
             $table->id();
             $table->string('name', 255);
             $table->timestamps();
-            $table->softDeletes();
         });
         
         // Buat tabel penanggung_jawab
@@ -25,9 +24,7 @@ return new class extends Migration
             $table->foreignId('area_id')->constrained('areas');
             $table->string('station', 255);
             $table->string('name', 255);
-            $table->string('email', 255);
             $table->timestamps();
-            $table->softDeletes();
         });
     }
 

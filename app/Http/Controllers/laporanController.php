@@ -14,6 +14,7 @@ use Carbon\Carbon;
 use App\Mail\LaporanDitugaskanSupervisor;
 use App\Mail\LaporanDieditSupervisor;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 
 class laporanController extends Controller
 {
@@ -21,7 +22,7 @@ class laporanController extends Controller
     {
         // Get all areas for filter
         $areas = Area::all();
-        
+
         return view('walkandtalk.sejarah', compact('areas'));
     }
 
@@ -36,7 +37,7 @@ class laporanController extends Controller
     {
         $messages = [
             'area_id.required' => 'Area harus dipilih.',
-            'kategori_masalah.required' => 'Kategori masalah harus dipilih.',
+            'problem_category_id.required' => 'Kategori masalah harus dipilih.',
             'deskripsi_masalah.required' => 'Deskripsi masalah harus diisi.',
             'tenggat_waktu.required' => 'Tenggat waktu harus diisi.',
         ];
@@ -44,7 +45,7 @@ class laporanController extends Controller
         $request->validate([
             'area_id' => 'required|exists:areas,id',
             'penanggung_jawab_id' => 'nullable|exists:penanggung_jawab,id',
-            'kategori_masalah' => 'required|string',
+            'problem_category_id' => 'required|exists:problem_categories,id',
             'deskripsi_masalah' => 'required|string',
             'tenggat_waktu' => 'required|date',
         ], $messages);
@@ -63,7 +64,7 @@ class laporanController extends Controller
         $laporan = laporan::create([
             'area_id' => $request->area_id,
             'penanggung_jawab_id' => $request->penanggung_jawab_id,
-            'kategori_masalah' => $request->kategori_masalah,
+            'problem_category_id' => $request->problem_category_id,
             'deskripsi_masalah' => $request->deskripsi_masalah,
             'tenggat_waktu' => $request->tenggat_waktu,
             'status' => 'Ditugaskan',
@@ -74,48 +75,46 @@ class laporanController extends Controller
         $this->sendSupervisorNotifications($laporan);
 
         // Redirect dengan pesan sukses
-        return redirect()->route('dashboard')->with('success', 'Laporan berhasil ditambahkan.');
+        return redirect()->route('dashboard')->with('success', 'Report created successfully.');
     }
 
     public function edit($id)
     {
-        $laporan = laporan::with(['area', 'penanggungJawab'])->findOrFail($id);
+        $laporan = laporan::with(['area', 'penanggungJawab', 'problemCategory'])->findOrFail($id);
         $areas = Area::with('penanggungJawabs')->get();
-        return view('walkandtalk.edit', compact('laporan', 'areas'));
+        $problemCategories = \App\Models\ProblemCategory::active()->ordered()->get();
+        return view('walkandtalk.edit', compact('laporan', 'areas', 'problemCategories'));
     }
 
     public function update(Request $request, $id)
     {
         $messages = [
             'area_id.required' => 'Area harus dipilih.',
-            'kategori_masalah.required' => 'Kategori masalah harus dipilih.',
+            'problem_category_id.required' => 'Kategori masalah harus dipilih.',
             'deskripsi_masalah.required' => 'Deskripsi masalah harus diisi.',
             'tenggat_waktu.required' => 'Tenggat waktu harus diisi.',
-            'status.required' => 'Status harus dipilih.',
         ];
 
         $request->validate([
             'area_id' => 'required|exists:areas,id',
             'penanggung_jawab_id' => 'nullable|exists:penanggung_jawab,id',
-            'kategori_masalah' => 'required|string',
+            'problem_category_id' => 'required|exists:problem_categories,id',
             'deskripsi_masalah' => 'required|string',
             'tenggat_waktu' => 'required|date',
-            'status' => 'required|string',
         ], $messages);
 
         // Cari laporan berdasarkan ID
         $laporan = laporan::findOrFail($id);
-        
+
         // Simpan data awal sebelum perubahan
         $oldData = [
             'area_id' => $laporan->area_id,
             'penanggung_jawab_id' => $laporan->penanggung_jawab_id,
-            'kategori_masalah' => $laporan->kategori_masalah,
+            'problem_category_id' => $laporan->problem_category_id,
             'deskripsi_masalah' => $laporan->deskripsi_masalah,
             'tenggat_waktu' => $laporan->tenggat_waktu,
-            'status' => $laporan->status,
         ];
-        
+
         // Simpan nama area lama untuk perbandingan
         $oldArea = $laporan->area ? $laporan->area->name : '-';
         $oldPenanggungJawab = $laporan->penanggungJawab ? $laporan->penanggungJawab->name : '-';
@@ -133,7 +132,7 @@ class laporanController extends Controller
         }
 
         $allPhotos = array_merge($existingPhotos, $newlyUploadedPhotos);
-        
+
         // Hapus file foto lama yang tidak ada di `existing_photos`
         $oldPhotos = $laporan->Foto ?: [];
         $photosToDelete = array_diff($oldPhotos, $existingPhotos);
@@ -148,23 +147,21 @@ class laporanController extends Controller
         $laporan->update([
             'area_id' => $request->area_id,
             'penanggung_jawab_id' => $request->penanggung_jawab_id,
-            'kategori_masalah' => $request->kategori_masalah,
+            'problem_category_id' => $request->problem_category_id,
             'deskripsi_masalah' => $request->deskripsi_masalah,
             'tenggat_waktu' => $request->tenggat_waktu,
-            'status' => $request->status,
             'Foto' => count($allPhotos) > 0 ? $allPhotos : null,
         ]);
-        
+
         // Lacak perubahan yang terjadi
         $perubahan = $this->detectChanges($oldData, [
             'area_id' => $request->area_id,
             'penanggung_jawab_id' => $request->penanggung_jawab_id,
-            'kategori_masalah' => $request->kategori_masalah,
+            'problem_category_id' => $request->problem_category_id,
             'deskripsi_masalah' => $request->deskripsi_masalah,
             'tenggat_waktu' => $request->tenggat_waktu,
-            'status' => $request->status,
         ], $oldArea, $oldPenanggungJawab);
-        
+
         // Reload laporan untuk mendapatkan data relasi terbaru
         $laporan = laporan::with(['area', 'penanggungJawab'])->find($id);
 
@@ -173,13 +170,9 @@ class laporanController extends Controller
             $this->sendEditNotifications($laporan, $perubahan);
         }
 
-        // Kirim notifikasi jika status ditugaskan
-        if ($request->status == 'Ditugaskan') {
-            $this->sendSupervisorNotifications($laporan);
-        }
 
         // Redirect dengan pesan sukses
-        return redirect()->route('dashboard')->with('success', 'Laporan berhasil diperbarui.');
+        return redirect()->route('dashboard')->with('success', 'Report updated successfully.');
     }
 
     public function destroy(Request $request, $id)
@@ -187,7 +180,7 @@ class laporanController extends Controller
         try {
             // Cari laporan yang akan dihapus
             $laporan = laporan::findOrFail($id);
-            
+
             // Periksa apakah laporan memiliki penyelesaian dan hapus jika ada
             if ($laporan->penyelesaian) {
                 // Hapus foto penyelesaian jika ada
@@ -199,11 +192,11 @@ class laporanController extends Controller
                         }
                     }
                 }
-                
+
                 // Hapus record penyelesaian
                 $laporan->penyelesaian->delete();
             }
-            
+
             // Hapus foto laporan jika ada
             if (!empty($laporan->Foto) && is_array($laporan->Foto)) {
                 foreach ($laporan->Foto as $foto) {
@@ -213,21 +206,21 @@ class laporanController extends Controller
                     }
                 }
             }
-            
+
             // Hapus laporan
             $laporan->delete();
-            
+
             // Return success response
             return response()->json([
                 'success' => true,
-                'message' => 'Laporan berhasil dihapus'
+                'message' => 'Report deleted successfully'
             ]);
-            
+
         } catch (\Exception $e) {
-            \Log::error('Error deleting laporan: ' . $e->getMessage());
+            Log::error('Error deleting laporan: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal menghapus laporan: ' . $e->getMessage()
+                'message' => 'Failed to delete report: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -241,18 +234,66 @@ class laporanController extends Controller
 
         // Get all areas for filter
         $areas = Area::all();
+        
+        // Data untuk grafik laporan per bulan (12 bulan terakhir)
+        $laporanPerBulan = laporan::selectRaw('MONTH(created_at) as bulan, COUNT(*) as total')
+            ->where('created_at', '>=', now()->subMonths(11))
+            ->groupBy('bulan')
+            ->orderBy('bulan')
+            ->get();
+
+        // Data untuk grafik area yang melapor per bulan
+        $areaPerBulan = laporan::join('areas', 'laporan.area_id', '=', 'areas.id')
+            ->selectRaw('areas.name as area_name, MONTH(laporan.created_at) as bulan, COUNT(*) as total')
+            ->where('laporan.created_at', '>=', now()->subMonths(11))
+            ->groupBy('areas.name', 'bulan')
+            ->orderBy('bulan')
+            ->get();
+
+        // Data untuk grafik pie category per bulan (bulan ini)
+        $categoryPerBulan = laporan::with('problemCategory')
+            ->selectRaw('problem_category_id, COUNT(*) as total')
+            ->whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->groupBy('problem_category_id')
+            ->get()
+            ->map(function($item) {
+                return [
+                    'problem_category' => $item->problemCategory,
+                    'total' => $item->total
+                ];
+            });
+
+        // Jika tidak ada data bulan ini, ambil data dari 3 bulan terakhir
+        if ($categoryPerBulan->isEmpty()) {
+            $categoryPerBulan = laporan::with('problemCategory')
+                ->selectRaw('problem_category_id, COUNT(*) as total')
+                ->where('created_at', '>=', now()->subMonths(3))
+                ->groupBy('problem_category_id')
+                ->get()
+                ->map(function($item) {
+                    return [
+                        'problem_category' => $item->problemCategory,
+                        'total' => $item->total
+                    ];
+                });
+        }
+
 
         return view('walkandtalk.dashboard', compact(
             'totalLaporan',
-            'laporanDitugaskan', 
+            'laporanDitugaskan',
             'laporanSelesai',
-            'areas'
+            'areas',
+            'laporanPerBulan',
+            'areaPerBulan',
+            'categoryPerBulan'
         ));
     }
 
     public function tindakan($id)
     {
-        $laporan = laporan::with(['area', 'penanggungJawab'])->findOrFail($id);
+        $laporan = laporan::with(['area', 'area.penanggungJawabs', 'penanggungJawab', 'problemCategory', 'penyelesaian'])->findOrFail($id);
         return view('walkandtalk.tindakan', compact('laporan'));
     }
 
@@ -272,7 +313,7 @@ class laporanController extends Controller
             $rules['deskripsi_penyelesaian'] = 'required|string';
             $rules['Foto'] = 'nullable|array';
             $rules['Foto.*'] = 'image|mimes:jpg,png,jpeg,gif,svg|max:2048';
-            
+
             $messages['Tanggal.required'] = 'Tanggal penyelesaian harus diisi.';
             $messages['deskripsi_penyelesaian.required' ]= 'Deskripsi penyelesaian harus diisi.';
         }
@@ -280,7 +321,7 @@ class laporanController extends Controller
         $request->validate($rules, $messages);
 
         $laporan = laporan::findOrFail($id);
-        
+
         if ($request->status === 'Selesai') {
             $fotoFileNames = [];
             if ($request->hasFile('Foto')) {
@@ -304,22 +345,25 @@ class laporanController extends Controller
 
         $laporan->update(['status' => $request->status]);
 
-        return redirect()->route('dashboard')->with('success', 'Status laporan berhasil diperbarui.');
+        return redirect()->route('dashboard')->with('success', 'Report status updated successfully.');
     }
 
     public function dashboardDatatables(Request $request)
     {
         // Inisialisasi query dengan filter default
-        $query = laporan::with(['area', 'penanggungJawab', 'penyelesaian'])
+        $query = laporan::with(['area', 'penanggungJawab', 'penyelesaian', 'problemCategory'])
             ->where('status', '!=', 'Selesai'); // Semua kecuali status Selesai
-        
+
         // Terapkan filter tambahan dari request
         $query = $this->applyFilters($request, $query);
 
         return DataTables::of($query)
             ->addIndexColumn()
+            ->editColumn('DT_RowIndex', function ($laporan) {
+                return '<div class="text-center fw-bold">' . $laporan->DT_RowIndex . '</div>';
+            })
             ->editColumn('Tanggal', function ($laporan) {
-                return Carbon::parse($laporan->created_at)->locale('en')->isoFormat('dddd, D MMMM YYYY');
+                return Carbon::parse($laporan->created_at)->format('l, j-n-Y');
             })
             ->addColumn('foto', function ($laporan) {
                 // Kode yang sudah ada untuk menampilkan foto
@@ -339,55 +383,58 @@ class laporanController extends Controller
                 $html = '';
                 if ($laporan->area) {
                     $areaName = $laporan->area->name;
-                    
+
                     if ($laporan->penanggungJawab) {
-                        $stationName = $laporan->penanggungJawab->station;
-                        
-                        // Jika area dan station sama persis, tampilkan hanya area
-                        if (strtolower($areaName) === strtolower($stationName)) {
+                        // Gunakan station jika tersedia, jika kosong fallback ke nama PIC
+                        $stationOrPic = trim((string)($laporan->penanggungJawab->station ?? ''));
+                        if ($stationOrPic === '') {
+                            $stationOrPic = $laporan->penanggungJawab->name ?? '';
+                        }
+
+                        if ($stationOrPic !== '') {
+                            $html = '<span class="fw-bold">' . $areaName . ' (' . e($stationOrPic) . ')</span>';
+                        } else {
                             $html = '<span class="fw-bold">' . $areaName . '</span>';
-                        } 
-                        // Jika station sudah termasuk area (misalnya QC LV sudah mencakup QC), tampilkan format Area (Station)
-                        else if (stripos($stationName, $areaName) !== false) {
-                            $html = '<span class="fw-bold">' . $areaName . ' (' . $stationName . ')</span>';
-                        } 
-                        // Format umum: Area (Station)
-                        else {
-                            $html = '<span class="fw-bold">' . $areaName . ' (' . $stationName . ')</span>';
                         }
                     } else {
-                        // Jika tidak ada station, tampilkan hanya area
-                        $html = '<span class="fw-bold">' . $areaName . '</span>';
+                        // Fallback: jika tidak ada penanggung_jawab tersimpan, coba ambil station pertama dari area terkait
+                        $firstStation = optional($laporan->area->penanggungJawabs()->orderBy('id')->first())->station;
+                        if ($firstStation) {
+                            $html = '<span class="fw-bold">' . $areaName . ' (' . e($firstStation) . ')</span>';
+                        } else {
+                            $html = '<span class="fw-bold">' . $areaName . '</span>';
+                        }
                     }
                 }
                 return $html;
             })
+            ->addColumn('problem_category', function ($laporan) {
+                if ($laporan->problemCategory) {
+                    $color = $laporan->problemCategory->color;
+                    $name = $laporan->problemCategory->name;
+                    return '<span class="badge problem-category-badge" style="background-color: ' . $color . '; color: white; max-width: 150px; white-space: normal; word-wrap: break-word; word-break: break-word; overflow-wrap: break-word; display: inline-block; line-height: 1.3; height: auto;">' . e($name) . '</span>';
+                }
+                return '<span class="text-muted">No Category</span>';
+            })
             ->addColumn('deskripsi_masalah', function ($laporan) {
                 $description = $laporan->deskripsi_masalah;
-                $maxLength = 50; // Jumlah karakter maksimum yang ditampilkan
-                
-                if (strlen($description) > $maxLength) {
-                    // Potong teks dan tambahkan tombol "Lihat Detail"
-                    $shortDescription = substr($description, 0, $maxLength) . '...';
-                    return '<div class="description-container">' . 
-                           '<span class="short-description">' . e($shortDescription) . '</span>' .
-                           '<button type="button" class="btn btn-sm btn-link view-description px-0 py-0 ms-1" ' .
-                           'data-bs-toggle="modal" data-bs-target="#descriptionModal" ' .
-                           'data-description="' . e($description) . '">' .
-                           '<i class="fas fa-eye"></i> Read More</button>' .
-                           '</div>';
-                }
-                
-                return e($description);
+                $maxLength = 80; // tampilkan ringkas di table, detail via modal row
+                $shortDescription = strlen($description) > $maxLength
+                    ? substr($description, 0, $maxLength) . '...'
+                    : $description;
+                return '<div class="description-container" title="' . e($laporan->deskripsi_masalah) . '">' . e($shortDescription) . '</div>';
+            })
+            ->addColumn('deskripsi_masalah_full', function ($laporan) {
+                return $laporan->deskripsi_masalah ?? '';
             })
             ->addColumn('tenggat_waktu', function ($laporan) {
-                return Carbon::parse($laporan->tenggat_waktu)->locale('en')->isoFormat('dddd, D MMMM YYYY');
+                return Carbon::parse($laporan->tenggat_waktu)->format('l, j-n-Y');
             })
             ->addColumn('status', function ($laporan) {
                 if ($laporan->status == 'Ditugaskan') {
-                    return '<span class="badge bg-warning">Assigned</span>';
+                    return '<span class="status-badge status-assigned"><i class="fas fa-exclamation-circle"></i> Assigned</span>';
                 } else if ($laporan->status == 'Selesai') {
-                    return '<span class="badge bg-success">Completed</span>';
+                    return '<span class="status-badge status-completed"><i class="fas fa-check-circle"></i> Completed</span>';
                 }
                 return '<span class="badge bg-secondary">' . $laporan->status . '</span>';
             })
@@ -398,39 +445,46 @@ class laporanController extends Controller
                 return '<a href="' . route('laporan.tindakan', $laporan->id) . '" class="btn btn-sm btn-primary"><i class="fas fa-tasks"></i> Action</a>';
             })
             ->addColumn('aksi', function ($laporan) {
-                // Implementasi dropdown untuk aksi
-                $dropdownId = 'dropdown-' . $laporan->id;
+                // Tombol Edit dan Delete terpisah
+                $editUrl = route('index.edit', $laporan->id);
+                $deleteUrl = route('laporan.destroy', $laporan->id);
                 
-                $dropdownHtml = '
-                <div class="dropdown">
-                    <button class="btn btn-sm btn-secondary dropdown-toggle" type="button" id="' . $dropdownId . '" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="fas fa-ellipsis-v"></i> Modify
+                $actionHtml = '
+                <div class="d-flex gap-1">
+                    <a href="' . $editUrl . '" class="btn btn-sm btn-warning" title="Edit">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <button class="btn btn-sm btn-danger delete-btn" 
+                            data-id="' . $laporan->id . '" 
+                            data-delete-url="' . $deleteUrl . '" 
+                            data-return-url="' . url()->current() . '"
+                            title="Delete">
+                        <i class="fas fa-trash"></i>
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="' . $dropdownId . '">
-                        <li><a class="dropdown-item" href="' . route('index.edit', $laporan->id) . '"><i class="fas fa-edit me-2 text-warning"></i> Edit</a></li>
-                        <li><button class="dropdown-item delete-btn" data-id="' . $laporan->id . '" data-delete-url="' . route('laporan.destroy', $laporan->id) . '" data-return-url="' . url()->current() . '"><i class="fas fa-trash me-2 text-danger"></i> Delete</button></li>
-                    </ul>
                 </div>';
-                
-                return $dropdownHtml;
+
+                return $actionHtml;
             })
-            ->rawColumns(['foto', 'departemen', 'deskripsi_masalah', 'status', 'penyelesaian', 'aksi'])
+            ->rawColumns(['foto', 'departemen', 'problem_category', 'deskripsi_masalah', 'status', 'penyelesaian', 'aksi'])
             ->make(true);
     }
 
     public function sejarahDatatables(Request $request)
     {
         // Inisialisasi query dengan filter default status 'Selesai'
-        $query = laporan::with(['area', 'penanggungJawab', 'penyelesaian'])
+        $query = laporan::with(['area', 'penanggungJawab', 'penyelesaian', 'problemCategory'])
             ->where('status', 'Selesai'); // Filter default untuk halaman Sejarah
-        
+
         // Terapkan filter tambahan dari request
         $query = $this->applyFilters($request, $query);
 
         return DataTables::of($query)
             ->addIndexColumn()
+            ->editColumn('DT_RowIndex', function ($laporan) {
+                return '<div class="text-center fw-bold">' . $laporan->DT_RowIndex . '</div>';
+            })
             ->editColumn('Tanggal', function ($laporan) {
-                return Carbon::parse($laporan->created_at)->locale('en')->isoFormat('dddd, D MMMM YYYY');
+                return Carbon::parse($laporan->created_at)->format('l, j-n-Y');
             })
             ->addColumn('foto', function ($laporan) {
                 // Kode yang sudah ada untuk menampilkan foto
@@ -450,47 +504,52 @@ class laporanController extends Controller
                 $html = '';
                 if ($laporan->area) {
                     $areaName = $laporan->area->name;
-                    
+
                     if ($laporan->penanggungJawab) {
-                        $stationName = $laporan->penanggungJawab->station;
-                        
-                        // Jika area dan station sama persis, tampilkan hanya area
-                        if (strtolower($areaName) === strtolower($stationName)) {
+                        // Gunakan station jika tersedia, jika kosong fallback ke nama PIC
+                        $stationOrPic = trim((string)($laporan->penanggungJawab->station ?? ''));
+                        if ($stationOrPic === '') {
+                            $stationOrPic = $laporan->penanggungJawab->name ?? '';
+                        }
+
+                        if ($stationOrPic !== '') {
+                            $html = '<span class="fw-bold">' . $areaName . ' (' . e($stationOrPic) . ')</span>';
+                        } else {
                             $html = '<span class="fw-bold">' . $areaName . '</span>';
-                        } 
-                        // Jika station sudah termasuk area (misalnya QC LV sudah mencakup QC), tampilkan format Area (Station)
-                        else if (stripos($stationName, $areaName) !== false) {
-                            $html = '<span class="fw-bold">' . $areaName . ' (' . $stationName . ')</span>';
-                        } 
-                        // Format umum: Area (Station)
-                        else {
-                            $html = '<span class="fw-bold">' . $areaName . ' (' . $stationName . ')</span>';
                         }
                     } else {
-                        // Jika tidak ada station, tampilkan hanya area
-                        $html = '<span class="fw-bold">' . $areaName . '</span>';
+                        // Fallback: jika tidak ada penanggung_jawab tersimpan, coba ambil station pertama dari area terkait
+                        $firstStation = optional($laporan->area->penanggungJawabs()->orderBy('id')->first())->station;
+                        if ($firstStation) {
+                            $html = '<span class="fw-bold">' . $areaName . ' (' . e($firstStation) . ')</span>';
+                        } else {
+                            $html = '<span class="fw-bold">' . $areaName . '</span>';
+                        }
                     }
                 }
                 return $html;
             })
+            ->addColumn('problem_category', function ($laporan) {
+                if ($laporan->problemCategory) {
+                    $color = $laporan->problemCategory->color;
+                    $name = $laporan->problemCategory->name;
+                    return '<span class="badge problem-category-badge" style="background-color: ' . $color . '; color: white; max-width: 150px; white-space: normal; word-wrap: break-word; word-break: break-word; overflow-wrap: break-word; display: inline-block; line-height: 1.3; height: auto;">' . e($name) . '</span>';
+                }
+                return '<span class="text-muted">No Category</span>';
+            })
             ->addColumn('deskripsi_masalah', function ($laporan) {
-                // Debug deskripsi
-                \Log::info('Deskripsi masalah ID '.$laporan->id.': '.$laporan->deskripsi_masalah);
-                
-                // ... kode yang sudah ada untuk menampilkan deskripsi
-                $shortDesc = \Illuminate\Support\Str::limit($laporan->deskripsi_masalah, 50, '...');
-                return '<div class="description-container">
-                    <span class="short-description">'.$shortDesc.'</span>
-                    <button class="btn btn-sm btn-link view-description" 
-                        data-description="'.htmlspecialchars($laporan->deskripsi_masalah).'" 
-                        data-bs-toggle="modal" 
-                        data-bs-target="#descriptionModal">
-                        Read More
-                    </button>
-                </div>';
+                $description = $laporan->deskripsi_masalah;
+                $maxLength = 80;
+                $shortDescription = strlen($description) > $maxLength
+                    ? substr($description, 0, $maxLength) . '...'
+                    : $description;
+                return '<div class="description-container" title="' . e($laporan->deskripsi_masalah) . '">' . e($shortDescription) . '</div>';
+            })
+            ->addColumn('deskripsi_masalah_full', function ($laporan) {
+                return $laporan->deskripsi_masalah ?? '';
             })
             ->addColumn('tenggat_waktu', function ($laporan) {
-                return Carbon::parse($laporan->tenggat_waktu)->locale('en')->isoFormat('dddd, D MMMM YYYY');
+                return Carbon::parse($laporan->tenggat_waktu)->format('l, j-n-Y');
             })
             ->addColumn('status', function ($laporan) {
                 if ($laporan->status == 'Ditugaskan') {
@@ -507,23 +566,27 @@ class laporanController extends Controller
                 return '<a href="' . route('laporan.tindakan', $laporan->id) . '" class="btn btn-sm btn-primary"><i class="fas fa-tasks"></i> Action</a>';
             })
             ->addColumn('aksi', function ($laporan) {
-                // Implementasi dropdown untuk aksi
-                $dropdownId = 'dropdown-' . $laporan->id;
+                // Tombol Edit dan Delete terpisah
+                $editUrl = route('index.edit', $laporan->id);
+                $deleteUrl = route('laporan.destroy', $laporan->id);
                 
-                $dropdownHtml = '
-                <div class="dropdown">
-                    <button class="btn btn-sm btn-secondary dropdown-toggle" type="button" id="' . $dropdownId . '" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="fas fa-ellipsis-v"></i> Modify
+                $actionHtml = '
+                <div class="d-flex gap-1">
+                    <a href="' . $editUrl . '" class="btn btn-sm btn-warning" title="Edit">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <button class="btn btn-sm btn-danger delete-btn" 
+                            data-id="' . $laporan->id . '" 
+                            data-delete-url="' . $deleteUrl . '" 
+                            data-return-url="' . url()->current() . '"
+                            title="Delete">
+                        <i class="fas fa-trash"></i>
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="' . $dropdownId . '">
-                        <li><a class="dropdown-item" href="' . route('index.edit', $laporan->id) . '"><i class="fas fa-edit me-2 text-warning"></i> Edit</a></li>
-                        <li><button class="dropdown-item delete-btn" data-id="' . $laporan->id . '" data-delete-url="' . route('laporan.destroy', $laporan->id) . '" data-return-url="' . url()->current() . '"><i class="fas fa-trash me-2 text-danger"></i> Delete</button></li>
-                    </ul>
                 </div>';
-                
-                return $dropdownHtml;
+
+                return $actionHtml;
             })
-            ->rawColumns(['foto', 'departemen', 'deskripsi_masalah', 'status', 'penyelesaian', 'aksi'])
+            ->rawColumns(['foto', 'departemen', 'problem_category', 'deskripsi_masalah', 'status', 'penyelesaian', 'aksi'])
             ->make(true);
     }
 
@@ -531,17 +594,17 @@ class laporanController extends Controller
     {
         // Cast $id ke integer untuk memastikan perbandingan numerik yang benar
         $id = (int)$id;
-        
+
         // Check if this is an area or penanggung_jawab
         if ($id <= 3) { // IDs 1-3 are areas
             $area = Area::with('penanggungJawabs')->find($id);
-            
+
             if (!$area) {
                 return response()->json([
                     'error' => 'Area tidak ditemukan'
                 ], 404);
             }
-            
+
             // Return all penanggung jawab names for this area
             $supervisorNames = $area->penanggungJawabs->pluck('name')->toArray();
             return response()->json([
@@ -550,13 +613,13 @@ class laporanController extends Controller
         } else {
             // This is a specific penanggung_jawab
             $penanggungJawab = PenanggungJawab::find($id);
-            
+
             if (!$penanggungJawab) {
                 return response()->json([
                     'error' => 'Penanggung jawab tidak ditemukan'
                 ], 404);
             }
-            
+
             // Return only this specific penanggung_jawab name
             return response()->json([
                 'group_members' => [$penanggungJawab->name]
@@ -567,14 +630,14 @@ class laporanController extends Controller
     public function getPenyelesaian($id)
     {
         $laporan = laporan::with('penyelesaian')->find($id);
-        
+
         if (!$laporan || !$laporan->penyelesaian) {
             return response()->json(['success' => false]);
         }
 
         $penyelesaian = $laporan->penyelesaian;
         $fotoUrls = [];
-        
+
         if (!empty($penyelesaian->Foto) && is_array($penyelesaian->Foto)) {
             foreach ($penyelesaian->Foto as $foto) {
                 $fotoUrls[] = asset('images/' . $foto);
@@ -594,32 +657,32 @@ class laporanController extends Controller
     {
         try {
             // Inisialisasi query
-            $query = laporan::with(['area', 'penanggungJawab', 'penyelesaian'])
+            $query = laporan::with(['area', 'penanggungJawab', 'penyelesaian', 'problemCategory'])
                 ->where('status', 'Selesai');
-            
+
             // Terapkan filter yang sama dengan tampilan sejarah
             $query = $this->applyFilters($request, $query);
-            
+
             // Get data
             $laporan = $query->get();
-            
+
             // Format periode untuk judul
             $periode = 'Semua Waktu';
             if ($request->filled('start_date') && $request->filled('end_date')) {
-                $startDate = Carbon::parse($request->start_date)->locale('en')->isoFormat('D MMMM YYYY');
-                $endDate = Carbon::parse($request->end_date)->locale('en')->isoFormat('D MMMM YYYY');
+                $startDate = Carbon::parse($request->start_date)->format('j-n-Y');
+                $endDate = Carbon::parse($request->end_date)->format('j-n-Y');
                 $periode = $startDate . ' - ' . $endDate;
             }
-            
+
             // Generate PDF
             $pdf = PDF::loadView('walkandtalk.pdf.laporan-selesai', compact('laporan', 'periode'));
             $pdf->setPaper('a4', 'landscape');
-            
+
             return $pdf->download('Laporan-Safety-Walk-and-Talk-' . date('Y-m-d') . '.pdf');
         } catch (\Exception $e) {
             // Log error
-            \Log::error('PDF Generation Error: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Gagal mengunduh laporan: ' . $e->getMessage());
+            Log::error('PDF Generation Error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to download report: ' . $e->getMessage());
         }
     }
 
@@ -632,34 +695,36 @@ class laporanController extends Controller
             $endDate = Carbon::parse($request->end_date)->endOfDay();
             $query->whereBetween('created_at', [$startDate, $endDate]);
         }
-        
+
         // Filter area
         if ($request->filled('area_id')) {
             $query->where('area_id', $request->area_id);
         }
-        
+
         // Filter penanggung jawab / station
         if ($request->filled('penanggung_jawab_id')) {
             $query->where('penanggung_jawab_id', $request->penanggung_jawab_id);
         }
-        
-        // Filter kategori masalah
-        if ($request->filled('kategori')) {
-            $query->where('kategori_masalah', $request->kategori);
+
+        // Filter problem category
+        if ($request->filled('problem_category_id')) {
+            $query->where('problem_category_id', $request->problem_category_id);
         }
-        
+
         // Filter status (hanya jika secara eksplisit diminta dari form filter)
         if ($request->filled('status')) {
             // Override filter default jika pengguna secara eksplisit memilih filter status
             $query->where('status', $request->status);
         }
-        
+
         // Filter tenggat waktu berdasarkan bulan
         if ($request->filled('tenggat_bulan')) {
             $month = $request->tenggat_bulan;
             $query->whereMonth('tenggat_waktu', $month);
         }
-        
+
+
+
         return $query;
     }
 
@@ -670,10 +735,10 @@ class laporanController extends Controller
     {
         try {
             $laporan = laporan::with(['area', 'penanggungJawab'])->find($laporan->id);
-        
+
             // Tentukan penerima email berdasarkan penanggung_jawab atau area
             $recipients = [];
-        
+
             if ($laporan->penanggungJawab && $laporan->penanggungJawab->email) {
                 // Jika ada penanggung jawab spesifik
                 $recipients[] = $laporan->penanggungJawab->email;
@@ -685,23 +750,23 @@ class laporanController extends Controller
                     }
                 }
             }
-        
+
             // Hapus duplikat email
             $recipients = array_unique($recipients);
-        
+
             // Kirim email ke semua penerima
             foreach ($recipients as $email) {
                 Mail::to($email)->send(new LaporanDitugaskanSupervisor($laporan));
             }
         } catch (\Exception $e) {
             // Log error tapi jangan hentikan aplikasi
-            \Log::error("Error sending notification email: " . $e->getMessage());
+            Log::error("Error sending notification email: " . $e->getMessage());
         }
     }
 
     /**
      * Deteksi perubahan yang terjadi pada laporan
-     * 
+     *
      * @param array $oldData Data laporan lama
      * @param array $newData Data laporan baru
      * @param string $oldArea Nama area lama
@@ -711,15 +776,14 @@ class laporanController extends Controller
     private function detectChanges(array $oldData, array $newData, string $oldArea, string $oldPenanggungJawab): array
     {
         $perubahan = [];
-        
+
         // Buat nama-nama field yang lebih user-friendly
         $fieldNames = [
-            'kategori_masalah' => 'Kategori Masalah',
+            'problem_category_id' => 'Problem Category',
             'deskripsi_masalah' => 'Deskripsi Masalah',
-            'status' => 'Status',
             'tenggat_waktu' => 'Tenggat Waktu',
         ];
-        
+
         // Periksa perubahan area
         if ($oldData['area_id'] != $newData['area_id']) {
             $newArea = Area::find($newData['area_id'])->name ?? '-';
@@ -728,7 +792,7 @@ class laporanController extends Controller
                 'new' => $newArea
             ];
         }
-        
+
         // Periksa perubahan penanggung jawab
         if ($oldData['penanggung_jawab_id'] != $newData['penanggung_jawab_id']) {
             $newPJ = PenanggungJawab::find($newData['penanggung_jawab_id'])->name ?? '-';
@@ -737,9 +801,9 @@ class laporanController extends Controller
                 'new' => $newPJ
             ];
         }
-        
+
         // Periksa perubahan pada field lainnya
-        foreach (['kategori_masalah', 'deskripsi_masalah', 'status'] as $field) {
+        foreach (['problem_category_id', 'deskripsi_masalah'] as $field) {
             if ($oldData[$field] != $newData[$field]) {
                 $perubahan[$fieldNames[$field]] = [
                     'old' => $oldData[$field],
@@ -747,7 +811,7 @@ class laporanController extends Controller
                 ];
             }
         }
-        
+
         // Periksa perubahan tanggal (format agar lebih mudah dibaca)
         if ($oldData['tenggat_waktu'] != $newData['tenggat_waktu']) {
             $perubahan[$fieldNames['tenggat_waktu']] = [
@@ -755,13 +819,13 @@ class laporanController extends Controller
                 'new' => Carbon::parse($newData['tenggat_waktu'])->format('d/m/Y')
             ];
         }
-        
+
         return $perubahan;
     }
 
     /**
      * Helper method to send notifications about edited reports
-     * 
+     *
      * @param laporan $laporan
      * @param array $perubahan
      */
@@ -770,7 +834,7 @@ class laporanController extends Controller
         try {
             // Tentukan penerima email berdasarkan penanggung_jawab atau area
             $recipients = [];
-            
+
             if ($laporan->penanggungJawab && $laporan->penanggungJawab->email) {
                 // Jika ada penanggung jawab spesifik
                 $recipients[] = $laporan->penanggungJawab->email;
@@ -782,17 +846,17 @@ class laporanController extends Controller
                     }
                 }
             }
-            
+
             // Hapus duplikat email
             $recipients = array_unique($recipients);
-            
+
             // Kirim email ke semua penerima
             foreach ($recipients as $email) {
                 Mail::to($email)->send(new LaporanDieditSupervisor($laporan, $perubahan));
             }
         } catch (\Exception $e) {
             // Log error tapi jangan hentikan aplikasi
-            \Log::error("Error sending edit notification email: " . $e->getMessage());
+            Log::error("Error sending edit notification email: " . $e->getMessage());
         }
     }
 
@@ -800,7 +864,7 @@ class laporanController extends Controller
     {
         // Cast to integer untuk memastikan perbandingan numerik yang benar
         $areaId = (int)$areaId;
-        
+
         // Cek jika areaId lebih besar dari 3, ini adalah ID penanggung jawab
         if ($areaId > 3) {
             $pj = PenanggungJawab::find($areaId);
@@ -810,28 +874,28 @@ class laporanController extends Controller
                     'message' => 'Penanggung jawab tidak ditemukan'
                 ], 404);
             }
-            
+
             // Untuk Station, hanya return penanggung jawab spesifik
             return response()->json([
                 'success' => true,
                 'supervisors' => [$pj->name]
             ]);
         }
-        
+
         // Jika areaId 1-3, ini adalah ID area
         $area = Area::find($areaId);
-        
+
         if (!$area) {
             return response()->json([
                 'success' => false,
                 'message' => 'Area tidak ditemukan'
             ], 404);
         }
-        
+
         // Untuk Area, return semua penanggung jawab di area tersebut
         $penanggungJawabs = $area->penanggungJawabs;
         $supervisors = $penanggungJawabs->pluck('name')->toArray();
-        
+
         return response()->json([
             'success' => true,
             'supervisors' => $supervisors
