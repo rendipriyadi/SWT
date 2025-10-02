@@ -14,7 +14,7 @@
                 <!-- Date Range -->
                 <div class="col-md-6 col-lg-3 mb-1">
                     <label class="form-label small mb-1">Report Date</label>
-                    <div class="input-group input-group-sm">
+                    <div class="input-group input-group-sm elegant-date-range">
                         <input type="date" class="form-control form-control-sm filter-control" id="start_date" name="start_date">
                         <span class="input-group-text py-0">to</span>
                         <input type="date" class="form-control form-control-sm filter-control" id="end_date" name="end_date">

@@ -282,7 +282,7 @@ class laporanController extends Controller
 
         return view('walkandtalk.dashboard', compact(
             'totalLaporan',
-            'laporanDitugaskan',
+            'laporanInProgress',
             'laporanSelesai',
             'areas',
             'laporanPerBulan',

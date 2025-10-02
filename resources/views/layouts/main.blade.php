@@ -28,6 +28,8 @@
     <link href="{{ asset('css/datatables-responsive.min.css') }}" rel="stylesheet">
     <!-- Bootstrap Datepicker CSS -->
     <link href="{{ asset('css/bootstrap-datepicker.min.css') }}" rel="stylesheet">
+    <!-- Elegant Datepicker CSS -->
+    <link href="{{ asset('css/elegant-datepicker.css') }}?v={{ time() }}" rel="stylesheet">
     
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="{{ asset('images/favicon.png') }}">
@@ -1104,6 +1106,8 @@
     <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
     <!-- Bootstrap Datepicker JS -->
     <script src="{{ asset('js/bootstrap-datepicker.min.js') }}"></script>
+    <!-- Elegant Datepicker JS -->
+    <script src="{{ asset('js/elegant-datepicker.js') }}?v={{ time() }}"></script>
     <script src="{{ asset('js/scripts.js') }}?v={{ time() }}_{{ rand(1000, 9999) }}"></script>
     <script src="{{ asset('js/area-station.js') }}?v={{ time() }}_{{ rand(1000, 9999) }}"></script>
     <script src="{{ asset('js/filter-area-station.js') }}?v={{ time() }}_{{ rand(1000, 9999) }}"></script>

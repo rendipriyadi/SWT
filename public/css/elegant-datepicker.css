@@ -1,0 +1,293 @@
+/* Elegant Date Picker Styling */
+.elegant-date-input {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.elegant-date-input .form-control {
+    background: #fff;
+    border: 1px solid #e0e6ed;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 14px;
+    color: #495057;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+}
+
+.elegant-date-input .form-control:hover {
+    border-color: #007bff;
+    box-shadow: 0 4px 8px rgba(0,123,255,0.1);
+}
+
+.elegant-date-input .form-control:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+    outline: none;
+}
+
+.elegant-date-input .calendar-icon {
+    position: absolute;
+    right: 12px;
+    color: #6c757d;
+    pointer-events: none;
+    z-index: 2;
+    transition: color 0.3s ease;
+}
+
+.elegant-date-input:hover .calendar-icon {
+    color: #007bff;
+}
+
+/* Custom Bootstrap Datepicker Styling */
+.datepicker {
+    border-radius: 12px !important;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.15) !important;
+    border: none !important;
+    overflow: hidden;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.datepicker-dropdown {
+    padding: 0 !important;
+}
+
+.datepicker table {
+    margin: 0 !important;
+}
+
+.datepicker .datepicker-switch,
+.datepicker .prev,
+.datepicker .next {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white !important;
+    border: none !important;
+    font-weight: 600;
+    text-shadow: none !important;
+    border-radius: 0 !important;
+}
+
+.datepicker .datepicker-switch:hover,
+.datepicker .prev:hover,
+.datepicker .next:hover {
+    background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%) !important;
+    color: white !important;
+}
+
+.datepicker thead tr:first-child th {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white !important;
+    border: none !important;
+    padding: 12px 8px;
+}
+
+.datepicker thead tr:last-child th {
+    background: #f8f9fa !important;
+    color: #6c757d !important;
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 8px;
+    border: none !important;
+}
+
+.datepicker tbody td {
+    border: none !important;
+    padding: 0 !important;
+}
+
+.datepicker tbody td.day {
+    width: 36px !important;
+    height: 36px !important;
+    line-height: 36px !important;
+    border-radius: 8px !important;
+    margin: 2px !important;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.datepicker tbody td.day:hover {
+    background: #e3f2fd !important;
+    color: #1976d2 !important;
+    transform: scale(1.05);
+}
+
+.datepicker tbody td.today {
+    background: linear-gradient(135deg, #42a5f5 0%, #1976d2 100%) !important;
+    color: white !important;
+    font-weight: 600;
+}
+
+.datepicker tbody td.today:hover {
+    background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%) !important;
+    transform: scale(1.05);
+}
+
+.datepicker tbody td.active {
+    background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%) !important;
+    color: white !important;
+    font-weight: 600;
+}
+
+.datepicker tbody td.active:hover {
+    background: linear-gradient(135deg, #388e3c 0%, #2e7d32 100%) !important;
+    transform: scale(1.05);
+}
+
+.datepicker tbody td.disabled {
+    color: #dee2e6 !important;
+    cursor: not-allowed !important;
+}
+
+.datepicker tbody td.disabled:hover {
+    background: transparent !important;
+    transform: none !important;
+}
+
+/* Dark mode support */
+:root[data-theme="dark"] .elegant-date-input .form-control {
+    background: var(--bg-card);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+:root[data-theme="dark"] .elegant-date-input .form-control:hover {
+    border-color: #4dabf7;
+    box-shadow: 0 4px 8px rgba(77, 171, 247, 0.1);
+}
+
+:root[data-theme="dark"] .elegant-date-input .form-control:focus {
+    border-color: #4dabf7;
+    box-shadow: 0 0 0 3px rgba(77, 171, 247, 0.1);
+}
+
+:root[data-theme="dark"] .elegant-date-input .calendar-icon {
+    color: var(--text-secondary);
+}
+
+:root[data-theme="dark"] .elegant-date-input:hover .calendar-icon {
+    color: #4dabf7;
+}
+
+:root[data-theme="dark"] .datepicker {
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+:root[data-theme="dark"] .datepicker thead tr:last-child th {
+    background: var(--bg-secondary) !important;
+    color: var(--text-secondary) !important;
+}
+
+:root[data-theme="dark"] .datepicker tbody td.day {
+    color: var(--text-primary) !important;
+}
+
+:root[data-theme="dark"] .datepicker tbody td.day:hover {
+    background: rgba(77, 171, 247, 0.1) !important;
+    color: #4dabf7 !important;
+}
+
+/* Animation for datepicker show/hide */
+.datepicker {
+    animation: fadeInUp 0.3s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Input group styling for date inputs */
+.elegant-date-group {
+    position: relative;
+}
+
+.elegant-date-group .input-group-text {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: 1px solid #667eea;
+    color: white;
+    border-radius: 0 8px 8px 0;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.elegant-date-group .input-group-text:hover {
+    background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+    transform: scale(1.02);
+}
+
+.elegant-date-group .form-control {
+    border-radius: 8px 0 0 8px;
+    border-right: none;
+}
+
+.elegant-date-group .form-control:focus {
+    border-right: none;
+    box-shadow: none;
+}
+
+.elegant-date-group .form-control:focus + .input-group-text {
+    border-color: #007bff;
+}
+
+/* Date range styling for filters */
+.elegant-date-range .form-control {
+    border-radius: 6px;
+    border: 1px solid #e0e6ed;
+    transition: all 0.3s ease;
+}
+
+.elegant-date-range .form-control:hover {
+    border-color: #007bff;
+    box-shadow: 0 2px 4px rgba(0,123,255,0.1);
+}
+
+.elegant-date-range .form-control:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0,123,255,0.1);
+}
+
+.elegant-date-range .input-group-text {
+    background: #f8f9fa;
+    border: 1px solid #e0e6ed;
+    color: #6c757d;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+/* Small size adjustments for filter inputs */
+.input-group-sm .elegant-date-input .form-control,
+.elegant-date-range .form-control-sm {
+    padding: 6px 10px;
+    font-size: 13px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .elegant-date-input .form-control {
+        padding: 10px 14px;
+        font-size: 16px; /* Prevents zoom on iOS */
+    }
+    
+    .datepicker tbody td.day {
+        width: 32px !important;
+        height: 32px !important;
+        line-height: 32px !important;
+        font-size: 13px;
+    }
+    
+    .elegant-date-range .form-control-sm {
+        font-size: 16px; /* Prevents zoom on iOS */
+    }
+}

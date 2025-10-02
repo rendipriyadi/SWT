@@ -112,7 +112,14 @@
 
             <div class="mb-3">
                 <label for="tenggat_waktu" class="form-label">Deadline:</label>
-                <input type="date" class="form-control @error('tenggat_waktu') is-invalid @enderror" id="tenggat_waktu" name="tenggat_waktu" value="{{ \Carbon\Carbon::parse($laporan->tenggat_waktu)->format('Y-m-d') }}" required>
+                <div class="elegant-date-group">
+                    <div class="input-group">
+                        <input type="date" class="form-control deadline-date @error('tenggat_waktu') is-invalid @enderror" id="tenggat_waktu" name="tenggat_waktu" value="{{ \Carbon\Carbon::parse($laporan->tenggat_waktu)->format('Y-m-d') }}" required>
+                        <span class="input-group-text">
+                            <i class="fas fa-calendar-alt"></i>
+                        </span>
+                    </div>
+                </div>
                 @error('tenggat_waktu')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror

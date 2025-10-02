@@ -113,12 +113,14 @@
             @csrf
             <div class="mb-3">
                 <label for="Tanggal" class="form-label fw-semibold">Completion Date <span class="text-danger">*</span></label>
-                <div class="input-group">
-                    <input type="text" class="form-control @error('Tanggal') is-invalid @enderror" id="Tanggal_display" placeholder="dd/mm/yyyy" readonly required>
-                    <input type="hidden" id="Tanggal" name="Tanggal" value="{{ old('Tanggal') }}">
-                    <span class="input-group-text" id="datePickerBtn">
-                        <i class="fas fa-calendar-alt"></i>
-                    </span>
+                <div class="elegant-date-group">
+                    <div class="input-group">
+                        <input type="text" class="form-control completion-date @error('Tanggal') is-invalid @enderror" id="Tanggal_display" placeholder="Select completion date..." readonly required>
+                        <input type="hidden" id="Tanggal" name="Tanggal" value="{{ old('Tanggal') }}">
+                        <span class="input-group-text">
+                            <i class="fas fa-calendar-alt"></i>
+                        </span>
+                    </div>
                 </div>
                 @error('Tanggal')
                     <div class="invalid-feedback">{{ $message }}</div>
