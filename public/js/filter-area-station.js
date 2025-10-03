@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Update station dropdown berdasarkan area yang dipilih
     function updateStations(areaId) {
         // Reset station dropdown
-        stationSelect.innerHTML = '<option value="">Semua Station</option>';
+        stationSelect.innerHTML = '<option value="">All Station</option>';
         
         // Jika tidak ada area yang dipilih
         if (!areaId) {

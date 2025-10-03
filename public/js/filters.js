@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Reset station dropdown to default
             const stationSelect = document.getElementById('penanggung_jawab_id');
             if (stationSelect) {
-                stationSelect.innerHTML = '<option value="">Semua Station</option>';
+                stationSelect.innerHTML = '<option value="">All Station</option>';
             }
             
             // Refresh table with cleared filters

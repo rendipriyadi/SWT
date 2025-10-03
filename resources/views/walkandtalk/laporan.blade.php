@@ -35,7 +35,7 @@
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
                 <div id="foto-preview-container" class="mt-3 d-flex flex-wrap gap-2"></div>
-                <button type="button" class="btn btn-outline-secondary mt-2" id="openCameraBtn">
+                <button type="button" class="btn btn-outline-secondary mt-2" id="openCameraBtn" style="border: 2px solid #6c757d;">
                     <i class="fas fa-camera me-2"></i>Take Photo
                 </button>
                 <div id="cameraContainer" style="display:none; margin-top:10px;">
@@ -114,12 +114,7 @@
                 <div class="col-md-6">
                     <label for="tenggat_waktu" class="form-label fw-semibold">Deadline <span class="text-danger">*</span></label>
                     <div class="elegant-date-group">
-                        <div class="input-group">
-                            <input type="date" class="form-control deadline-date @error('tenggat_waktu') is-invalid @enderror" id="tenggat_waktu" name="tenggat_waktu" value="{{ old('tenggat_waktu') }}" required>
-                            <span class="input-group-text">
-                                <i class="fas fa-calendar-alt"></i>
-                            </span>
-                        </div>
+                        <input type="date" class="form-control deadline-date @error('tenggat_waktu') is-invalid @enderror" id="tenggat_waktu" name="tenggat_waktu" value="{{ old('tenggat_waktu') }}" required>
                     </div>
                     @error('tenggat_waktu')
                         <div class="invalid-feedback">{{ $message }}</div>
