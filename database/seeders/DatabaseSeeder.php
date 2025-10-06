@@ -24,8 +24,7 @@ class DatabaseSeeder extends Seeder
             AreaSeeder::class,
             PenanggungJawabSeeder::class,
             ProblemCategorySeeder::class,
-            CleanupSoftDeletedSeeder::class,
-            // LaporanSeeder::class, // Commented out - let users start with clean data
+            
         ]);
     }
 }
