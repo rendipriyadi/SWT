@@ -40,14 +40,15 @@
     <div class="row">
         @forelse($areas as $index => $area)
             <div class="col-lg-6 col-xl-4 mb-4">
-                <div class="card h-100 area-card">
-                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                        <h6 class="mb-0 fw-bold">
-                            <i class="fas fa-map-marker-alt me-2"></i>{{ $area->name }}
-                        </h6>
-                        <span class="badge bg-light text-primary">{{ $area->penanggungJawabs->count() }} Station</span>
-                    </div>
-                    <div class="card-body">
+                <div class="card h-100 area-card position-relative">
+                    <a href="{{ route('master-data.area.show', $area->id) }}" class="text-reset text-decoration-none d-block">
+                        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0 fw-bold">
+                                <i class="fas fa-map-marker-alt me-2"></i>{{ $area->name }}
+                            </h6>
+                            <span class="badge bg-light text-primary">{{ $area->penanggungJawabs->count() }} Station</span>
+                        </div>
+                        <div class="card-body">
                         @if($area->penanggungJawabs->count() > 0)
                             <div class="mb-3">
                                 <h6 class="text-muted mb-2 small">STATION & PERSON IN CHARGE</h6>
@@ -68,9 +69,14 @@
                                 <p class="text-muted mb-0">There is no station yet</p>
                             </div>
                         @endif
-                    </div>
-                    <div class="card-footer bg-transparent border-0 pt-0">
+                        </div>
+                    </a>
+                    <div class="card-footer bg-transparent border-0 pt-0 position-relative">
                         <div class="d-flex gap-2">
+                            <a href="{{ route('master-data.area.show', $area->id) }}" 
+                               class="btn btn-outline-info btn-sm flex-fill">
+                                <i class="fas fa-eye me-1"></i>View Details
+                            </a>
                             <a href="{{ route('master-data.area.edit', $area->id) }}" 
                                class="btn btn-outline-warning btn-sm flex-fill">
                                 <i class="fas fa-edit me-1"></i>Edit

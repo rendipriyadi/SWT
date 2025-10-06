@@ -70,6 +70,12 @@ class AreaController extends Controller
         }
     }
 
+    public function show(Area $area)
+    {
+        $area->load('penanggungJawabs');
+        return view('master-data.area.show', compact('area'));
+    }
+
     public function edit(Area $area)
     {
         $area->load('penanggungJawabs');

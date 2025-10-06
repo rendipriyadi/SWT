@@ -3,11 +3,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\SoftDeletes;
+// SoftDeletes dihapus karena kolom deleted_at telah di-drop
 
 class laporan extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
 
     // Tentukan nama tabel secara eksplisit
     protected $table = 'laporan';
