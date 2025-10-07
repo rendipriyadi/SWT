@@ -15,6 +15,7 @@ class PenanggungJawab extends Model
         'area_id',
         'station',
         'name',
+        'email',
     ];
     
     /**

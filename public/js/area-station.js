@@ -5,45 +5,21 @@ document.addEventListener('DOMContentLoaded', function() {
     const stationSelect = document.getElementById('penanggung_jawab_id');
     const supervisorInput = document.getElementById('supervisor');
 
-    // Data mapping area ke stations dan penanggung jawab
-    const areaStationMap = {
-        // Manufaktur (ID: 1)
-        '1': {
-            allSupervisors: 'Aris Setiawan, Rachmad Haryono, Hadi Djohansyah, Helmy Sundani, Sarifudin Raysan, Bayu Putra Trianto, Joni Rahman, Tri Widardi, Asept Surachaman',
-            stations: [
-                { id: 1, name: 'LV Assembly', supervisor: 'Aris Setiawan' },
-                { id: 2, name: 'LV Box', supervisor: 'Rachmad Haryono' },
-                { id: 3, name: 'LV Module', supervisor: 'Hadi Djohansyah' },
-                { id: 4, name: 'MV Assembly', supervisor: 'Helmy Sundani' },
-                { id: 5, name: 'Prefabrication', supervisor: 'Sarifudin Raysan' },
-                { id: 6, name: 'Packing', supervisor: 'Bayu Putra Trianto' },
-                { id: 7, name: 'Tool Store', supervisor: 'Joni Rahman' },
-                { id: 8, name: 'General', supervisor: 'Tri Widardi' },
-                { id: 9, name: 'General', supervisor: 'Asept Surachaman' }
-            ]
-        },
-        // QC (ID: 2)
-        '2': {
-            allSupervisors: 'Ishak Marthen, Sirad Nova Mihardi, Arif Hadi Rizali',
-            stations: [
-                { id: 10, name: 'QC LV', supervisor: 'Ishak Marthen' },
-                { id: 11, name: 'QC MV', supervisor: 'Sirad Nova Mihardi' },
-                { id: 12, name: 'IQC', supervisor: 'Abduh Al Agani' },
-                { id: 13, name: 'General', supervisor: 'Arif Hadi Rizali' }
-            ]
-        },
-        // Warehouse (ID: 3)
-        '3': {
-            allSupervisors: 'Suhendra, Wahyu Wahyudin',
-            stations: [
-                { id: 14, name: 'Warehouse', supervisor: 'Suhendra' },
-                { id: 15, name: 'Warehouse', supervisor: 'Wahyu Wahyudin' }
-            ]
+    // Fetch-based population from backend
+    let fetchedStations = [];
+    async function fetchStations(areaId) {
+        try {
+            const response = await fetch(`/get-penanggung-jawab/${areaId}`);
+            if (!response.ok) throw new Error('Failed to fetch stations');
+            return await response.json();
+        } catch (e) {
+            console.error(e);
+            return { stations: [], group_members: [] };
         }
-    };
+    }
 
     // Update station dropdown berdasarkan area yang dipilih
-    function updateStations(areaId) {
+    async function updateStations(areaId) {
         // Reset station dropdown
         stationSelect.innerHTML = '<option value="">Pilih Station</option>';
         
@@ -52,16 +28,13 @@ document.addEventListener('DOMContentLoaded', function() {
             supervisorInput.value = '';
             return;
         }
-        
-        // Tampilkan semua penanggung jawab area
-        supervisorInput.value = areaStationMap[areaId].allSupervisors;
-        
-        // Isi dropdown stations
-        const stations = areaStationMap[areaId].stations;
-        stations.forEach(station => {
+        const data = await fetchStations(areaId);
+        supervisorInput.value = (data.group_members || []).join(', ');
+        fetchedStations = data.stations || [];
+        fetchedStations.forEach(station => {
             const option = document.createElement('option');
             option.value = station.id;
-            option.textContent = station.name;
+            option.textContent = station.station;
             stationSelect.appendChild(option);
         });
         
@@ -84,23 +57,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // Update supervisor berdasarkan station yang dipilih
     function updateSupervisor(stationId, areaId) {
         if (!stationId || stationId === '') {
-            // Jika station tidak dipilih, tampilkan semua supervisor dari area
-            if (areaId) {
-                supervisorInput.value = areaStationMap[areaId].allSupervisors;
-            } else {
-                supervisorInput.value = '';
-            }
+            supervisorInput.value = supervisorInput.value; // keep group list
             return;
         }
-        
-        // Temukan supervisor untuk station yang dipilih
-        const area = areaStationMap[areaId];
-        if (!area) return;
-        
-        const station = area.stations.find(s => s.id == stationId);
-        if (station) {
-            supervisorInput.value = station.supervisor;
-            console.log(`Supervisor updated for station ID: ${stationId} - ${station.supervisor}`);
+        const match = fetchedStations.find(s => String(s.id) === String(stationId));
+        if (match) {
+            supervisorInput.value = match.name || '';
         }
     }
 
@@ -117,6 +79,16 @@ document.addEventListener('DOMContentLoaded', function() {
             const stationId = this.value;
             const areaId = areaSelect.value;
             updateSupervisor(stationId, areaId);
+        });
+    }
+    
+    // On submit, if station is not chosen, avoid sending an empty value
+    const form = document.getElementById('reportForm');
+    if (form && stationSelect) {
+        form.addEventListener('submit', function() {
+            if (!stationSelect.value) {
+                stationSelect.removeAttribute('name');
+            }
         });
     }
     

@@ -1,6 +1,10 @@
 document.addEventListener('DOMContentLoaded', function() {
     console.log('filter-area-station.js loaded');
 
+    // Only run on pages that contain the filter form
+    const filterForm = document.getElementById('filterForm');
+    if (!filterForm) return;
+
     const areaSelect = document.getElementById('area_id');
     const stationSelect = document.getElementById('penanggung_jawab_id');
 

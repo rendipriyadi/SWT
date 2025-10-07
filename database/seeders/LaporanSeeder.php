@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\laporan;
+use App\Models\Laporan;
 use App\Models\Penyelesaian;
 use App\Models\Area;
 use App\Models\PenanggungJawab;
@@ -36,10 +36,11 @@ class LaporanSeeder extends Seeder
             $areaId = $faker->randomElement($areaIds);
             $penanggungJawabId = $this->getRandomPenanggungJawabForArea($areaId);
             
-            laporan::create([
+            Laporan::create([
                 'tanggal' => $faker->dateTimeBetween('-2 months', 'now'),
                 'area_id' => $areaId,
                 'penanggung_jawab_id' => $penanggungJawabId,
+                'departemen_supervisor_id' => 1,
                 'problem_category_id' => $faker->randomElement($problemCategoryIds),
                 'deskripsi_masalah' => $faker->paragraph(2),
                 'tenggat_waktu' => $faker->dateTimeBetween('now', '+1 month'),
@@ -55,10 +56,11 @@ class LaporanSeeder extends Seeder
             $penanggungJawabId = $this->getRandomPenanggungJawabForArea($areaId);
             $createdAt = $faker->dateTimeBetween('-2 months', '-1 week');
             
-            $laporan = laporan::create([
+            $laporan = Laporan::create([
                 'tanggal' => $createdAt,
                 'area_id' => $areaId,
                 'penanggung_jawab_id' => $penanggungJawabId,
+                'departemen_supervisor_id' => 1,
                 'problem_category_id' => $faker->randomElement($problemCategoryIds),
                 'deskripsi_masalah' => $faker->paragraph(2),
                 'tenggat_waktu' => $faker->dateTimeBetween($createdAt, '+1 month'),

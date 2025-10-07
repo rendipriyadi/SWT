@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class DepartemenSupervisor extends Model
 {
     protected $table = 'departemen_supervisors';
-    protected $fillable = ['departemen', 'supervisor', 'workgroup'];
+    protected $fillable = ['departemen', 'supervisor', 'workgroup', 'email'];
 
     public function laporan()
     {

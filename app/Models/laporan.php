@@ -5,7 +5,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 // SoftDeletes dihapus karena kolom deleted_at telah di-drop
 
-class laporan extends Model
+class Laporan extends Model
 {
     use HasFactory;
 

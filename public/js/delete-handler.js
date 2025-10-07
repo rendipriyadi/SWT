@@ -6,7 +6,7 @@ $.ajaxSetup({
 
 document.addEventListener('DOMContentLoaded', function() {
     // Delegasi event untuk menangani tombol delete di dalam dropdown
-    $(document).on('click', '.dropdown-item.delete-btn', function(e) {
+    $(document).on('click', '.delete-btn', function(e) {
         e.preventDefault();
         e.stopPropagation();
         

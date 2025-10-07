@@ -128,11 +128,19 @@ class ElegantDatePicker {
         }
         
         // Initialize Bootstrap Datepicker
+        // Prefer to attach the popup within the input wrapper so it stays aligned while scrolling
+        const wrapper = input.closest('.elegant-date-input, .elegant-date-group');
+        if (wrapper) {
+            config.container = wrapper; // keep dropdown within the same scrolling context
+        }
+
         $(input).datepicker(config)
             .on('show', (e) => {
                 // Add elegant class to datepicker
                 setTimeout(() => {
                     $('.datepicker').addClass('elegant-datepicker-popup');
+                    // Recalculate position after styles applied
+                    try { $(input).datepicker('place'); } catch (_) {}
                 }, 10);
             })
             .on('changeDate', (e) => {
@@ -143,13 +151,18 @@ class ElegantDatePicker {
             });
         
         // Handle click on wrapper to open datepicker
-        const wrapper = input.closest('.elegant-date-input, .elegant-date-group');
         if (wrapper) {
             wrapper.addEventListener('click', (e) => {
                 if (e.target === input || e.target.classList.contains('calendar-icon') || e.target.classList.contains('input-group-text')) {
                     $(input).datepicker('show');
                 }
             });
+
+            // Keep popup aligned on scroll of the nearest scrollable container
+            const scrollParent = this.getScrollParent(wrapper) || window;
+            const reposition = () => { try { $(input).datepicker('place'); } catch (_) {} };
+            scrollParent.addEventListener('scroll', reposition, { passive: true });
+            window.addEventListener('resize', reposition, { passive: true });
         }
         
         // Prevent manual typing
@@ -171,6 +184,20 @@ class ElegantDatePicker {
         input.addEventListener('paste', (e) => {
             e.preventDefault();
         });
+    }
+
+    getScrollParent(element) {
+        if (!element) return null;
+        let parent = element.parentElement;
+        while (parent && parent !== document.body) {
+            const style = getComputedStyle(parent);
+            const overflowY = style.overflowY;
+            if (/(auto|scroll|overlay)/.test(overflowY)) {
+                return parent;
+            }
+            parent = parent.parentElement;
+        }
+        return document.scrollingElement || document.documentElement;
     }
     
     handleDateChange(input, date, options = {}) {

@@ -19,8 +19,9 @@
         </div>
     </div>
     <div class="card p-4">
-        <form action="{{ route('laporan.store') }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route('laporan.store') }}" method="POST" enctype="multipart/form-data" id="reportForm">
             @csrf
+            <input type="hidden" name="_token" value="{{ csrf_token() }}">
             <div class="mb-4">
                 <label for="Foto" class="form-label fw-semibold">Upload Photos</label>
                 <div class="upload-area border-2 border-dashed border-primary rounded-3 p-4 text-center">
@@ -124,7 +125,7 @@
 
             <!-- Submit Button -->
             <div class="d-flex justify-content-end mt-4">
-                <button type="submit" class="btn btn-primary btn-lg px-5">
+                <button type="submit" class="btn btn-primary btn-lg px-5" id="submitBtn">
                     <i class="fas fa-paper-plane me-2"></i>Submit Report
                 </button>
             </div>
@@ -245,6 +246,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Ensure CSRF token is fresh
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    const formToken = document.querySelector('input[name="_token"]');
+    if (formToken) {
+        formToken.value = csrfToken;
+    }
+    
     // --- Camera & File Handling ---
     const fotoInput = document.getElementById('Foto');
     const previewContainer = document.getElementById('foto-preview-container');
@@ -380,6 +388,31 @@ document.addEventListener('DOMContentLoaded', function() {
             fileStore.forEach(file => dataTransfer.items.add(file));
             fotoInput.files = dataTransfer.files;
         }
+    }
+    
+    // Form submission handling
+    const form = document.getElementById('reportForm');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    if (form && submitBtn) {
+        form.addEventListener('submit', function(e) {
+            // Update CSRF token before submission
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            const formToken = document.querySelector('input[name="_token"]');
+            if (formToken) {
+                formToken.value = csrfToken;
+            }
+            
+            // Disable submit button to prevent double submission
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Submitting...';
+            
+            // Re-enable after 5 seconds as fallback
+            setTimeout(() => {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Submit Report';
+            }, 5000);
+        });
     }
 });
 </script>

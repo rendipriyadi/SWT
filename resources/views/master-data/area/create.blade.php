@@ -88,22 +88,27 @@ document.addEventListener('DOMContentLoaded', function() {
     let stationCount = 0;
 
     // Add station function
-    function addStation(station = '', penanggungJawab = '') {
+    function addStation(station = '', penanggungJawab = '', email = '') {
         stationCount++;
         const stationHtml = `
             <div class="station-item border rounded p-3 mb-3" data-index="${stationCount}">
                 <div class="row">
-                    <div class="col-md-5">
+                    <div class="col-md-4">
                         <label class="form-label">Station</label>
                         <input type="text" class="form-control" name="stations[${stationCount}]" 
                                value="${station}" placeholder="Masukkan nama station" required>
                     </div>
-                    <div class="col-md-5">
+                    <div class="col-md-4">
                         <label class="form-label">Penanggung Jawab</label>
                         <input type="text" class="form-control" name="penanggung_jawab[${stationCount}]" 
                                value="${penanggungJawab}" placeholder="Masukkan nama penanggung jawab" required>
                     </div>
-                    <div class="col-md-2 d-flex align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" name="emails[${stationCount}]" 
+                               value="${email}" placeholder="Masukkan email (opsional)">
+                    </div>
+                    <div class="col-md-1 d-flex align-items-end">
                         <button type="button" class="btn btn-outline-danger btn-sm remove-station" 
                                 ${stationCount === 1 ? 'style="display:none"' : ''}>
                             <i class="fas fa-trash"></i>

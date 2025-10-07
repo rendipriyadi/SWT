@@ -82,22 +82,27 @@ document.addEventListener('DOMContentLoaded', function() {
     let stationCount = 0;
 
     // Add station function
-    function addStation(station = '', penanggungJawab = '') {
+    function addStation(station = '', penanggungJawab = '', email = '') {
         stationCount++;
         const stationHtml = `
             <div class="station-item border rounded p-3 mb-3" data-index="${stationCount}">
                 <div class="row">
-                    <div class="col-md-5">
+                    <div class="col-md-4">
                         <label class="form-label">Station</label>
                         <input type="text" class="form-control" name="stations[]" 
                                value="${station}" placeholder="Enter the station name" required>
                     </div>
-                    <div class="col-md-5">
+                    <div class="col-md-4">
                         <label class="form-label">People in Charge</label>
                         <input type="text" class="form-control" name="penanggung_jawab[]" 
                                value="${penanggungJawab}" placeholder="Enter the name of the person in charge" required>
                     </div>
-                    <div class="col-md-2 d-flex align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" name="emails[]" 
+                               value="${email}" placeholder="Enter email (optional)">
+                    </div>
+                    <div class="col-md-1 d-flex align-items-end">
                         <button type="button" class="btn btn-outline-danger btn-sm remove-station" 
                                 ${stationCount === 1 ? 'style="display:none"' : ''}>
                             <i class="fas fa-trash"></i>
@@ -128,7 +133,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Load existing data
     @if($area->penanggungJawabs->count() > 0)
         @foreach($area->penanggungJawabs as $index => $pj)
-            addStation('{{ $pj->station }}', '{{ $pj->name }}');
+            addStation('{{ $pj->station }}', '{{ $pj->name }}', '{{ $pj->email }}');
         @endforeach
     @else
         addStation();

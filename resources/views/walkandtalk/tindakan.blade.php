@@ -258,192 +258,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 @push('styles')
 <style>
-/* Simple Clean Datepicker */
-.datepicker {
-    border-radius: 4px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    border: 1px solid #ddd;
-    font-family: Arial, sans-serif;
-    background: #ffffff;
-    overflow: hidden;
-    width: 280px !important;
-    min-width: 280px !important;
-    max-width: 280px !important;
-    position: fixed !important;
-    z-index: 9999 !important;
-}
-
-.datepicker table tr td.active,
-.datepicker table tr td.active:hover,
-.datepicker table tr td.active.disabled,
-.datepicker table tr td.active.disabled:hover {
-    background: #007bff !important;
-    color: white;
-}
-
-.datepicker table tr td.today {
-    background: #f8f9fa !important;
-    color: #000 !important;
-    font-weight: bold;
-}
-
-.datepicker table tr td.today:hover {
-    background: #e9ecef !important;
-}
-
-.datepicker table tr td:hover {
-    background: #f8f9fa !important;
-    color: #000 !important;
-}
-
-.datepicker table tr td.old,
-.datepicker table tr td.new {
-    color: #999;
-}
-
-.datepicker table tr td.disabled,
-.datepicker table tr td.disabled:hover {
-    color: #ccc !important;
-    background: #f8f9fa !important;
-    cursor: not-allowed;
-}
-
-.datepicker table thead tr th {
-    background: #f8f9fa;
-    color: #000;
-    border: none;
-    font-weight: normal;
-    padding: 8px;
-}
-
-.datepicker table thead tr th.prev,
-.datepicker table thead tr th.next {
-    cursor: pointer;
-    font-weight: bold;
-}
-
-.datepicker table thead tr th.prev:hover,
-.datepicker table thead tr th.next:hover {
-    background: #e9ecef;
-}
-
-.datepicker table thead tr th.datepicker-switch {
-    font-size: 14px;
-    font-weight: normal;
-}
-
-.datepicker table thead tr th.dow {
-    background: #f8f9fa;
-    color: #666;
-    font-size: 11px;
-    font-weight: bold;
-    padding: 6px 4px;
-    border-bottom: 1px solid #ddd;
-}
-
-.datepicker table tbody tr td {
-    padding: 4px;
-    transition: none;
-}
-
-.datepicker table {
-    width: 100% !important;
-    table-layout: fixed !important;
-}
-
-.datepicker table tbody tr td.day {
-    width: 32px !important;
-    height: 32px !important;
-    line-height: 24px !important;
-    text-align: center;
-    cursor: pointer;
-    color: #000;
-    font-weight: normal;
-    padding: 4px !important;
-}
-
-.datepicker table tbody tr td.day:hover {
-    background: #f8f9fa !important;
-    color: #000 !important;
-}
-
-.datepicker table tbody tr td.month,
-.datepicker table tbody tr td.year {
-    padding: 8px 6px;
-    text-align: center;
-    cursor: pointer;
-    color: #000;
-    font-weight: normal;
-}
-
-.datepicker table tbody tr td.month:hover,
-.datepicker table tbody tr td.year:hover {
-    background: #f8f9fa !important;
-    color: #000 !important;
-}
-
-.datepicker table tbody tr td.month.active,
-.datepicker table tbody tr td.year.active {
-    background: #007bff !important;
-    color: white !important;
-}
-
-.datepicker table tbody tr td.month.focused,
-.datepicker table tbody tr td.year.focused {
-    background: #f8f9fa !important;
-    color: #000 !important;
-}
-
-.datepicker table tbody tr td.range {
-    background: #e3f2fd !important;
-    color: #000 !important;
-}
-
-.datepicker table tbody tr td.range:hover {
-    background: #bbdefb !important;
-}
-
-.datepicker table tbody tr td.range.start,
-.datepicker table tbody tr td.range.end {
-    background: #007bff !important;
-    color: white !important;
-}
-
-.datepicker table tbody tr td.range.start:hover,
-.datepicker table tbody tr td.range.end:hover {
-    background: #0056b3 !important;
-}
-
-/* Input Group Enhancement */
-.input-group-text {
-    cursor: pointer;
-    background: #f8f9fa;
-    color: #666;
-    border: 1px solid #ced4da;
-    font-weight: normal;
-    transition: all 0.2s ease;
-}
-
-.input-group-text:hover {
-    background: #e9ecef;
-    color: #000;
-    transform: scale(1.02);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-/* Datepicker Dropdown Animation - Simple Fade */
-.datepicker.dropdown-menu {
-    animation: fadeIn 0.2s ease;
-}
-
-@keyframes fadeIn {
-    0% {
-        opacity: 0;
-    }
-    100% {
-        opacity: 1;
-    }
-}
+/* Keep only minimal tweaks for the tindakan datepicker; let global elegant styles handle positioning */
+.input-group-text { cursor: pointer; }
 </style>
 @endpush
 
@@ -474,13 +290,14 @@ document.addEventListener('DOMContentLoaded', function() {
         const dateInputGroup = tanggalInputDisplay.closest('.input-group');
         
         // Initialize datepicker on display input
+        const containerEl = dateInputGroup.closest('.elegant-date-group') || 'body';
         $(tanggalInputDisplay).datepicker({
             format: 'dd/mm/yyyy',
             autoclose: true,
             todayHighlight: true,
             startDate: new Date(),
-            orientation: 'top auto',
-            container: 'body',
+            orientation: 'auto',
+            container: containerEl,
             todayBtn: 'linked',
             clearBtn: true,
             language: 'en',
@@ -516,55 +333,7 @@ document.addEventListener('DOMContentLoaded', function() {
             tanggalInput.value = formattedDate;
         });
         
-        // Custom positioning function
-        function positionDatepicker() {
-            const datepicker = $('.datepicker');
-            if (datepicker.length) {
-                const inputOffset = dateInputGroup.offset();
-                const inputWidth = dateInputGroup.outerWidth();
-                const inputHeight = dateInputGroup.outerHeight();
-                const datepickerWidth = 320;
-                const datepickerHeight = 350;
-                
-                let left = inputOffset.left + (inputWidth - datepickerWidth) / 2;
-                let top = inputOffset.top - datepickerHeight - 10;
-                
-                const viewportWidth = $(window).width();
-                const viewportHeight = $(window).height();
-                const scrollTop = $(window).scrollTop();
-                
-                if (left < 10) left = 10;
-                if (left + datepickerWidth > viewportWidth - 10) {
-                    left = viewportWidth - datepickerWidth - 10;
-                }
-                
-                if (top < scrollTop + 10) {
-                    top = inputOffset.top + inputHeight + 10;
-                }
-                
-                datepicker.css({
-                    'position': 'fixed',
-                    'left': left + 'px',
-                    'top': top + 'px',
-                    'width': datepickerWidth + 'px',
-                    'z-index': 9999
-                });
-            }
-        }
-        
-        // Show datepicker with custom positioning
-        $(tanggalInputDisplay).on('show', function() {
-            setTimeout(function() {
-                positionDatepicker();
-            }, 10);
-        });
-        
-        // Reposition on scroll and resize
-        $(window).on('scroll resize', function() {
-            if ($('.datepicker').is(':visible')) {
-                positionDatepicker();
-            }
-        });
+        // Rely on plugin placement; no custom fixed positioning
         
         // Trigger datepicker when input group text is clicked
         $('#datePickerBtn').on('click', function() {

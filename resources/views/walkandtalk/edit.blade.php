@@ -81,9 +81,9 @@
                 @enderror
             </div>
 
-            <!-- Penanggung Jawab Display -->
+            <!-- People in Charge Display -->
             <div class="mb-3">
-                <label for="supervisor" class="form-label">Supervisor:</label>
+                <label for="supervisor" class="form-label">People in Charge:</label>
                 <input type="text" class="form-control" id="supervisor" readonly>
             </div>
 

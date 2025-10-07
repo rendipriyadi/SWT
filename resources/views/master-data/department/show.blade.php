@@ -36,6 +36,10 @@
                             <td><strong>Work Group:</strong></td>
                             <td>{{ $department->workgroup ?: '-' }}</td>
                         </tr>
+                        <tr>
+                            <td><strong>Email:</strong></td>
+                            <td>{{ $department->email ?: '-' }}</td>
+                        </tr>
                     </table>
                 </div>
             </div>

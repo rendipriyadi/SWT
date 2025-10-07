@@ -47,16 +47,18 @@
                             <th class="text-center">Supervisor</th>
                             <th class="text-center" style="width: 200px;">Department</th>
                             <th class="text-center">Work Group</th>
+                            <th class="text-center">Email</th>
                             <th class="text-center" style="width: 200px;">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($departments as $index => $department)
-                        <tr data-supervisor="{{ $department->supervisor }}" data-department="{{ $department->departemen ?? $department->name }}" data-workgroup="{{ $department->workgroup ?: '-' }}">
+                        <tr data-supervisor="{{ $department->supervisor }}" data-department="{{ $department->departemen ?? $department->name }}" data-workgroup="{{ $department->workgroup ?: '-' }}" data-email="{{ $department->email ?: '-' }}">
                             <td>{{ $index + 1 }}</td>
                             <td data-supervisor="{{ $department->supervisor }}">{{ $department->supervisor }}</td>
                             <td data-department="{{ $department->departemen ?? $department->name }}">{{ $department->departemen ?? $department->name }}</td>
                             <td data-workgroup="{{ $department->workgroup ?: '-' }}">{{ $department->workgroup ?: '-' }}</td>
+                            <td data-email="{{ $department->email ?: '-' }}">{{ $department->email ?: '-' }}</td>
                             <td class="text-center">
                                 <a href="{{ route('master-data.department.show', $department->id) }}" class="btn btn-sm btn-info no-row-nav">
                                     <i class="fas fa-eye"></i>
@@ -88,11 +90,12 @@
                                 <th>Supervisor</th>
                                 <th>Department</th>
                                 <th>Work Group</th>
+                                <th>Email</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($departments as $index => $department)
-                            <tr class="mobile-table-row" data-bs-toggle="collapse" data-bs-target="#details{{ $department->id }}" aria-expanded="false" data-id="{{ $department->id }}" data-supervisor="{{ $department->supervisor }}" data-department="{{ $department->departemen ?? $department->name }}" data-workgroup="{{ $department->workgroup ?: '-' }}">
+                            <tr class="mobile-table-row" data-bs-toggle="collapse" data-bs-target="#details{{ $department->id }}" aria-expanded="false" data-id="{{ $department->id }}" data-supervisor="{{ $department->supervisor }}" data-department="{{ $department->departemen ?? $department->name }}" data-workgroup="{{ $department->workgroup ?: '-' }}" data-email="{{ $department->email ?: '-' }}">
                                 <td class="text-center">
                                     <span class="d-flex align-items-center justify-content-center gap-1">
                                         {{ $index + 1 }}
@@ -102,6 +105,7 @@
                                 <td>{{ $department->supervisor }}</td>
                                 <td>{{ $department->departemen ?? $department->name }}</td>
                                 <td>{{ $department->workgroup ?: '-' }}</td>
+                                <td>{{ $department->email ?: '-' }}</td>
                             </tr>
                             <tr class="collapse" id="details{{ $department->id }}">
                                 <td colspan="3" class="p-0">
@@ -110,6 +114,10 @@
                                             <div class="col-6">
                                                 <strong>Work Group:</strong><br>
                                                 <span class="text-muted">{{ $department->workgroup ?: '-' }}</span>
+                                            </div>
+                                            <div class="col-6">
+                                                <strong>Email:</strong><br>
+                                                <span class="text-muted">{{ $department->email ?: '-' }}</span>
                                             </div>
                                         </div>
                                         <div class="mobile-action-buttons p-3 pt-0">

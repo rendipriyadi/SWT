@@ -35,6 +35,7 @@ class DepartmentController extends Controller
             'supervisor' => 'required|string|max:255',
             'name' => 'required|string|max:255',
             'workgroup' => 'nullable|string|max:255',
+            'email' => 'nullable|email|max:255',
         ]);
 
         if ($validator->fails()) {
@@ -47,6 +48,7 @@ class DepartmentController extends Controller
             'supervisor' => $request->supervisor,
             'departemen' => $request->name,
             'workgroup' => $request->workgroup,
+            'email' => $request->email,
         ]);
 
         return redirect()->route('master-data.department.index')
@@ -80,6 +82,7 @@ class DepartmentController extends Controller
             'supervisor' => 'required|string|max:255',
             'name' => 'required|string|max:255',
             'workgroup' => 'nullable|string|max:255',
+            'email' => 'nullable|email|max:255',
         ]);
 
         if ($validator->fails()) {
@@ -92,6 +95,7 @@ class DepartmentController extends Controller
             'supervisor' => $request->supervisor,
             'departemen' => $request->name,
             'workgroup' => $request->workgroup,
+            'email' => $request->email,
         ]);
 
         return redirect()->route('master-data.department.index')

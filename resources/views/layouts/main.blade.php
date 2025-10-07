@@ -972,7 +972,7 @@
     </style>
 </head>
 {{-- <body class="sb-nav-fixed"> --}}
-<body class="sb-nav-fixed {{ request()->routeIs('login') ? 'auth-layout' : '' }}">
+<body class="sb-nav-fixed">
     <!-- Navbar -->
     <nav class="sb-topnav navbar navbar-expand navbar-light">
         <div class="container-fluid">
@@ -992,16 +992,11 @@
                     <i class="fas fa-moon" id="themeIcon"></i>
                 </button>
             </li>
-            <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle d-flex align-items-center" id="userDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <span class="me-2 text-dark fw-semibold">{{ auth()->user()->name ?? 'User' }}</span>
-                        <i class="fa-regular fa-circle-user text-dark" style="font-size: 2rem;"></i>
-                </a>
-                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                        <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#logoutModal">
-                            <i class="fas fa-sign-out-alt me-2"></i>Logout
-                        </a></li>
-                </ul>
+            <li class="nav-item">
+                <span class="nav-link d-flex align-items-center">
+                    <span class="me-2 text-dark fw-semibold">Admin</span>
+                    <i class="fa-regular fa-circle-user text-dark" style="font-size: 2rem;"></i>
+                </span>
             </li>
         </ul>
         </div>
@@ -1030,8 +1025,7 @@
                             <span class="nav-text">Dashboard</span>
                         </a>
                         
-                        <!-- MASTER DATA Section (Admin Only) -->
-                        @if(auth()->check() && (str_contains(strtolower(auth()->user()->email), 'admin') || auth()->user()->email === 'admin@siemens.com'))
+                        <!-- MASTER DATA Section (Always visible - Admin mode) -->
                         <div class="nav-divider my-2"></div>
                         <div class="nav-header text-muted small fw-bold px-3 py-2">MASTER DATA</div>
                         <a class="nav-link py-2 {{ Request::is('master-data/department*') ? 'active' : '' }}" href="{{ route('master-data.department.index') }}">
@@ -1046,7 +1040,6 @@
                             <div class="sb-nav-link-icon"><i class="fa-solid fa-tags"></i></div>
                             <span class="nav-text">Problem Category</span>
                         </a>
-                        @endif
                         
                         <!-- TRANSACTION Section -->
                         <div class="nav-divider my-2"></div>
@@ -1284,57 +1277,6 @@
     });
     </script>
 
-    <!-- Logout Confirmation Modal -->
-    <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header border-0">
-                    <h5 class="modal-title text-dark" id="logoutModalLabel">
-                        <i class="fas fa-sign-out-alt me-2 text-secondary"></i>Confirm Logout
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="text-center mb-3">
-                        <i class="fas fa-sign-out-alt text-secondary fa-3x mb-3"></i>
-                    </div>
-                    <p class="text-center mb-3">Are you sure you want to logout?</p>
-                    <p class="text-muted text-center small mb-0">
-                        <i class="fas fa-info-circle me-1"></i>
-                        You will need to login again to access the system
-                    </p>
-                </div>
-                <div class="modal-footer border-0">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="fas fa-times me-1"></i>Cancel
-                    </button>
-                    <button type="button" class="btn btn-outline-secondary" id="confirmLogout">
-                        <i class="fas fa-sign-out-alt me-1"></i>Logout
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-    // Logout function
-    document.getElementById('confirmLogout').addEventListener('click', function() {
-        // Create a form to submit logout request
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '{{ route("logout") }}';
-
-        // Add CSRF token
-        const csrfToken = document.createElement('input');
-        csrfToken.type = 'hidden';
-        csrfToken.name = '_token';
-        csrfToken.value = '{{ csrf_token() }}';
-        form.appendChild(csrfToken);
-
-        document.body.appendChild(form);
-        form.submit();
-    });
-    </script>
 
     <!-- Global Modals -->
     <div class="modal fade description-modal" id="descriptionModal" tabindex="-1" aria-labelledby="descriptionModalLabel" aria-hidden="true">

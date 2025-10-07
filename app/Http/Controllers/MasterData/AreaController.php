@@ -30,7 +30,9 @@ class AreaController extends Controller
             'stations' => 'required|array|min:1',
             'stations.*' => 'required|string|max:255',
             'penanggung_jawab' => 'required|array|min:1',
-            'penanggung_jawab.*' => 'required|string|max:255'
+            'penanggung_jawab.*' => 'required|string|max:255',
+            'emails' => 'nullable|array',
+            'emails.*' => 'nullable|email|max:255'
         ], [
             'name.required' => 'Nama area harus diisi',
             'name.unique' => 'Nama area sudah ada',
@@ -53,7 +55,8 @@ class AreaController extends Controller
                 PenanggungJawab::create([
                     'area_id' => $area->id,
                     'station' => $station,
-                    'name' => $request->penanggung_jawab[$index]
+                    'name' => $request->penanggung_jawab[$index],
+                    'email' => $request->emails[$index] ?? null,
                 ]);
             }
 
@@ -89,7 +92,9 @@ class AreaController extends Controller
             'stations' => 'required|array|min:1',
             'stations.*' => 'required|string|max:255',
             'penanggung_jawab' => 'required|array|min:1',
-            'penanggung_jawab.*' => 'required|string|max:255'
+            'penanggung_jawab.*' => 'required|string|max:255',
+            'emails' => 'nullable|array',
+            'emails.*' => 'nullable|email|max:255'
         ], [
             'name.required' => 'Nama area harus diisi',
             'name.unique' => 'Nama area sudah ada',
@@ -115,7 +120,8 @@ class AreaController extends Controller
                 PenanggungJawab::create([
                     'area_id' => $area->id,
                     'station' => $station,
-                    'name' => $request->penanggung_jawab[$index]
+                    'name' => $request->penanggung_jawab[$index],
+                    'email' => $request->emails[$index] ?? null,
                 ]);
             }
 
