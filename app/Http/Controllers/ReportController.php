@@ -116,7 +116,7 @@ class ReportController extends Controller
             'Foto' => count($fotoFileNames) > 0 ? $fotoFileNames : null,
         ]);
 
-        $this->sendSupervisorNotifications($laporan);
+        // $this->sendSupervisorNotifications($laporan); // Disabled email notifications
 
         return redirect()->route('laporan.index')->with('success', 'Report created successfully.');
     }
@@ -223,7 +223,7 @@ class ReportController extends Controller
 
         $laporan = Laporan::with(['area', 'penanggungJawab'])->find($id);
         if (!empty($perubahan)) {
-            $this->sendEditNotifications($laporan, $perubahan);
+            // $this->sendEditNotifications($laporan, $perubahan); // Disabled email notifications
         }
 
         return redirect()->route('dashboard')->with('success', 'Report updated successfully.');
