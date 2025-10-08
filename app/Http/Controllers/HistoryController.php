@@ -34,8 +34,8 @@ class HistoryController extends Controller
             ->editColumn('Tanggal', function ($laporan) { return Carbon::parse($laporan->created_at)->format('l, j-n-Y'); })
             ->addColumn('foto', function ($laporan) {
                 if (!empty($laporan->Foto) && is_array($laporan->Foto)) {
-                    $foto = $laporan->Foto[0]; $fotoPath = asset('images/reports/' . $foto); $photoUrls = [];
-                    foreach ($laporan->Foto as $f) { $photoUrls[] = asset('images/reports/' . $f); }
+                    $foto = $laporan->Foto[0]; $fotoPath = asset('images/' . $foto); $photoUrls = [];
+                    foreach ($laporan->Foto as $f) { $photoUrls[] = asset('images/' . $f); }
                     $photoData = json_encode($photoUrls);
                     return '<img src="' . $fotoPath . '" alt="Foto Masalah" class="img-thumbnail" style="width: 80px; height: 80px; object-fit: cover; cursor: pointer;" data-bs-toggle="modal" data-bs-target="#modalFotoFull" data-photos=\'' . $photoData . '\'>';
                 }
@@ -61,7 +61,6 @@ class HistoryController extends Controller
                 return '<span class="text-muted">No Category</span>'; })
             ->addColumn('deskripsi_masalah', function ($laporan) { $d=$laporan->deskripsi_masalah; $m=80; $s=strlen($d)>$m?substr($d,0,$m).'...':$d; return '<div class="description-container" title="' . e($laporan->deskripsi_masalah) . '">' . e($s) . '</div>'; })
             ->addColumn('deskripsi_masalah_full', function ($laporan) { return $laporan->deskripsi_masalah ?? ''; })
-            ->addColumn('penanggung_jawab', function ($laporan) { return $laporan->penanggungJawab ? $laporan->penanggungJawab->name : 'Not assigned'; })
             ->addColumn('tenggat_waktu', function ($laporan) { return Carbon::parse($laporan->tenggat_waktu)->format('l, j-n-Y'); })
             ->addColumn('status', function ($laporan) { return $laporan->status == 'Selesai' ? '<span class="status-badge status-completed"><i class="fas fa-check-circle"></i> Completed</span>' : '<span class="badge bg-secondary">' . $laporan->status . '</span>'; })
             ->addColumn('penyelesaian', function ($laporan) { return $laporan->penyelesaian ? '<button class="btn btn-sm btn-info lihat-penyelesaian-btn" data-bs-toggle="modal" data-bs-target="#modalPenyelesaian" data-id="' . $laporan->id . '"><i class="fas fa-eye"></i> View</button>' : '<a href="' . route('laporan.tindakan', $laporan->id) . '" class="btn btn-sm btn-primary"><i class="fas fa-tasks"></i> Action</a>'; })
