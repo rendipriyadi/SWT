@@ -31,7 +31,10 @@ class ProblemCategorySeeder extends Seeder
         ];
 
         foreach ($categories as $category) {
-            ProblemCategory::create($category);
+            ProblemCategory::updateOrCreate(
+                ['name' => $category['name']],
+                $category
+            );
         }
     }
 }
