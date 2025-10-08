@@ -107,6 +107,11 @@ php artisan cache:clear
 npm run build
 ```
 
+7. Start development server
+```bash
+php artisan serve
+```
+
 ## Catatan Penting
 - Database akan otomatis ter-setup dengan data master (departemen, area, problem categories)
 - Tidak ada dummy laporan yang di-generate
