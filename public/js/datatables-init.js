@@ -56,36 +56,22 @@ $(document).ready(function() {
                     name: 'deskripsi_masalah', 
                     render: function(data, type, row) {
                         if (type === 'display') {
-                            // Pastikan data tidak null
                             if (!data) return '';
-                            
-                            // Sanitasi data dan batasi panjang
-                            const safeText = String(data).replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                            const maxLength = 50;
-                            
-                            // Jika teks melebihi panjang maksimum, tambahkan ellipsis dan link detail
-                            if (safeText.length > maxLength) {
-                                return safeText.substring(0, maxLength) + '... ' +
-                                    '<a href="#" class="view-description" data-description="' + 
-                                    safeText.replace(/"/g, '&quot;') + '">detail</a>';
+                            // Strip HTML tags safely, then truncate
+                            var textOnly = $('<div>').html(String(data)).text();
+                            const maxLength = 80;
+                            if (textOnly.length > maxLength) {
+                                const fullEsc = textOnly.replace(/"/g, '&quot;');
+                                return textOnly.substring(0, maxLength) + '... ' +
+                                    '<a href="#" class="view-description" data-description="' + fullEsc + '">detail</a>';
                             }
-                            return safeText;
+                            return textOnly;
                         }
                         return data;
                     }
                 },
                 { data: 'tenggat_waktu', name: 'tenggat_waktu', width: '90px' },
-                { 
-                    data: 'status', 
-                    name: 'status', 
-                    width: '110px',
-                    render: function(data, type, row) {
-                        if (type === 'display') {
-                            return createStatusBadge(data);
-                        }
-                        return data;
-                    }
-                },
+                { data: 'status', name: 'status', width: '110px', orderable: false, searchable: false },
                 { data: 'penyelesaian', name: 'penyelesaian', orderable: false, searchable: false, className: 'text-center', width: '50px' },
                 { 
                     data: 'aksi', 
@@ -123,6 +109,22 @@ $(document).ready(function() {
                 url: $('#sejarahTable').data('url'),
                 type: 'GET'
             },
+            language: {
+                processing: "Loading...",
+                search: "Search:",
+                lengthMenu: "Show _MENU_",
+                info: "_START_-_END_ of _TOTAL_",
+                infoEmpty: "No data",
+                infoFiltered: "(filtered from _MAX_)",
+                zeroRecords: "No data found",
+                paginate: {
+                    first: "First",
+                    last: "Last",
+                    next: "»",
+                    previous: "«"
+                }
+            },
+            dom: '<"row mb-3"<"col-md-6"l><"col-md-6 text-end"f>>rtip',
             columns: [
                 { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false, className: 'text-center', width: '25px' },
                 { data: 'Tanggal', name: 'Tanggal', width: '90px' },
@@ -134,59 +136,28 @@ $(document).ready(function() {
                     name: 'deskripsi_masalah',
                     render: function(data, type, row) {
                         if (type === 'display') {
-                            // Pastikan data tidak null
                             if (!data) return '';
-                            
-                            // Sanitasi data dan batasi panjang
-                            const safeText = String(data).replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                            const maxLength = 50;
-                            
-                            // Jika teks melebihi panjang maksimum, tambahkan ellipsis dan link detail
-                            if (safeText.length > maxLength) {
-                                return safeText.substring(0, maxLength) + '... ' +
-                                    '<a href="#" class="view-description" data-description="' + 
-                                    safeText.replace(/"/g, '&quot;') + '">detail</a>';
+                            var textOnly = $('<div>').html(String(data)).text();
+                            const maxLength = 80;
+                            if (textOnly.length > maxLength) {
+                                const fullEsc = textOnly.replace(/"/g, '&quot;');
+                                return textOnly.substring(0, maxLength) + '... ' +
+                                    '<a href="#" class="view-description" data-description="' + fullEsc + '">detail</a>';
                             }
-                            return safeText;
+                            return textOnly;
                         }
                         return data;
                     }
                 },
-                { 
-                    data: 'status', 
-                    name: 'status', 
-                    width: '110px',
-                    render: function(data, type, row) {
-                        if (type === 'display') {
-                            return createStatusBadge(data);
-                        }
-                        return data;
-                    }
-                },
+                { data: 'tenggat_waktu', name: 'tenggat_waktu', width: '90px' },
+                { data: 'status', name: 'status', width: '110px', orderable: false, searchable: false },
                 { data: 'penyelesaian', name: 'penyelesaian', orderable: false, searchable: false, className: 'text-center', width: '50px' },
-                { 
-                    data: 'aksi', 
-                    name: 'aksi', 
-                    orderable: false, 
-                    searchable: false,
-                    width: '65px',
-                    className: 'text-center',
-                    render: function(data, type, row, meta) {
-                        const dropdownId = 'dropdown-' + row.id;
-                        
-                        return `<div class="dropdown action-dropdown">
-                            <button class="btn btn-sm btn-secondary dropdown-toggle py-0 px-2" type="button" id="${dropdownId}" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-ellipsis-v"></i>
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="${dropdownId}">
-                                <li><a class="dropdown-item" href="#"><i class="fas fa-info-circle text-info"></i> Detail</a></li>
-                                <li><button class="dropdown-item delete-btn" data-id="${row.id}" data-delete-url="/laporan/${row.id}/delete" data-return-url="${window.location.pathname}"><i class="fas fa-trash text-danger"></i> Hapus</button></li>
-                            </ul>
-                        </div>`;
-                    }
-                }
+                { data: 'aksi', name: 'aksi', orderable: false, searchable: false, width: '65px', className: 'text-center' }
             ],
-            order: [[1, 'desc']]
+            order: [[1, 'desc']],
+            createdRow: function(row, data) {
+                $(row).addClass('clickable-row');
+            }
         });
     }
 
@@ -205,6 +176,21 @@ $(document).ready(function() {
     // Add filter button after table is drawn
     $('.dataTable').on('draw.dt', function() {
         ensureFilterButton();
+    });
+
+    // Global handler for description detail links
+    $(document).on('click', 'a.view-description', function(e) {
+        e.preventDefault();
+        var fullText = $(this).data('description') || '';
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                title: 'Description',
+                html: '<div style="text-align:left;white-space:pre-wrap">' + fullText + '</div>',
+                confirmButtonText: 'Close'
+            });
+        } else {
+            alert(fullText);
+        }
     });
 });
 

@@ -109,7 +109,7 @@
             margin-top: 5px;
         }
     </style>
-    <link rel="icon" type="image/png" href="{{ asset('images/favicon.png') }}">
+    <link rel="icon" type="image/png" href="{{ asset('images/static/favicon.png') }}">
 </head>
 <body>
     <div class="header">

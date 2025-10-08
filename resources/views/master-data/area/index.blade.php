@@ -104,42 +104,41 @@
     </div>
 </div>
 
-<!-- Delete Confirmation Modal -->
-<div class="modal fade" id="deleteModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Delete Confirmation</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <p>Are you sure you want to delete the area <strong id="areaName"></strong>?</p>
-                <p class="text-danger small">Deleted data cannot be recovered!</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <form id="deleteForm" method="POST" style="display: inline;">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="btn btn-danger">Delete</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
+<!-- Hidden form for SweetAlert2 submission -->
+<form id="deleteForm" method="POST" style="display:none;">
+    @csrf
+    @method('DELETE')
+</form>
 @endsection
 
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Handle delete button click
-    $(document).on('click', '.delete-btn', function() {
+    $(document).on('click', '.delete-btn', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
         const areaId = $(this).data('id');
         const areaName = $(this).data('name');
-        
-        $('#areaName').text(areaName);
-        $('#deleteForm').attr('action', '{{ route("master-data.area.destroy", ":id") }}'.replace(':id', areaId));
-        $('#deleteModal').modal('show');
+        const actionUrl = '{{ route("master-data.area.destroy", ":id") }}'.replace(':id', areaId);
+
+        Swal.fire({
+            title: 'Delete Confirmation',
+            html: `Are you sure you want to delete the area <strong>${areaName}</strong>?<br><span class="text-danger small">Deleted data cannot be recovered!</span>`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, Delete',
+            cancelButtonText: 'Cancel',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const form = document.getElementById('deleteForm');
+                form.setAttribute('action', actionUrl);
+                form.submit();
+            }
+        });
     });
 });
 </script>

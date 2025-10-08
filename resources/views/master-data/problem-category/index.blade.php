@@ -178,7 +178,7 @@
                                         <a href="{{ route('master-data.problem-category.edit', $category) }}" class="btn btn-sm btn-warning" title="Edit" onclick="event.stopPropagation();">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <button type="button" class="btn btn-sm btn-danger" onclick="event.stopPropagation(); showDeleteModal({{ $category->id }}, '{{ $category->name }}')" title="Delete">
+                                        <button type="button" class="btn btn-sm btn-danger delete-problem-category-btn" data-id="{{ $category->id }}" data-name="{{ $category->name }}" title="Delete">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </div>
@@ -202,41 +202,11 @@
     </div>
 </div>
 
-<!-- Delete Confirmation Modal -->
-<div class="modal fade" id="deleteCategoryModal" tabindex="-1" aria-labelledby="deleteCategoryModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header border-0">
-                <h5 class="modal-title text-danger" id="deleteCategoryModalLabel">
-                    <i class="fas fa-exclamation-triangle me-2"></i>Delete Category
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="text-center mb-3">
-                    <i class="fas fa-trash-alt text-danger fa-3x mb-3"></i>
-                </div>
-                <p class="text-center mb-3">Are you sure you want to delete this category?</p>
-                <p class="text-danger text-center small mb-0">
-                    <i class="fas fa-exclamation-circle me-1"></i>
-                    This action is permanent and cannot be reversed
-                </p>
-            </div>
-            <div class="modal-footer border-0">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="fas fa-times me-1"></i>Cancel
-                </button>
-                <form id="deleteCategoryForm" method="POST" style="display: inline;">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="btn btn-danger">
-                        <i class="fas fa-trash me-1"></i>Delete Category
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
+<!-- Hidden form for SweetAlert2 deletion -->
+<form id="deleteProblemCategoryForm" method="POST" style="display:none;">
+    @csrf
+    @method('DELETE')
+</form>
 
 <!-- Detail Modal -->
 <div class="modal fade" id="viewCategoryModal" tabindex="-1" aria-labelledby="viewCategoryModalLabel" aria-hidden="true">
@@ -270,15 +240,8 @@
     </div>
     </div>
 
+@push('scripts')
 <script>
-function showDeleteModal(categoryId, categoryName) {
-    const form = document.getElementById('deleteCategoryForm');
-    form.action = `/master-data/problem-category/${categoryId}`;
-    document.getElementById('deleteCategoryModal').querySelector('.modal-body p').innerHTML = 
-        `Are you sure you want to delete the category "<strong>${categoryName}</strong>"?`;
-    new bootstrap.Modal(document.getElementById('deleteCategoryModal')).show();
-}
-
 // Row click to open detail modal
 document.addEventListener('click', function(e){
     const row = e.target.closest('tr.category-row');
@@ -294,5 +257,41 @@ document.addEventListener('click', function(e){
     document.getElementById('vc_description').textContent = desc;
     new bootstrap.Modal(document.getElementById('viewCategoryModal')).show();
 });
+
+// SweetAlert2 delete for problem categories
+document.addEventListener('click', function(e){
+    const btn = e.target.closest('.delete-problem-category-btn');
+    if (!btn) return;
+    const id = btn.getAttribute('data-id');
+    const name = btn.getAttribute('data-name');
+
+    if (typeof Swal === 'undefined') {
+        if (confirm(`Are you sure you want to delete category "${name}"?`)) {
+            const form = document.getElementById('deleteProblemCategoryForm');
+            form.setAttribute('action', `/master-data/problem-category/${id}`);
+            form.submit();
+        }
+        return;
+    }
+
+    Swal.fire({
+        title: 'Delete Confirmation',
+        html: `Are you sure you want to delete the category <strong>${name}</strong>?<br><span class="text-danger small">This action cannot be undone.</span>`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Delete',
+        cancelButtonText: 'Cancel',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const form = document.getElementById('deleteProblemCategoryForm');
+            form.setAttribute('action', `/master-data/problem-category/${id}`);
+            form.submit();
+        }
+    });
+});
 </script>
+@endpush
 @endsection

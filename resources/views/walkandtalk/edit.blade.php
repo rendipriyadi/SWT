@@ -4,7 +4,25 @@
 
 @section('content')
 <div class="container-fluid px-4">
-    <h1 class="mt-4">Edit Report</h1>
+    <div class="page-header mb-4 position-relative">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="mb-2">Edit Report</h1>
+                <p class="text-muted mb-0">Update report details and information</p>
+            </div>
+        </div>
+        <!-- Tombol Back di kanan atas -->
+        <div class="position-absolute" style="top: 0; right: 0;">
+            @php
+                // Determine back URL based on report status
+                $backUrl = $laporan->status === 'Selesai' ? route('sejarah') : route('laporan.index');
+                $backText = $laporan->status === 'Selesai' ? 'Back to History' : 'Back to Reports';
+            @endphp
+            <a href="{{ $backUrl }}" class="btn btn-outline-secondary" style="border: 2px solid #6c757d;">
+                <i class="fas fa-arrow-left me-2"></i>{{ $backText }}
+            </a>
+        </div>
+    </div>
     <div class="card p-4">
         <form action="{{ route('laporan.update', $laporan->id) }}" method="POST" enctype="multipart/form-data">
             @csrf
@@ -42,7 +60,7 @@
                             @foreach($laporan->Foto as $key => $foto)
                                 <div class="position-relative">
                                     <input type="hidden" name="existing_photos[]" value="{{ $foto }}" id="existing-photo-{{ $key }}">
-                                    <img src="{{ asset('images/' . $foto) }}" alt="Foto {{ $key+1 }}" class="img-thumbnail" style="width: 100px; height: 100px; object-fit: cover;">
+                                    <img src="{{ asset('images/reports/' . $foto) }}" alt="Foto {{ $key+1 }}" class="img-thumbnail" style="width: 100px; height: 100px; object-fit: cover;">
                                     <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 remove-photo" data-input-id="existing-photo-{{ $key }}">
                                         <i class="fas fa-times"></i>
                                     </button>
@@ -112,14 +130,7 @@
 
             <div class="mb-3">
                 <label for="tenggat_waktu" class="form-label">Deadline:</label>
-                <div class="elegant-date-group">
-                    <div class="input-group">
-                        <input type="date" class="form-control deadline-date @error('tenggat_waktu') is-invalid @enderror" id="tenggat_waktu" name="tenggat_waktu" value="{{ \Carbon\Carbon::parse($laporan->tenggat_waktu)->format('Y-m-d') }}" required>
-                        <span class="input-group-text">
-                            <i class="fas fa-calendar-alt"></i>
-                        </span>
-                    </div>
-                </div>
+                <input type="date" class="form-control deadline-date @error('tenggat_waktu') is-invalid @enderror" id="tenggat_waktu" name="tenggat_waktu" value="{{ \Carbon\Carbon::parse($laporan->tenggat_waktu)->format('Y-m-d') }}" required>
                 @error('tenggat_waktu')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror

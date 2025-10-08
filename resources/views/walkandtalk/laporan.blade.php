@@ -22,34 +22,40 @@
         <form action="{{ route('laporan.store') }}" method="POST" enctype="multipart/form-data" id="reportForm">
             @csrf
             <input type="hidden" name="_token" value="{{ csrf_token() }}">
-            <div class="mb-4">
-                <label for="Foto" class="form-label fw-semibold">Upload Photos</label>
-                <div class="upload-area border-2 border-dashed border-primary rounded-3 p-4 text-center">
-                    <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i>
-                    <p class="mb-3">Drag and drop photos here or click to browse</p>
-                    <input type="file" class="form-control @error('Foto.*') is-invalid @enderror" id="Foto" name="Foto[]" accept="image/*" multiple style="display: none;">
-                    <button type="button" class="btn btn-outline-primary" onclick="document.getElementById('Foto').click()">
-                        <i class="fas fa-folder-open me-2"></i>Browse Files
+            <!-- Completion Photos and Deadline side by side -->
+            <div class="row g-4 mb-4">
+                <!-- Completion Photos -->
+                <div class="col-md-6">
+                    <label for="Foto" class="form-label fw-semibold">Completion Photos:</label>
+                    <input type="file" class="form-control @error('Foto.*') is-invalid @enderror" id="Foto" name="Foto[]" accept="image/*" multiple>
+                    @error('Foto.*')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                    <button type="button" class="btn btn-outline-secondary mt-2" id="openCameraBtn" style="border: 2px solid #6c757d;">
+                        <i class="fas fa-camera me-2"></i>Take Photo
                     </button>
-                </div>
-                @error('Foto.*')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
-                <div id="foto-preview-container" class="mt-3 d-flex flex-wrap gap-2"></div>
-                <button type="button" class="btn btn-outline-secondary mt-2" id="openCameraBtn" style="border: 2px solid #6c757d;">
-                    <i class="fas fa-camera me-2"></i>Take Photo
-                </button>
-                <div id="cameraContainer" style="display:none; margin-top:10px;">
-                    <video id="video" autoplay playsinline style="width:100%; max-width:350px; border:1px solid #ccc; border-radius:8px;"></video>
-                    <canvas id="canvas" style="display:none;"></canvas>
-                    <div class="mt-2">
-                        <button type="button" class="btn btn-primary" id="captureBtn">
-                            <i class="fas fa-camera me-1"></i>Take Photo
-                        </button>
-                        <button type="button" class="btn btn-outline-secondary" id="closeCameraBtn">
-                            <i class="fas fa-times me-1"></i>Close Camera
-                        </button>
+                    <div id="cameraContainer" style="display:none; margin-top:10px;">
+                        <video id="video" autoplay playsinline style="width:100%; max-width:350px; border:1px solid #ccc; border-radius:8px;"></video>
+                        <canvas id="canvas" style="display:none;"></canvas>
+                        <div class="mt-2">
+                            <button type="button" class="btn btn-primary" id="captureBtn">
+                                <i class="fas fa-camera me-1"></i>Take Photo
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" id="closeCameraBtn">
+                                <i class="fas fa-times me-1"></i>Close Camera
+                            </button>
+                        </div>
                     </div>
+                    <div id="foto-preview-container" class="mt-3 d-flex flex-wrap gap-2"></div>
+                </div>
+
+                <!-- Deadline -->
+                <div class="col-md-6">
+                    <label for="tenggat_waktu" class="form-label fw-semibold">Deadline <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control @error('tenggat_waktu') is-invalid @enderror" id="tenggat_waktu" name="tenggat_waktu" value="{{ old('tenggat_waktu') }}" required>
+                    @error('tenggat_waktu')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
                 </div>
             </div>
 
@@ -111,16 +117,6 @@
                     @enderror
                 </div>
 
-                <!-- Deadline -->
-                <div class="col-md-6">
-                    <label for="tenggat_waktu" class="form-label fw-semibold">Deadline <span class="text-danger">*</span></label>
-                    <div class="elegant-date-group">
-                        <input type="date" class="form-control deadline-date @error('tenggat_waktu') is-invalid @enderror" id="tenggat_waktu" name="tenggat_waktu" value="{{ old('tenggat_waktu') }}" required>
-                    </div>
-                    @error('tenggat_waktu')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
-                </div>
             </div>
 
             <!-- Submit Button -->

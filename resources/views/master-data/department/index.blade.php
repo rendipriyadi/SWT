@@ -33,9 +33,6 @@
     <div class="card shadow mb-4">
         <div class="card-header p-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
             <h6 class="m-0 font-weight-bold text-dark">DATA DEPARTMENT</h6>
-            <div class="ms-auto" style="max-width: 260px;">
-                <input id="deptSearch" type="text" class="form-control form-control-sm" placeholder="Search keyword...">
-            </div>
         </div>
         <div class="card-body p-3">
             <!-- Desktop Table -->
@@ -66,13 +63,11 @@
                                 <a href="{{ route('master-data.department.edit', $department->id) }}" class="btn btn-sm btn-warning no-row-nav">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <form action="{{ route('master-data.department.destroy', $department->id) }}" method="POST" style="display: inline;" class="no-row-nav">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-danger no-row-nav" onclick="return showDeleteModal(event, '{{ $department->departemen }}')">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </form>
+                                <button type="button" class="btn btn-sm btn-danger no-row-nav delete-dept-btn"
+                                        data-action="{{ route('master-data.department.destroy', $department->id) }}"
+                                        data-name="{{ $department->departemen ?? $department->name }}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
                             </td>
                         </tr>
                         @endforeach
@@ -127,13 +122,11 @@
                                             <a href="{{ route('master-data.department.edit', $department->id) }}" class="btn btn-sm btn-warning mobile-action-btn">
                                                 <i class="fas fa-edit"></i> Edit
                                             </a>
-                                            <form action="{{ route('master-data.department.destroy', $department->id) }}" method="POST" style="display: inline;">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-danger mobile-action-btn" onclick="return showDeleteModal(event, '{{ $department->departemen }}')">
-                                                    <i class="fas fa-trash"></i> Delete
-                                                </button>
-                                            </form>
+                                            <button type="button" class="btn btn-sm btn-danger mobile-action-btn delete-dept-btn"
+                                                    data-action="{{ route('master-data.department.destroy', $department->id) }}"
+                                                    data-name="{{ $department->departemen ?? $department->name }}">
+                                                <i class="fas fa-trash"></i> Delete
+                                            </button>
                                         </div>
                                     </div>
                                 </td>
@@ -205,32 +198,10 @@
 #departmentDetailModal .value { font-size: 1.05rem; color: var(--text-primary); }
 </style>
 
+@push('scripts')
 <script>
 $(document).ready(function() {
-    // Initialize DataTables only for desktop (guarded)
-    var table;
-    try {
-        if (window.innerWidth >= 768 && $.fn && $.fn.DataTable) {
-            table = $('#departmentsTable').DataTable({
-                responsive: true,
-                pageLength: 25,
-                order: [[0, 'asc']],
-                columnDefs: [
-                    { orderable: false, targets: -1 }
-                ],
-                dom: '<"row mb-3"<"col-md-6"l><"col-md-6 text-end"f>>rtip'
-            });
-
-            // Keyword search binding
-            $('#deptSearch').on('keyup change', function(){
-                table.search(this.value).draw();
-            });
-        }
-    } catch (e) {
-        if (window.console && console.warn) {
-            console.warn('DataTables initialization skipped due to error:', e);
-        }
-    }
+    // Keep native table styles: DataTables disabled on department page
     
     // Removed row-click navigation; using View button only
     
@@ -280,62 +251,49 @@ $(document).ready(function() {
             $(target).addClass('show');
         }
     });
-});
+    // SweetAlert2 handler for department deletes (match /area)
+    $(document).on('click', '.delete-dept-btn', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
 
-// Function to show delete modal
-function showDeleteModal(event, departmentName) {
-    event.preventDefault();
-    
-    // Set modal content
-    $('#deleteDepartmentName').text(departmentName);
-    
-    // Get the form from the clicked button
-    const form = event.target.closest('form');
-    const formAction = form.action;
-    
-    // Set the modal form action
-    $('#deleteDepartmentForm').attr('action', formAction);
-    
-    // Show modal
-    $('#deleteDepartmentModal').modal('show');
-    
-    return false;
-}
+        const actionUrl = $(this).data('action');
+        const deptName = $(this).data('name');
+
+        // Fallback if Swal is unavailable
+        if (typeof Swal === 'undefined') {
+            if (confirm(`Are you sure you want to delete department "${deptName}"?`)) {
+                const form = document.getElementById('deleteDepartmentHiddenForm');
+                form.setAttribute('action', actionUrl);
+                form.submit();
+            }
+            return;
+        }
+
+        Swal.fire({
+            title: 'Delete Confirmation',
+            html: `Are you sure you want to delete the department <strong>${deptName}</strong>?<br><span class="text-danger small">Deleted data cannot be recovered!</span>`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, Delete',
+            cancelButtonText: 'Cancel',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const form = document.getElementById('deleteDepartmentHiddenForm');
+                form.setAttribute('action', actionUrl);
+                form.submit();
+            }
+        });
+    });
+});
 </script>
+@endpush
 @endsection
 
-<!-- Delete Confirmation Modal -->
-<div class="modal fade" id="deleteDepartmentModal" tabindex="-1" aria-labelledby="deleteDepartmentModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header border-0">
-                <h5 class="modal-title text-danger" id="deleteDepartmentModalLabel">
-                    <i class="fas fa-exclamation-triangle me-2"></i>Delete Department
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="text-center mb-3">
-                    <i class="fas fa-trash-alt text-danger fa-3x mb-3"></i>
-                </div>
-                <p class="text-center mb-3">Are you sure you want to delete department "<strong id="deleteDepartmentName"></strong>"?</p>
-                <p class="text-danger text-center small mb-0">
-                    <i class="fas fa-exclamation-circle me-1"></i>
-                    This action is permanent and cannot be reversed
-                </p>
-            </div>
-            <div class="modal-footer border-0">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="fas fa-times me-1"></i>Cancel
-                </button>
-                <form id="deleteDepartmentForm" method="POST" style="display: inline;">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="btn btn-danger">
-                        <i class="fas fa-trash me-1"></i>Delete Department
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
+<!-- Hidden form to submit DELETE after SweetAlert2 confirm -->
+<form id="deleteDepartmentHiddenForm" method="POST" style="display:none;">
+    @csrf
+    @method('DELETE')
+</form>

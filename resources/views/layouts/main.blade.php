@@ -32,7 +32,7 @@
     <link href="{{ asset('css/elegant-datepicker.css') }}?v={{ time() }}" rel="stylesheet">
     
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="{{ asset('images/favicon.png') }}">
+    <link rel="icon" type="image/png" href="{{ asset('images/static/favicon.png') }}">
     <link rel="manifest" href="{{ asset('manifest.json') }}">
 
     <!-- CSRF Token -->
@@ -1113,6 +1113,7 @@
     <script src="{{ asset('js/responsive-bootstrap5.min.js') }}"></script>
     <script src="{{ asset('js/datatables-init.js') }}?v={{ time() }}_{{ rand(1000, 9999) }}"></script>
     <script src="{{ asset('js/filter-icon.js') }}"></script>
+    <!-- SweetAlert2 for reports and history only -->
     <script src="{{ asset('js/sweetalert2.min.js') }}"></script>
     <script src="{{ asset('js/delete-handler.js') }}"></script>
     <script src="{{ asset('js/modal-handlers.js') }}?v={{ time() }}_{{ rand(1000, 9999) }}"></script>

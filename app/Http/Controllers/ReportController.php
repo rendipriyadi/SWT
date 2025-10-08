@@ -100,7 +100,7 @@ class ReportController extends Controller
         if ($request->hasFile('Foto')) {
             foreach ($request->file('Foto') as $foto) {
                 $fileName = time() . '_' . $foto->getClientOriginalName();
-                $foto->move(public_path('images'), $fileName);
+                $foto->move(public_path('images/reports'), $fileName);
                 $fotoFileNames[] = $fileName;
             }
         }
@@ -188,7 +188,7 @@ class ReportController extends Controller
         if ($request->hasFile('Foto')) {
             foreach ($request->file('Foto') as $foto) {
                 $fileName = time() . '_' . $foto->getClientOriginalName();
-                $foto->move(public_path('images'), $fileName);
+                $foto->move(public_path('images/reports'), $fileName);
                 $newlyUploadedPhotos[] = $fileName;
             }
         }
@@ -253,13 +253,13 @@ class ReportController extends Controller
 
         if ($request->status === 'Selesai') {
             $fotoFileNames = [];
-            if ($request->hasFile('Foto')) {
-                foreach ($request->file('Foto') as $file) {
-                    $fileName = time() . '-' . $file->getClientOriginalName();
-                    $file->move(public_path('images'), $fileName);
-                    $fotoFileNames[] = $fileName;
-                }
+        if ($request->hasFile('Foto')) {
+            foreach ($request->file('Foto') as $file) {
+                $fileName = time() . '-' . $file->getClientOriginalName();
+                $file->move(public_path('images/completions'), $fileName);
+                $fotoFileNames[] = $fileName;
             }
+        }
 
             \App\Models\Penyelesaian::updateOrCreate(
                 ['laporan_id' => $laporan->id],
@@ -269,7 +269,7 @@ class ReportController extends Controller
 
         $laporan->update(['status' => $request->status]);
 
-        return redirect()->route('dashboard')->with('success', 'Report status updated successfully.');
+        return redirect()->route('sejarah')->with('success', 'Report status updated successfully.');
     }
 
     public function dashboardDatatables(Request $request)
@@ -286,9 +286,9 @@ class ReportController extends Controller
             ->addColumn('foto', function ($laporan) {
                 if (!empty($laporan->Foto) && is_array($laporan->Foto)) {
                     $foto = $laporan->Foto[0];
-                    $fotoPath = asset('images/' . $foto);
+                    $fotoPath = asset('images/reports/' . $foto);
                     $photoUrls = [];
-                    foreach ($laporan->Foto as $foto) { $photoUrls[] = asset('images/' . $foto); }
+                    foreach ($laporan->Foto as $foto) { $photoUrls[] = asset('images/reports/' . $foto); }
                     $photoData = json_encode($photoUrls);
                     return '<img src="' . $fotoPath . '" alt="Foto Masalah" class="img-thumbnail" style="width: 80px; height: 80px; object-fit: cover; cursor: pointer;" data-bs-toggle="modal" data-bs-target="#modalFotoFull" data-photos=\'' . $photoData . '\'>';
                 }
@@ -322,6 +322,7 @@ class ReportController extends Controller
                 return '<div class="description-container" title="' . e($laporan->deskripsi_masalah) . '">' . e($shortDescription) . '</div>';
             })
             ->addColumn('deskripsi_masalah_full', function ($laporan) { return $laporan->deskripsi_masalah ?? ''; })
+            ->addColumn('penanggung_jawab', function ($laporan) { return $laporan->penanggungJawab ? $laporan->penanggungJawab->name : 'Not assigned'; })
             ->addColumn('tenggat_waktu', function ($laporan) { return Carbon::parse($laporan->tenggat_waktu)->format('l, j-n-Y'); })
             ->addColumn('status', function ($laporan) { return $laporan->status == 'In Progress' ? '<span class="status-badge status-in-progress"><i class="fas fa-cog fa-spin"></i> In Progress</span>' : ($laporan->status == 'Selesai' ? '<span class="status-badge status-completed"><i class="fas fa-check-circle"></i> Completed</span>' : '<span class="badge bg-secondary">' . $laporan->status . '</span>'); })
             ->addColumn('penyelesaian', function ($laporan) { return $laporan->penyelesaian ? '<button class="btn btn-sm btn-info lihat-penyelesaian-btn" data-bs-toggle="modal" data-bs-target="#modalPenyelesaian" data-id="' . $laporan->id . '"><i class="fas fa-eye"></i> View</button>' : '<a href="' . route('laporan.tindakan', $laporan->id) . '" class="btn btn-sm btn-primary"><i class="fas fa-tasks"></i> Action</a>'; })
@@ -388,7 +389,7 @@ class ReportController extends Controller
         if (!$laporan || !$laporan->penyelesaian) { return response()->json(['success' => false]); }
         $fotoUrls = [];
         if (!empty($laporan->penyelesaian->Foto) && is_array($laporan->penyelesaian->Foto)) {
-            foreach ($laporan->penyelesaian->Foto as $foto) { $fotoUrls[] = asset('images/' . $foto); }
+            foreach ($laporan->penyelesaian->Foto as $foto) { $fotoUrls[] = asset('images/completions/' . $foto); }
         }
         return response()->json([
             'success' => true,

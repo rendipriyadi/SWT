@@ -121,12 +121,41 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Remove station button click
     $(document).on('click', '.remove-station', function() {
-        $(this).closest('.station-item').remove();
+        const stationItem = $(this).closest('.station-item');
+        const stationName = stationItem.find('input[name="stations[]"]').val() || 'this station';
         
-        // Show/hide remove buttons
-        const stationItems = $('.station-item');
-        if (stationItems.length === 1) {
-            stationItems.find('.remove-station').hide();
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                title: 'Delete Station',
+                text: `Are you sure you want to delete "${stationName}"?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    stationItem.remove();
+                    
+                    // Show/hide remove buttons
+                    const stationItems = $('.station-item');
+                    if (stationItems.length === 1) {
+                        stationItems.find('.remove-station').hide();
+                    }
+                }
+            });
+        } else {
+            // Fallback to native confirm if SweetAlert2 is not available
+            if (confirm(`Are you sure you want to delete "${stationName}"?`)) {
+                stationItem.remove();
+                
+                // Show/hide remove buttons
+                const stationItems = $('.station-item');
+                if (stationItems.length === 1) {
+                    stationItems.find('.remove-station').hide();
+                }
+            }
         }
     });
 

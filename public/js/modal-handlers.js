@@ -174,7 +174,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Fallback if no photos
             carouselInner.append(`
                 <div class="carousel-item active">
-                    <img src="/images/nophoto.jpg" class="d-block w-100 img-fluid rounded" alt="Foto tidak tersedia">
+                    <img src="/images/static/nophoto.jpg" class="d-block w-100 img-fluid rounded" alt="Foto tidak tersedia">
                 </div>
             `);
         }

@@ -17,7 +17,9 @@ Route::post('/laporan/store', [ReportController::class, 'store'])->name('laporan
 Route::get('/sejarah', [HistoryController::class, 'index'])->name('sejarah');
 Route::get('/create', [ReportController::class, 'create'])->name('index.create');
 Route::post('/store', [ReportController::class, 'store'])->name('index.store');
-Route::get('/edit{id}', [ReportController::class, 'edit'])->name('index.edit');
+// Explicit edit route for reports used by DataTables action buttons
+Route::get('/laporan/{id}/edit', [ReportController::class, 'edit'])->name('laporan.edit');
+// Keep legacy alias if needed, but primary update is named 'laporan.update'
 Route::put('/update{id}', [ReportController::class, 'update'])->name('index.update');
 Route::delete('/laporan/{id}/delete', [ReportController::class, 'destroy'])->name('laporan.destroy');
 Route::put('/laporan/{id}', [ReportController::class, 'update'])->name('laporan.update');

@@ -91,12 +91,12 @@
                         @foreach($laporan->Foto as $foto)
                             <div class="position-relative">
                                 <img 
-                                    src="{{ asset('images/' . $foto) }}" 
+                                    src="{{ asset('images/reports/' . $foto) }}" 
                                     class="img-thumbnail cursor-pointer" 
                                     style="height: 100px; object-fit: cover;"
                                     data-bs-toggle="modal"
                                     data-bs-target="#modalFotoFull"
-                                    data-photos="{{ json_encode(array_map(function($f) { return asset('images/' . $f); }, $laporan->Foto)) }}"
+                                    data-photos="{{ json_encode(array_map(function($f) { return asset('images/reports/' . $f); }, $laporan->Foto)) }}"
                                     alt="Issue Photo"
                                 >
                             </div>
@@ -113,15 +113,7 @@
             @csrf
             <div class="mb-3">
                 <label for="Tanggal" class="form-label fw-semibold">Completion Date <span class="text-danger">*</span></label>
-                <div class="elegant-date-group">
-                    <div class="input-group">
-                        <input type="text" class="form-control completion-date @error('Tanggal') is-invalid @enderror" id="Tanggal_display" placeholder="Select completion date..." readonly required>
-                        <input type="hidden" id="Tanggal" name="Tanggal" value="{{ old('Tanggal') }}">
-                        <span class="input-group-text">
-                            <i class="fas fa-calendar-alt"></i>
-                        </span>
-                    </div>
-                </div>
+                <input type="date" class="form-control @error('Tanggal') is-invalid @enderror" id="Tanggal" name="Tanggal" value="{{ old('Tanggal') }}" required>
                 @error('Tanggal')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
@@ -268,7 +260,6 @@ document.addEventListener('DOMContentLoaded', function() {
 document.addEventListener('DOMContentLoaded', function() {
     const statusSelect = document.getElementById('status');
     const tanggalInput = document.getElementById('Tanggal');
-    const tanggalInputDisplay = document.getElementById('Tanggal_display');
     const deskripsiInput = document.getElementById('deskripsi_penyelesaian');
     const fotoInput = document.getElementById('Foto');
 
@@ -285,71 +276,21 @@ document.addEventListener('DOMContentLoaded', function() {
     statusSelect.addEventListener('change', updateRequiredFields);
     updateRequiredFields(); // initial
 
-    // --- Bootstrap Datepicker for Completion Date ---
-    if (tanggalInputDisplay) {
-        const dateInputGroup = tanggalInputDisplay.closest('.input-group');
-        
-        // Initialize datepicker on display input
-        const containerEl = dateInputGroup.closest('.elegant-date-group') || 'body';
-        $(tanggalInputDisplay).datepicker({
-            format: 'dd/mm/yyyy',
-            autoclose: true,
-            todayHighlight: true,
-            startDate: new Date(),
-            orientation: 'auto',
-            container: containerEl,
-            todayBtn: 'linked',
-            clearBtn: true,
-            language: 'en',
-            weekStart: 1,
-            calendarWeeks: true,
-            showOnFocus: true,
-            toggleActive: true,
-            templates: {
-                leftArrow: '<i class="fas fa-chevron-left"></i>',
-                rightArrow: '<i class="fas fa-chevron-right"></i>'
-            }
-        }).on('changeDate', function(e) {
-            // Validate selected date
-            const selectedDate = e.date;
+    // --- Simple date validation for Completion Date ---
+    if (tanggalInput) {
+        tanggalInput.addEventListener('change', function() {
+            const selectedDate = new Date(this.value);
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             
             if (selectedDate < today) {
-                $(this).addClass('is-invalid');
-                $(this).attr('data-bs-original-title', 'Completion date cannot be in the past');
+                this.setCustomValidity('Completion date cannot be in the past');
+                this.classList.add('is-invalid');
             } else {
-                $(this).removeClass('is-invalid');
-                $(this).removeAttr('data-bs-original-title');
+                this.setCustomValidity('');
+                this.classList.remove('is-invalid');
             }
-            
-            // Convert to Y-m-d format for hidden input
-            const year = selectedDate.getFullYear();
-            const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
-            const day = String(selectedDate.getDate()).padStart(2, '0');
-            const formattedDate = `${year}-${month}-${day}`;
-            
-            // Update hidden input with correct format
-            tanggalInput.value = formattedDate;
         });
-        
-        // Rely on plugin placement; no custom fixed positioning
-        
-        // Trigger datepicker when input group text is clicked
-        $('#datePickerBtn').on('click', function() {
-            $(tanggalInputDisplay).datepicker('show');
-        });
-        
-        // Load existing value if any
-        if (tanggalInput.value) {
-            const existingDate = new Date(tanggalInput.value);
-            if (!isNaN(existingDate.getTime())) {
-                const day = String(existingDate.getDate()).padStart(2, '0');
-                const month = String(existingDate.getMonth() + 1).padStart(2, '0');
-                const year = existingDate.getFullYear();
-                tanggalInputDisplay.value = `${day}/${month}/${year}`;
-            }
-        }
     }
     
     // Foto preview dan kamera
