@@ -22,25 +22,31 @@ class CleanupDuplicateDataSeeder extends Seeder
 
     private function cleanupProblemCategories()
     {
+        $this->command->info('Cleaning up duplicate problem_categories...');
+        
         // Get all problem categories
         $categories = DB::table('problem_categories')->get();
         
         // Group by name to find duplicates
         $grouped = $categories->groupBy('name');
         
+        $totalDeleted = 0;
         foreach ($grouped as $name => $duplicates) {
             if ($duplicates->count() > 1) {
                 $this->command->info("Found {$duplicates->count()} duplicates for category: {$name}");
                 
-                // Keep the first one, delete the rest
-                $keep = $duplicates->first();
-                $toDelete = $duplicates->skip(1);
+                // Keep the first one (lowest ID), delete the rest
+                $keep = $duplicates->sortBy('id')->first();
+                $toDelete = $duplicates->where('id', '>', $keep->id);
                 
                 foreach ($toDelete as $duplicate) {
                     DB::table('problem_categories')->where('id', $duplicate->id)->delete();
-                    $this->command->info("Deleted duplicate category ID: {$duplicate->id}");
+                    $this->command->info("Deleted duplicate category ID: {$duplicate->id} (name: {$duplicate->name})");
+                    $totalDeleted++;
                 }
             }
         }
+        
+        $this->command->info("Total deleted duplicates: {$totalDeleted}");
     }
 }
