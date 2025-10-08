@@ -13,14 +13,15 @@ class DepartemenSupervisorSeeder extends Seeder
      */
     public function run(): void
     {
-        DepartemenSupervisor::create([
-            'id' => 1,
-            'departemen' => 'Default Department',
-            'supervisor' => 'Default Supervisor',
-            'workgroup' => 'WG-DEFAULT',
-            'email' => 'supervisor@siemens.com',
-            'created_at' => now(),
-            'updated_at' => now()
-        ]);
+        DepartemenSupervisor::updateOrCreate(
+            ['id' => 1],
+            [
+                'departemen' => 'Default Department',
+                'supervisor' => 'Default Supervisor',
+                'workgroup' => 'WG-DEFAULT',
+                'email' => 'supervisor@siemens.com',
+                'updated_at' => now()
+            ]
+        );
     }
 }
