@@ -18,6 +18,12 @@ yarn-error.log
 /.idea
 /.vscode
 
-/public/images/*
+# Ignore all images except static assets
+/public/images/reports/*
+/public/images/completions/*
+# Keep the directories themselves
+!/public/images/reports/.gitkeep
+!/public/images/completions/.gitkeep
+# Keep static assets
 !/public/images/static
 !/public/images/static/**

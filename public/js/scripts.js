@@ -49,6 +49,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 localStorage.setItem('sb|sidebar-toggle', 'true');
             }
         }
+
+        // Beritahu komponen lain bahwa sidebar telah berubah (untuk reflow DataTables)
+        try {
+            window.dispatchEvent(new CustomEvent('sidebar:toggled'));
+        } catch (e) {}
     }
 
     initSidebar();

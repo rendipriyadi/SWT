@@ -89,14 +89,31 @@
                     <h6 class="fw-bold">Problem Photos:</h6>
                     <div class="d-flex flex-wrap gap-2 mt-2">
                         @foreach($laporan->Foto as $foto)
+                            @php
+                                // Helper to resolve photo URL with fallback
+                                $photoPath = public_path('images/reports/' . $foto);
+                                if (!file_exists($photoPath)) {
+                                    $photoPath = public_path('images/' . $foto);
+                                }
+                                $photoUrl = file_exists(public_path('images/reports/' . $foto)) 
+                                    ? asset('images/reports/' . $foto) 
+                                    : asset('images/' . $foto);
+                                
+                                // Build array of all photo URLs for carousel
+                                $allPhotoUrls = array_map(function($f) {
+                                    return file_exists(public_path('images/reports/' . $f)) 
+                                        ? asset('images/reports/' . $f) 
+                                        : asset('images/' . $f);
+                                }, $laporan->Foto);
+                            @endphp
                             <div class="position-relative">
                                 <img 
-                                    src="{{ asset('images/reports/' . $foto) }}" 
+                                    src="{{ $photoUrl }}" 
                                     class="img-thumbnail cursor-pointer" 
                                     style="height: 100px; object-fit: cover;"
                                     data-bs-toggle="modal"
                                     data-bs-target="#modalFotoFull"
-                                    data-photos="{{ json_encode(array_map(function($f) { return asset('images/reports/' . $f); }, $laporan->Foto)) }}"
+                                    data-photos="{{ json_encode($allPhotoUrls) }}"
                                     alt="Issue Photo"
                                 >
                             </div>

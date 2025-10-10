@@ -160,7 +160,7 @@
                                             @if($category->description)
                                                 @php
                                                     $desc = strip_tags($category->description ?? '');
-                                                    $shortDesc = \Illuminate\Support\Str::words($desc, 20, '...');
+                                                    $shortDesc = \Illuminate\Support\Str::words($desc, 10, '...');
                                                 @endphp
                                                 <br><small class="text-muted">{{ $shortDesc }}</small>
                                             @endif

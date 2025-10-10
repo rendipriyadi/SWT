@@ -100,7 +100,7 @@ class ReportController extends Controller
         if ($request->hasFile('Foto')) {
             foreach ($request->file('Foto') as $foto) {
                 $fileName = time() . '_' . $foto->getClientOriginalName();
-                $foto->move(public_path('images'), $fileName);
+                $foto->move(public_path('images/reports'), $fileName);
                 $fotoFileNames[] = $fileName;
             }
         }
@@ -154,79 +154,102 @@ class ReportController extends Controller
 
     public function update(Request $request, $id)
     {
-        $messages = [
-            'area_id.required' => 'Area harus dipilih.',
-            'problem_category_id.required' => 'Kategori masalah harus dipilih.',
-            'deskripsi_masalah.required' => 'Deskripsi masalah harus diisi.',
-            'tenggat_waktu.required' => 'Tenggat waktu harus diisi.',
-        ];
+        try {
+            $messages = [
+                'area_id.required' => 'Area harus dipilih.',
+                'problem_category_id.required' => 'Kategori masalah harus dipilih.',
+                'deskripsi_masalah.required' => 'Deskripsi masalah harus diisi.',
+                'tenggat_waktu.required' => 'Tenggat waktu harus diisi.',
+            ];
 
-        $request->validate([
-            'area_id' => 'required|exists:areas,id',
-            'penanggung_jawab_id' => 'nullable|exists:penanggung_jawab,id',
-            'problem_category_id' => 'required|exists:problem_categories,id',
-            'deskripsi_masalah' => 'required|string',
-            'tenggat_waktu' => 'required|date',
-        ], $messages);
+            $request->validate([
+                'area_id' => 'required|exists:areas,id',
+                'penanggung_jawab_id' => 'nullable|exists:penanggung_jawab,id',
+                'problem_category_id' => 'required|exists:problem_categories,id',
+                'deskripsi_masalah' => 'required|string',
+                'tenggat_waktu' => 'required|date',
+                'Foto.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240',
+            ], $messages);
 
-        $laporan = Laporan::findOrFail($id);
+            $laporan = Laporan::findOrFail($id);
 
-        $oldData = [
-            'area_id' => $laporan->area_id,
-            'penanggung_jawab_id' => $laporan->penanggung_jawab_id,
-            'problem_category_id' => $laporan->problem_category_id,
-            'deskripsi_masalah' => $laporan->deskripsi_masalah,
-            'tenggat_waktu' => $laporan->tenggat_waktu,
-        ];
+            $oldData = [
+                'area_id' => $laporan->area_id,
+                'penanggung_jawab_id' => $laporan->penanggung_jawab_id,
+                'problem_category_id' => $laporan->problem_category_id,
+                'deskripsi_masalah' => $laporan->deskripsi_masalah,
+                'tenggat_waktu' => $laporan->tenggat_waktu,
+            ];
 
-        $oldArea = $laporan->area ? $laporan->area->name : '-';
-        $oldPenanggungJawab = $laporan->penanggungJawab ? $laporan->penanggungJawab->name : '-';
+            $oldArea = $laporan->area ? $laporan->area->name : '-';
+            $oldPenanggungJawab = $laporan->penanggungJawab ? $laporan->penanggungJawab->name : '-';
 
-        $existingPhotos = $request->input('existing_photos', []);
-        $newlyUploadedPhotos = [];
+            $existingPhotos = $request->input('existing_photos', []);
+            $newlyUploadedPhotos = [];
 
-        if ($request->hasFile('Foto')) {
-            foreach ($request->file('Foto') as $foto) {
-                $fileName = time() . '_' . $foto->getClientOriginalName();
-                $foto->move(public_path('images'), $fileName);
-                $newlyUploadedPhotos[] = $fileName;
+            if ($request->hasFile('Foto')) {
+                foreach ($request->file('Foto') as $foto) {
+                    $fileName = time() . '_' . $foto->getClientOriginalName();
+                    $foto->move(public_path('images/reports'), $fileName);
+                    $newlyUploadedPhotos[] = $fileName;
+                }
             }
-        }
 
-        $allPhotos = array_merge($existingPhotos, $newlyUploadedPhotos);
+            $allPhotos = array_merge($existingPhotos, $newlyUploadedPhotos);
 
-        $oldPhotos = $laporan->Foto ?: [];
-        $photosToDelete = array_diff($oldPhotos, $existingPhotos);
-        foreach ($photosToDelete as $photo) {
-            $filePath = public_path('images/' . $photo);
-            if (file_exists($filePath)) {
-                unlink($filePath);
+            $oldPhotos = $laporan->Foto ?: [];
+            $photosToDelete = array_diff($oldPhotos, $existingPhotos);
+            foreach ($photosToDelete as $photo) {
+                // Try reports folder first, then fallback to legacy images folder
+                $filePath = public_path('images/reports/' . $photo);
+                if (!file_exists($filePath)) {
+                    $filePath = public_path('images/' . $photo);
+                }
+                if (file_exists($filePath)) {
+                    unlink($filePath);
+                }
             }
+
+            $laporan->update([
+                'area_id' => $request->area_id,
+                'penanggung_jawab_id' => $request->penanggung_jawab_id,
+                'problem_category_id' => $request->problem_category_id,
+                'deskripsi_masalah' => $request->deskripsi_masalah,
+                'tenggat_waktu' => $request->tenggat_waktu,
+                'Foto' => count($allPhotos) > 0 ? $allPhotos : null,
+            ]);
+
+            $perubahan = $this->detectChanges($oldData, [
+                'area_id' => $request->area_id,
+                'penanggung_jawab_id' => $request->penanggung_jawab_id,
+                'problem_category_id' => $request->problem_category_id,
+                'deskripsi_masalah' => $request->deskripsi_masalah,
+                'tenggat_waktu' => $request->tenggat_waktu,
+            ], $oldArea, $oldPenanggungJawab);
+
+            $laporan = Laporan::with(['area', 'penanggungJawab'])->find($id);
+            if (!empty($perubahan)) {
+                // $this->sendEditNotifications($laporan, $perubahan); // Disabled email notifications
+            }
+
+            $returnUrl = $request->input('return_url', route('laporan.index'));
+            
+            // Prevent redirect to datatables AJAX endpoints
+            if (str_contains($returnUrl, '/datatables')) {
+                $returnUrl = route('laporan.index');
+            }
+            
+            return redirect($returnUrl)->with('success', 'Report updated successfully.');
+            
+        } catch (\Exception $e) {
+            \Log::error('Error updating report: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            
+            $returnUrl = $request->input('return_url', route('laporan.index'));
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Failed to update report: ' . $e->getMessage());
         }
-
-        $laporan->update([
-            'area_id' => $request->area_id,
-            'penanggung_jawab_id' => $request->penanggung_jawab_id,
-            'problem_category_id' => $request->problem_category_id,
-            'deskripsi_masalah' => $request->deskripsi_masalah,
-            'tenggat_waktu' => $request->tenggat_waktu,
-            'Foto' => count($allPhotos) > 0 ? $allPhotos : null,
-        ]);
-
-        $perubahan = $this->detectChanges($oldData, [
-            'area_id' => $request->area_id,
-            'penanggung_jawab_id' => $request->penanggung_jawab_id,
-            'problem_category_id' => $request->problem_category_id,
-            'deskripsi_masalah' => $request->deskripsi_masalah,
-            'tenggat_waktu' => $request->tenggat_waktu,
-        ], $oldArea, $oldPenanggungJawab);
-
-        $laporan = Laporan::with(['area', 'penanggungJawab'])->find($id);
-        if (!empty($perubahan)) {
-            // $this->sendEditNotifications($laporan, $perubahan); // Disabled email notifications
-        }
-
-        return redirect()->route('dashboard')->with('success', 'Report updated successfully.');
     }
 
     public function tindakan($id)
@@ -256,7 +279,7 @@ class ReportController extends Controller
             if ($request->hasFile('Foto')) {
                 foreach ($request->file('Foto') as $file) {
                     $fileName = time() . '-' . $file->getClientOriginalName();
-                    $file->move(public_path('images'), $fileName);
+                    $file->move(public_path('images/completions'), $fileName);
                     $fotoFileNames[] = $fileName;
                 }
             }
@@ -269,6 +292,11 @@ class ReportController extends Controller
 
         $laporan->update(['status' => $request->status]);
 
+        // Redirect to history if status is completed, otherwise to dashboard
+        if ($request->status === 'Selesai') {
+            return redirect()->route('sejarah')->with('success', 'Report completed successfully and moved to history.');
+        }
+
         return redirect()->route('dashboard')->with('success', 'Report status updated successfully.');
     }
 
@@ -277,18 +305,58 @@ class ReportController extends Controller
         $query = Laporan::with(['area', 'penanggungJawab', 'penyelesaian', 'problemCategory'])
             ->where('status', '!=', 'Selesai');
 
-        $query = $this->applyFilters($request, $query);
+        // Apply filters
+        if ($request->filled('start_date')) {
+            $query->whereDate('Tanggal', '>=', $request->start_date);
+        }
+        if ($request->filled('end_date')) {
+            $query->whereDate('Tanggal', '<=', $request->end_date);
+        }
+        if ($request->filled('area_id')) {
+            $query->where('area_id', $request->area_id);
+        }
+        if ($request->filled('category_id')) {
+            $query->where('problem_category_id', $request->category_id);
+        }
+
+        $query->orderBy('Tanggal', 'desc');
+
+        // Helper to resolve report photo URL with fallback to legacy folder
+        $resolveReportUrl = function(string $filename) {
+            $candidates = [
+                public_path('images/reports/' . $filename),
+                public_path('images/' . $filename),
+            ];
+            foreach ($candidates as $idx => $path) {
+                if (file_exists($path)) {
+                    return $idx === 0 ? asset('images/reports/' . $filename) : asset('images/' . $filename);
+                }
+            }
+            return asset('images/' . $filename);
+        };
 
         return DataTables::of($query)
             ->addIndexColumn()
-            ->editColumn('DT_RowIndex', function ($laporan) { return '<div class="text-center fw-bold">' . $laporan->DT_RowIndex . '</div>'; })
-            ->editColumn('Tanggal', function ($laporan) { return Carbon::parse($laporan->created_at)->format('l, j-n-Y'); })
-            ->addColumn('foto', function ($laporan) {
+            ->addColumn('Tanggal', function ($laporan) {
+                return Carbon::parse($laporan->created_at)->format('l, j-n-Y');
+            })
+            ->addColumn('deskripsi_masalah_full', function ($laporan) {
+                return $laporan->deskripsi_masalah ?? '';
+            })
+            ->addColumn('person_in_charge', function ($laporan) {
+                if ($laporan->penanggungJawab) {
+                    return $laporan->penanggungJawab->name ?? '';
+                }
+                return '';
+            })
+            ->addColumn('foto', function ($laporan) use ($resolveReportUrl) {
                 if (!empty($laporan->Foto) && is_array($laporan->Foto)) {
                     $foto = $laporan->Foto[0];
-                    $fotoPath = asset('images/' . $foto);
+                    $fotoPath = $resolveReportUrl($foto);
                     $photoUrls = [];
-                    foreach ($laporan->Foto as $foto) { $photoUrls[] = asset('images/' . $foto); }
+                    foreach ($laporan->Foto as $f) {
+                        $photoUrls[] = $resolveReportUrl($f);
+                    }
                     $photoData = json_encode($photoUrls);
                     return '<img src="' . $fotoPath . '" alt="Foto Masalah" class="img-thumbnail" style="width: 80px; height: 80px; object-fit: cover; cursor: pointer;" data-bs-toggle="modal" data-bs-target="#modalFotoFull" data-photos=\'' . $photoData . '\'>';
                 }
@@ -300,34 +368,52 @@ class ReportController extends Controller
                     $areaName = $laporan->area->name;
                     if ($laporan->penanggungJawab) {
                         $stationOrPic = trim((string)($laporan->penanggungJawab->station ?? ''));
-                        if ($stationOrPic === '') { $stationOrPic = $laporan->penanggungJawab->name ?? ''; }
+                        if ($stationOrPic === '') {
+                            $stationOrPic = $laporan->penanggungJawab->name ?? '';
+                        }
                         $html = $stationOrPic !== '' ? '<span class="fw-bold">' . $areaName . ' (' . e($stationOrPic) . ')</span>' : '<span class="fw-bold">' . $areaName . '</span>';
                     } else {
-                        $firstStation = optional($laporan->area->penanggungJawabs()->orderBy('id')->first())->station;
-                        $html = $firstStation ? '<span class="fw-bold">' . $areaName . ' (' . e($firstStation) . ')</span>' : '<span class="fw-bold">' . $areaName . '</span>';
+                        $html = '<span class="fw-bold">' . $areaName . '</span>';
                     }
                 }
                 return $html;
             })
             ->addColumn('problem_category', function ($laporan) {
                 if ($laporan->problemCategory) {
-                    $color = $laporan->problemCategory->color; $name = $laporan->problemCategory->name;
-                    return '<span class="badge problem-category-badge" style="background-color: ' . $color . '; color: white; max-width: 150px; white-space: normal; word-wrap: break-word; word-break: break-word; overflow-wrap: break-word; display: inline-block; line-height: 1.3; height: auto;">' . e($name) . '</span>';
+                    $color = $laporan->problemCategory->color ?? '#6c757d';
+                    $name = $laporan->problemCategory->name;
+                    return '<span class="badge" style="background-color: ' . $color . '; color: white;">' . e($name) . '</span>';
                 }
                 return '<span class="text-muted">No Category</span>';
             })
             ->addColumn('deskripsi_masalah', function ($laporan) {
-                $description = $laporan->deskripsi_masalah; $maxLength = 80;
+                $description = $laporan->deskripsi_masalah;
+                $maxLength = 80;
                 $shortDescription = strlen($description) > $maxLength ? substr($description, 0, $maxLength) . '...' : $description;
                 return '<div class="description-container" title="' . e($laporan->deskripsi_masalah) . '">' . e($shortDescription) . '</div>';
             })
-            ->addColumn('deskripsi_masalah_full', function ($laporan) { return $laporan->deskripsi_masalah ?? ''; })
-            ->addColumn('tenggat_waktu', function ($laporan) { return Carbon::parse($laporan->tenggat_waktu)->format('l, j-n-Y'); })
-            ->addColumn('status', function ($laporan) { return $laporan->status == 'In Progress' ? '<span class="status-badge status-in-progress"><i class="fas fa-cog fa-spin"></i> In Progress</span>' : ($laporan->status == 'Selesai' ? '<span class="status-badge status-completed"><i class="fas fa-check-circle"></i> Completed</span>' : '<span class="badge bg-secondary">' . $laporan->status . '</span>'); })
-            ->addColumn('penyelesaian', function ($laporan) { return $laporan->penyelesaian ? '<button class="btn btn-sm btn-info lihat-penyelesaian-btn" data-bs-toggle="modal" data-bs-target="#modalPenyelesaian" data-id="' . $laporan->id . '"><i class="fas fa-eye"></i> View</button>' : '<a href="' . route('laporan.tindakan', $laporan->id) . '" class="btn btn-sm btn-primary"><i class="fas fa-tasks"></i> Action</a>'; })
+            ->addColumn('deskripsi_masalah_full', function ($laporan) {
+                return $laporan->deskripsi_masalah ?? '';
+            })
+            ->editColumn('tenggat_waktu', function ($laporan) {
+                return Carbon::parse($laporan->tenggat_waktu)->format('l, j-n-Y');
+            })
+            ->addColumn('status', function ($laporan) {
+                return $laporan->status == 'In Progress'
+                    ? '<span class="status-badge status-in-progress"><i class="fas fa-cog fa-spin"></i> In Progress</span>'
+                    : '<span class="badge bg-secondary">' . $laporan->status . '</span>';
+            })
+            ->addColumn('penyelesaian', function ($laporan) {
+                return $laporan->penyelesaian
+                    ? '<button class="btn btn-sm btn-info lihat-penyelesaian-btn" data-bs-toggle="modal" data-bs-target="#modalPenyelesaian" data-id="' . $laporan->id . '"><i class="fas fa-eye"></i> View</button>'
+                    : '<a href="' . route('laporan.tindakan', $laporan->id) . '" class="btn btn-sm btn-primary"><i class="fas fa-tasks"></i> Action</a>';
+            })
             ->addColumn('aksi', function ($laporan) {
-                $editUrl = route('laporan.edit', $laporan->id); $deleteUrl = route('laporan.destroy', $laporan->id);
-                return '<div class="d-flex gap-1"><a href="' . $editUrl . '" class="btn btn-sm btn-warning" title="Edit"><i class="fas fa-edit"></i></a><button class="btn btn-sm btn-danger delete-btn" data-id="' . $laporan->id . '" data-delete-url="' . $deleteUrl . '" data-return-url="' . url()->current() . '" title="Delete"><i class="fas fa-trash"></i></button></div>';
+                // Use laporan.index route instead of datatables endpoint
+                $returnUrl = route('laporan.index');
+                $editUrl = route('laporan.edit', ['id' => $laporan->id, 'return_url' => $returnUrl]);
+                $deleteUrl = route('laporan.destroy', $laporan->id);
+                return '<div class="d-flex gap-1"><a href="' . $editUrl . '" class="btn btn-sm btn-warning" title="Edit"><i class="fas fa-edit"></i></a><button class="btn btn-sm btn-danger delete-btn" data-id="' . $laporan->id . '" data-delete-url="' . $deleteUrl . '" data-return-url="' . $returnUrl . '" title="Delete"><i class="fas fa-trash"></i></button></div>';
             })
             ->rawColumns(['foto', 'departemen', 'problem_category', 'deskripsi_masalah', 'status', 'penyelesaian', 'aksi'])
             ->make(true);
@@ -344,8 +430,8 @@ class ReportController extends Controller
             // Delete associated completion photos if any
             $penyelesaian = \App\Models\Penyelesaian::where('laporan_id', $laporan->id)->first();
             if ($penyelesaian && !empty($penyelesaian->Foto) && is_array($penyelesaian->Foto)) {
-                foreach ($penyelesaian->Foto as $foto) {
-                    $path = public_path('images/' . $foto);
+            foreach ($penyelesaian->Foto as $foto) {
+                $path = public_path('images/completions/' . $foto);
                     if (file_exists($path)) { @unlink($path); }
                 }
                 $penyelesaian->delete();
@@ -354,7 +440,7 @@ class ReportController extends Controller
             // Delete report photos
             if (!empty($laporan->Foto) && is_array($laporan->Foto)) {
                 foreach ($laporan->Foto as $foto) {
-                    $path = public_path('images/' . $foto);
+                    $path = public_path('images/reports/' . $foto);
                     if (file_exists($path)) { @unlink($path); }
                 }
             }
@@ -386,9 +472,24 @@ class ReportController extends Controller
     {
         $laporan = Laporan::with('penyelesaian')->find($id);
         if (!$laporan || !$laporan->penyelesaian) { return response()->json(['success' => false]); }
+        
+        // Helper to resolve completion photo URL with fallback to legacy folder
+        $resolveCompletionUrl = function(string $filename) {
+            $candidates = [
+                public_path('images/completions/' . $filename),
+                public_path('images/' . $filename),
+            ];
+            foreach ($candidates as $idx => $path) {
+                if (file_exists($path)) {
+                    return $idx === 0 ? asset('images/completions/' . $filename) : asset('images/' . $filename);
+                }
+            }
+            return asset('images/' . $filename);
+        };
+        
         $fotoUrls = [];
         if (!empty($laporan->penyelesaian->Foto) && is_array($laporan->penyelesaian->Foto)) {
-            foreach ($laporan->penyelesaian->Foto as $foto) { $fotoUrls[] = asset('images/' . $foto); }
+            foreach ($laporan->penyelesaian->Foto as $foto) { $fotoUrls[] = $resolveCompletionUrl($foto); }
         }
         return response()->json([
             'success' => true,

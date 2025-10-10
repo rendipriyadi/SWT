@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Update station dropdown berdasarkan area yang dipilih
     async function updateStations(areaId) {
         // Reset station dropdown
-        stationSelect.innerHTML = '<option value="">Pilih Station</option>';
+        stationSelect.innerHTML = '<option value="">Select Station</option>';
         
         // Jika tidak ada area yang dipilih
         if (!areaId) {
@@ -92,15 +92,15 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Initialize form if values exist (important for edit form)
+    // Initialize form if values exist (important for edit form and validation errors)
     if (areaSelect && areaSelect.value) {
         updateStations(areaSelect.value);
         
         // Delay to ensure DOM is fully loaded
         setTimeout(() => {
-            // If edit form has station pre-selected
-            if (stationSelect.getAttribute('data-selected')) {
-                const selectedStation = stationSelect.getAttribute('data-selected');
+            // If form has station pre-selected (from old() or edit form)
+            const selectedStation = stationSelect.getAttribute('data-selected');
+            if (selectedStation) {
                 const options = stationSelect.querySelectorAll('option');
                 for (let option of options) {
                     if (option.value === selectedStation) {
@@ -110,6 +110,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
             }
-        }, 100);
+        }, 200); // Increased delay for better reliability
     }
 });

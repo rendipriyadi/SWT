@@ -437,7 +437,7 @@
     }
 
     /* Unified logo size to match navbar brand (26px) */
-    .sb-sidenav .px-3.py-3 img { width: 26px; height: 26px; }
+    .sb-sidenav .px-3.py-3 img { width: 26px; height: 26px; object-fit: contain; border-radius: 6px; display: block; }
 
     /* Collapsed rail: keep same border and vertical alignment */
     body.sidebar-collapsed #layoutSidenav_nav .sb-sidenav .px-3.py-3 {
@@ -637,9 +637,9 @@
     /* Photo column */
     .table th:nth-child(3) img, .table td:nth-child(3) img, .thumb-sm { max-width: 60px; height: 60px; object-fit: cover; }
 
-    /* Datatables wrapper: avoid forcing horizontal scroll */
-    .dataTables_wrapper { overflow-x: hidden; }
-    .dataTables_scrollBody { overflow-x: hidden !important; }
+    /* DataTables wrapper: allow horizontal scroll and full width */
+    .dataTables_wrapper { overflow-x: visible; width: 100%; }
+    .dataTables_scrollBody { overflow-x: auto !important; }
 
     .table tbody tr {
         transition: all 0.2s ease;
@@ -1011,9 +1011,9 @@
             <nav class="sb-sidenav accordion sb-sidenav-dark" id="sidenavAccordion">
                 <div class="px-3 py-3 border-bottom d-flex align-items-center gap-2">
                     @php
-                        $logoPath = file_exists(public_path('images/logo-s.png')) ? 'images/logo-s.png' : (file_exists(public_path('images/logo.png')) ? 'images/logo.png' : 'images/favicon.png');
+                        $logoPath = file_exists(public_path('images/static/logo-s.png')) ? 'images/static/logo-s.png' : (file_exists(public_path('images/static/logo.png')) ? 'images/static/logo.png' : 'images/static/favicon.png');
                     @endphp
-                    <img src="{{ asset($logoPath) }}" alt="S" style="width:28px;height:28px;border-radius:6px;object-fit:cover;">
+                    <img src="{{ asset($logoPath) }}" alt="S" style="width:28px;height:28px;border-radius:6px;object-fit:contain;">
                     <div class="fw-semibold brand-text" style="line-height:1.1;">Safety Walk and Talk</div>
                 </div>
                 <div class="sb-sidenav-menu">

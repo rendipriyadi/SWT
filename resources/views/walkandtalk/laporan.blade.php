@@ -78,7 +78,7 @@
                 <!-- Station Dropdown -->
                 <div class="col-md-6">
                     <label for="penanggung_jawab_id" class="form-label fw-semibold">Station <small class="text-muted">(Optional)</small></label>
-                    <select class="form-select @error('penanggung_jawab_id') is-invalid @enderror" id="penanggung_jawab_id" name="penanggung_jawab_id">
+                    <select class="form-select @error('penanggung_jawab_id') is-invalid @enderror" id="penanggung_jawab_id" name="penanggung_jawab_id" data-selected="{{ old('penanggung_jawab_id') }}">
                         <option value="">Select Station</option>
                     </select>
                     @error('penanggung_jawab_id')

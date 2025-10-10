@@ -14,10 +14,26 @@
         </a>
     </div>
 
-    <div class="card p-3">
-        <div class="table-responsive">
-            <table id="reportsTable" class="table table-bordered table-striped table-hover w-100 small" data-url="{{ route('dashboard.datatables') }}">
+    <div class="card">
+        <div class="card-body p-0">
+        <div class="table-scroll-x">
+            <table id="laporanTable" class="table table-bordered table-striped table-hover small mb-0" data-url="{{ route('dashboard.datatables') }}">
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>Date</th>
+                        <th>Photo</th>
+                        <th>Area/Station</th>
+                        <th>Problem Category</th>
+                        <th>Description</th>
+                        <th>Deadline</th>
+                        <th>Status</th>
+                        <th>Completion</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
             </table>
+        </div>
         </div>
     </div>
 
@@ -125,185 +141,55 @@
 
 @push('scripts')
 <style>
+/* Lebar kolom dipindahkan ke columnDefs DataTables untuk sinkron thead/td */
+
 /* Make table rows look clickable and add hover feedback */
-#reportsTable tbody tr.clickable-row { cursor: pointer; }
-#reportsTable tbody tr.clickable-row:hover { background-color: rgba(13,110,253,0.08); }
-/* Column widths mapping (by order):
-   1 No, 2 Date, 3 Photo, 4 Area/Station, 5 Problem Category,
-   6 Description, 7 Deadline, 8 Status, 9 Completion, 10 Action
-*/
-/* Date (col 2) and Deadline (col 7) */
-#reportsTable th:nth-child(2),
-#reportsTable td:nth-child(2) { width: 90px !important; min-width: 90px !important; text-align: center;}
-#reportsTable th:nth-child(7),
-#reportsTable td:nth-child(7) { width: 110px !important; min-width: 110px !important; text-align: center;}
-/* Description (col 6) */
-#reportsTable th:nth-child(6),
-#reportsTable td:nth-child(6) { width: 200px !important; min-width: 200px !important;}
-/* No (col 1) */
-#reportsTable th:nth-child(1),
-#reportsTable td:nth-child(1) { width: 35px !important; min-width: 35px !important; text-align: center;}
-/* Photo (col 3) */
-#reportsTable th:nth-child(3),
-#reportsTable td:nth-child(3) { width: 80px !important; min-width: 80px !important; text-align: center;}
-/* Area/Station (col 4) */
-#reportsTable th:nth-child(4),
-#reportsTable td:nth-child(4) { width: 100px !important; min-width: 100px !important; text-align: center;}
-/* Problem Category (col 5) */
-#reportsTable th:nth-child(5),
-#reportsTable td:nth-child(5) { width: 80px !important; min-width: 80px !important; text-align: center;}
-/* Status (col 8) */
-#reportsTable th:nth-child(8),
-#reportsTable td:nth-child(8) { width: 100px !important; min-width: 100px !important; text-align: center;}
-/* Completion (col 9) */
-#reportsTable th:nth-child(9),
-#reportsTable td:nth-child(9) { width: 80px !important; min-width: 80px !important; text-align: center;}
-/* Action (col 10) */
-#reportsTable th:nth-child(10),
-#reportsTable td:nth-child(10) { width: 100px !important; min-width: 100px !important; text-align: center;}
+#laporanTable tbody tr.clickable-row { cursor: pointer; }
+#laporanTable tbody tr.clickable-row:hover { background-color: rgba(13,110,253,0.08); }
+
 /* Bigger typography for Report Details modal */
 #rowDetailModal .modal-dialog { max-width: 900px; }
 #rowDetailModal .modal-body { font-size: 1rem; }
 #rowDetailModal .modal-title { font-size: 1.25rem; }
-#rowDetailModal .fw-semibold { font-size: 0.95rem; color: var(--text-secondary); }
 #rowDetailModal .value { font-size: 1.05rem; color: var(--text-primary); }
+
+/* Remove inner border on scroll wrapper when placed inside a card to maximize usable width */
+.card .table-scroll-x { border: 0 !important; border-radius: 0 !important; }
+
+/* Date column specific styling - allow text wrapping and proper spacing */
+#laporanTable tbody td:nth-child(2) {
+  white-space: normal !important;
+  word-wrap: break-word !important;
+  word-break: break-word !important;
+  line-height: 1.3 !important;
+  vertical-align: middle !important;
+  padding: 0.75rem 0.5rem !important;
+  min-height: 50px !important;
+}
+
+/* Override any conflicting styles for date column */
+#laporanTable tbody td:nth-child(2).wrap-cell {
+  white-space: normal !important;
+  word-break: break-word !important;
+  height: auto !important;
+}
+
+/* Ensure table rows have consistent height when content wraps */
+#laporanTable tbody tr {
+  height: auto !important;
+  min-height: 60px;
+}
+
+/* Better text wrapping for all table cells */
+#laporanTable td {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
 </style>
+
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const tableEl = document.getElementById('reportsTable');
-    if (!tableEl) return;
-    const ajaxUrl = tableEl.getAttribute('data-url');
-
-    const table = $('#reportsTable').DataTable({
-        processing: true,
-        serverSide: true,
-        ajax: ajaxUrl,
-        responsive: true,
-        autoWidth: false,
-        scrollX: false,
-        initComplete: function() {
-            try {
-                var api = this.api();
-                var lastIdx = api.columns().indexes().toArray().slice(-1)[0];
-                var hdr = api.column(lastIdx).header();
-                if (hdr && $.trim($(hdr).text()) === '') {
-                    $(hdr).text('Action');
-                }
-            } catch(e) {}
-        },
-        columns: [
-            {data: 'DT_RowIndex', name: 'DT_RowIndex', title: 'No', orderable: false, searchable: false, className: 'text-center'},
-            {data: 'Tanggal', name: 'Tanggal', title: 'Date'},
-            {data: 'foto', name: 'foto', title: 'Photo', orderable: false, searchable: false},
-            {data: 'departemen', name: 'area.name', title: 'Area/Station'},
-            {data: 'problem_category', name: 'problemCategory.name', title: 'Problem Category', orderable: false, searchable: true},
-            {data: 'deskripsi_masalah', name: 'deskripsi_masalah', title: 'Description', searchable: true},
-            {data: 'tenggat_waktu', name: 'tenggat_waktu', title: 'Deadline'},
-            {data: 'status', name: 'status', title: 'Status', orderable: false, searchable: true},
-            {data: 'penyelesaian', name: 'penyelesaian', title: 'Completion', orderable: false, searchable: false},
-            {data: 'aksi', name: 'aksi', title: 'Action', orderable: false, searchable: false}
-        ],
-        columnDefs: [
-            { targets: [0,2,8,9], orderable: false },
-            { targets: '_all', createdCell: function(td){ td.style.whiteSpace='normal'; td.style.wordBreak='break-word'; } }
-        ],
-        order: [[1, 'desc']],
-        createdRow: function(row, data) {
-            $(row).addClass('clickable-row');
-        },
-        language: {
-            processing: "Loading...",
-            search: "Search:",
-            lengthMenu: "Show _MENU_",
-            info: " _START_ / _TOTAL_ ",
-            infoEmpty: "No data to display",
-            infoFiltered: "(filtered from _MAX_ total records)",
-            zeroRecords: "No data found",
-            paginate: {
-                first: "First",
-                last: "Last",
-                next: "»",
-                previous: "«"
-            }
-        },
-        dom: '<"row mb-3"<"col-md-6"l><"col-md-6 text-end"f>>rtip',
-        drawCallback: function() {
-            // Hook up photo preview
-            $(document).off('click', 'img[data-photos]').on('click', 'img[data-photos]', function(){
-                const photos = JSON.parse($(this).attr('data-photos') || '[]');
-                const inner = $('#photoCarousel .carousel-inner');
-                inner.empty();
-                photos.forEach((url, idx) => {
-                    inner.append('<div class="carousel-item '+(idx===0?'active':'')+'"><img src="'+url+'" class="d-block w-100" style="max-height:70vh; object-fit:contain;"></div>');
-                });
-            });
-
-            // Row click open detail modal (ignore clicks on buttons/links)
-            $('#reportsTable tbody').off('click', 'tr').on('click', 'tr', function(e){
-                if ($(e.target).closest('a,button,.btn,input,label,select').length) return;
-                const dt = $('#reportsTable').DataTable();
-                const data = dt.row(this).data();
-                if (!data) return;
-                $('#rd_date').text($(this).find('td:eq(1)').text() || '');
-                $('#rd_area').html(data.departemen || '');
-                $('#rd_person_in_charge').text(data.penanggung_jawab || 'Not assigned');
-                $('#rd_category').html(data.problem_category || '');
-                $('#rd_status').html(data.status || '');
-                $('#rd_deadline').text($(this).find('td:eq(6)').text() || '');
-                $('#rd_description').text($(this).find('td:eq(5)').text() || '');
-                $('#rowDetailModal').modal('show');
-            });
-            
-            // Handle delete button click
-            $(document).off('click', '.delete-btn').on('click', '.delete-btn', function(e) {
-                e.preventDefault();
-                const deleteUrl = $(this).data('delete-url');
-                const reportTitle = $(this).data('title') || 'this report';
-                $('#deleteReportTitle').text(reportTitle);
-                $('#deleteReportModal').data('delete-url', deleteUrl);
-                $('#deleteReportModal').modal('show');
-            });
-            
-            // Handle confirm delete button
-            $('#confirmDeleteReport').on('click', function() {
-                const deleteUrl = $('#deleteReportModal').data('delete-url');
-                const $button = $(this);
-                const originalText = $button.html();
-                $button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>Deleting...');
-                $.ajax({
-                    url: deleteUrl,
-                    type: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                    },
-                    success: function(response) {
-                        $('#deleteReportModal').modal('hide');
-                        if (typeof Swal !== 'undefined') {
-                            Swal.fire({ icon: 'success', title: 'Success!', text: response.message || 'Report deleted successfully', timer: 3000, showConfirmButton: false });
-                        } else {
-                            alert(response.message || 'Report deleted successfully');
-                        }
-                        if ($.fn.DataTable.isDataTable('#reportsTable')) {
-                            $('#reportsTable').DataTable().ajax.reload();
-                        }
-                    },
-                    error: function(xhr) {
-                        let errorMessage = 'Failed to delete report';
-                        if (xhr.responseJSON && xhr.responseJSON.message) { errorMessage = xhr.responseJSON.message; }
-                        if (typeof Swal !== 'undefined') {
-                            Swal.fire({ icon: 'error', title: 'Error!', text: errorMessage });
-                        } else {
-                            alert(errorMessage);
-                        }
-                    },
-                    complete: function() { $button.prop('disabled', false).html(originalText); }
-                });
-            });
-        }
-    });
-});
+// Data for filter dropdowns
+window.areasData = @json(\App\Models\Area::all(['id', 'name']));
+window.categoriesData = @json(\App\Models\ProblemCategory::active()->ordered()->get(['id', 'name']));
 </script>
 @endpush
-
-
-

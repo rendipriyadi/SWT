@@ -53,9 +53,15 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Tambahkan event handler untuk tombol close dan klik backdrop
         document.addEventListener('click', function(e) {
-            if (e.target.classList.contains('modal') || 
-                e.target.classList.contains('btn-close') || 
-                e.target.getAttribute('data-bs-dismiss') === 'modal') {
+            // Guard against null targets or nodes without classList
+            const tgt = e && e.target ? e.target : null;
+            if (!tgt) return;
+            const hasClassList = !!(tgt.classList && typeof tgt.classList.contains === 'function');
+            const isBackdrop = hasClassList && tgt.classList.contains('modal');
+            const isCloseBtn = hasClassList && tgt.classList.contains('btn-close');
+            const isDismissAttr = typeof tgt.getAttribute === 'function' && tgt.getAttribute('data-bs-dismiss') === 'modal';
+
+            if (isBackdrop || isCloseBtn || isDismissAttr) {
                 setTimeout(function() {
                     if (document.querySelectorAll('.modal.show').length === 0) {
                         document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
@@ -208,27 +214,39 @@ document.addEventListener('DOMContentLoaded', function() {
                 html += '<h6 class="fw-bold">Completion Photos:</h6>';
 
                 if (res.Foto && Array.isArray(res.Foto) && res.Foto.length > 0) {
-                    html += '<div id="penyelesaianPhotoCarousel" class="carousel slide" data-bs-ride="carousel">';
+                    html += '<div id="penyelesaianPhotoCarousel" class="carousel slide position-relative" style="background-color: #f8f9fa; padding: 20px; border-radius: 8px;">';
                     html += '<div class="carousel-inner">';
                     
                     res.Foto.forEach((foto, index) => {
                         html += `<div class="carousel-item ${index === 0 ? 'active' : ''}">
-                            <img src="${foto}" class="d-block w-100 img-fluid rounded" alt="Foto Penyelesaian ${index+1}">
+                            <img src="${foto}" class="d-block img-fluid rounded mx-auto" style="max-height: 400px; max-width: 100%; object-fit: contain;" alt="Foto Penyelesaian ${index+1}">
                         </div>`;
                     });
                     
                     html += '</div>';
                     
-                    // Carousel navigation buttons if more than 1 photo
+                    // Carousel navigation buttons if more than 1 photo with better visibility
                     if (res.Foto.length > 1) {
-                        html += `<button class="carousel-control-prev" type="button" data-bs-target="#penyelesaianPhotoCarousel" data-bs-slide="prev">
-                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        html += `<button class="carousel-control-prev" type="button" data-bs-target="#penyelesaianPhotoCarousel" data-bs-slide="prev" style="width: 50px;">
+                            <span class="carousel-control-prev-icon" aria-hidden="true" style="background-color: rgba(0,0,0,0.7); padding: 20px; border-radius: 50%;"></span>
                             <span class="visually-hidden">Previous</span>
                         </button>
-                        <button class="carousel-control-next" type="button" data-bs-target="#penyelesaianPhotoCarousel" data-bs-slide="next">
-                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <button class="carousel-control-next" type="button" data-bs-target="#penyelesaianPhotoCarousel" data-bs-slide="next" style="width: 50px;">
+                            <span class="carousel-control-next-icon" aria-hidden="true" style="background-color: rgba(0,0,0,0.7); padding: 20px; border-radius: 50%;"></span>
                             <span class="visually-hidden">Next</span>
                         </button>`;
+                        
+                        // Add thumbnail previews below carousel
+                        html += '<div class="d-flex justify-content-center gap-2 mt-3 flex-wrap">';
+                        res.Foto.forEach((foto, index) => {
+                            html += `<img src="${foto}" 
+                                class="img-thumbnail completion-thumbnail ${index === 0 ? 'active-thumbnail' : ''}" 
+                                data-bs-target="#penyelesaianPhotoCarousel" 
+                                data-bs-slide-to="${index}"
+                                style="width: 80px; height: 80px; object-fit: cover; cursor: pointer; border: 3px solid ${index === 0 ? '#0d6efd' : 'transparent'};"
+                                alt="Thumbnail ${index+1}">`;
+                        });
+                        html += '</div>';
                     }
                     
                     html += '</div>'; // end carousel
@@ -250,9 +268,31 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Initialize carousel manually
                 if (res.Foto && res.Foto.length > 0) {
-                    new bootstrap.Carousel(document.getElementById('penyelesaianPhotoCarousel'), {
-                        interval: 5000
+                    const carouselEl = document.getElementById('penyelesaianPhotoCarousel');
+                    const carousel = new bootstrap.Carousel(carouselEl, {
+                        interval: false // Disable auto-slide
                     });
+                    
+                    // Handle thumbnail clicks
+                    if (res.Foto.length > 1) {
+                        const thumbnails = document.querySelectorAll('.completion-thumbnail');
+                        thumbnails.forEach((thumb, index) => {
+                            thumb.addEventListener('click', function() {
+                                carousel.to(index);
+                                // Update active thumbnail border
+                                thumbnails.forEach(t => t.style.border = '3px solid transparent');
+                                this.style.border = '3px solid #0d6efd';
+                            });
+                        });
+                        
+                        // Update thumbnail border on carousel slide
+                        carouselEl.addEventListener('slid.bs.carousel', function(e) {
+                            const activeIndex = e.to;
+                            thumbnails.forEach((t, i) => {
+                                t.style.border = i === activeIndex ? '3px solid #0d6efd' : '3px solid transparent';
+                            });
+                        });
+                    }
                 }
             } else {
                 modalBody.html('<div class="alert alert-danger mb-0">Completion data not found.</div>');

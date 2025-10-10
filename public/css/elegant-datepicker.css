@@ -61,7 +61,7 @@
 .datepicker .datepicker-switch,
 .datepicker .prev,
 .datepicker .next {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    background: #009999 !important;
     color: white !important;
     border: none !important;
     font-weight: 600;
@@ -72,7 +72,7 @@
 .datepicker .datepicker-switch:hover,
 .datepicker .prev:hover,
 .datepicker .next:hover {
-    background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%) !important;
+    background: #007777 !important;
     color: white !important;
 }
 
@@ -214,7 +214,7 @@
 }
 
 .elegant-date-group .input-group-text {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #009999;
     border: 1px solid #667eea;
     color: white;
     border-radius: 0 8px 8px 0;

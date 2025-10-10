@@ -123,8 +123,8 @@
                 <p class="mb-0 opacity-75">Area Details & Station Information</p>
             </div>
             <div>
-                <a href="{{ route('master-data.area.index') }}" class="btn back-btn">
-                    <i class="fas fa-arrow-left me-2"></i>Back to Areas
+                <a href="{{ route('master-data.area.index') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Area
                 </a>
             </div>
         </div>

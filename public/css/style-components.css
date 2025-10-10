@@ -244,7 +244,7 @@
   }
 
 /* Status badges with icons */
-.status-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; font-size: 0.7rem; border-radius: 999px; line-height: 1; white-space: nowrap; min-width: fit-content; }
+.status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; font-size: 0.85rem; font-weight: 600; border-radius: 999px; line-height: 1.1; white-space: nowrap; min-width: fit-content; }
 .status-in-progress { background:#cfe2ff; color:#084298; border:1px solid #9ec5fe; }
 .status-completed { background:#d1f7ec; color:#0f5132; border:1px solid #a7e9d6; }
 
@@ -260,17 +260,92 @@
   display: inline-flex !important;
 }
 
+/* Utility: allow wrapping in certain cells */
+.wrap-cell {
+  white-space: normal !important;
+  word-break: break-word !important;
+}
+
+/* Ensure badges and buttons fit and center in their cells */
+.status-cell .status-badge,
+.completion-cell .btn,
+.action-cell .btn { display: inline-flex; align-items: center; justify-content: center; }
+.action-cell .btn { margin: 0 2px; min-width: 28px; height: 28px; padding: 0.15rem 0.4rem; font-size: 0.75rem; }
+.completion-cell .btn { min-width: 60px; height: 28px; padding: 0.15rem 0.5rem; font-size: 0.75rem; }
+.action-cell, .completion-cell, .status-cell { text-align: center !important; vertical-align: middle !important; }
+
+/* Utility to keep things in one line when needed */
+.no-wrap { white-space: nowrap !important; }
+
+/* Make description typography slightly larger */
+td.wrap-cell { font-size: 1rem; line-height: 1.5; }
+
+/* Align DataTables header/body widths exactly */
+.dataTables_scrollHeadInner,
+.dataTables_scrollHeadInner table { width: auto !important; }
+.dataTables_scrollHead table,
+.dataTables_scrollBody table { table-layout: fixed !important; width: auto !important; }
+
+/* Unify padding/typography between thead th and tbody td to avoid drift */
+.table thead th,
+.table tbody td {
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+
+/* Reports and History table: match title (thead) and body sizes for perfect alignment */
+#laporanTable thead th,
+#laporanTable tbody td,
+#sejarahTable thead th,
+#sejarahTable tbody td {
+  padding: 0.5rem 0.5rem !important;
+  font-size: 0.95rem !important;
+  line-height: 1.3 !important;
+  box-sizing: border-box;
+  vertical-align: middle !important;
+}
+
+/* History table header styling */
+#sejarahTable thead th {
+  text-align: center !important;
+  font-weight: 600 !important;
+  background-color: #f8f9fa !important;
+  border-bottom: 2px solid #dee2e6 !important;
+  white-space: nowrap;
+}
+
+/* History table body styling */
+#sejarahTable tbody td {
+  border-bottom: 1px solid #dee2e6 !important;
+}
+
+/* Center titles and improve readability */
+.table thead th { text-align: center; font-weight: 600; vertical-align: middle; white-space: normal; line-height: 1.2; }
+
+/* Ensure consistent alignment for history table */
+#sejarahTable thead th,
+#sejarahTable tbody td {
+  text-align: center !important;
+  vertical-align: middle !important;
+}
+
+/* Special alignment for description column (left-align text) */
+#sejarahTable tbody td:nth-child(6) {
+  text-align: left !important;
+}
+
 /* Ensure status column has enough space */
 table.dataTable td:has(.status-badge),
 table.dataTable th:contains('STATUS') {
-  min-width: 110px !important;
+  min-width: 0 !important;
   white-space: nowrap;
 }
 
 /* Alternative selector for status column */
 table.dataTable td[data-order*="Progress"],
 table.dataTable td[data-order*="Completed"] {
-  min-width: 110px !important;
+  min-width: 0 !important;
 }
 
 /* Thumbnails hover */
@@ -325,7 +400,7 @@ table.dataTable td[data-order*="Completed"] {
 
   /* ===== TABLE CELL STYLING ===== */
   .table .description-cell {
-    max-width: 400px;
+    max-width: 320px;
     position: relative;
     white-space: normal;
     line-height: 1.4;
@@ -352,14 +427,21 @@ table.dataTable td[data-order*="Completed"] {
   }
 
   /* Compact variant inside table cells */
-  table td .status-badge { 
-    padding: 2px 8px; 
-    font-size: 0.65rem; 
-    gap: 3px; 
-    white-space: nowrap; 
-    min-width: fit-content;
-    flex-shrink: 0;
-  }
+table td .status-badge { 
+  padding: 4px 12px; 
+  font-size: 0.85rem; 
+  gap: 6px; 
+  white-space: nowrap; 
+  min-width: fit-content;
+  flex-shrink: 0;
+}
+
+/* Make status badges smaller inside Reports/History tables */
+#reportsTable .status-badge,
+#sejarahTable .status-badge {
+  font-size: 0.72rem !important;
+  padding: 2px 8px !important; /* slightly wider for PROCESS */
+}
 
   @media (max-width: 575.98px) {
     .table .description-cell {
@@ -512,6 +594,9 @@ table.dataTable td[data-order*="Completed"] {
   }
 }
 
+/* Allow horizontal scroll when needed */
+.table-responsive { overflow-x: auto !important; overflow-y: visible; }
+
 /* ===== PROBLEM CATEGORY COLUMN STYLING ===== */
 /* Desktop only - Fixed width for Problem Category column with text wrapping */
 @media (min-width: 992px) {
@@ -519,11 +604,23 @@ table.dataTable td[data-order*="Completed"] {
   .table {
     table-layout: fixed !important;
   }
+  /* Area/Station column (4) */
+  .table th:nth-child(4),
+  .table td:nth-child(4) {
+    width: 130px !important;
+    min-width: 130px !important;
+    max-width: 130px !important;
+    white-space: normal;
+    word-wrap: break-word;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    vertical-align: top;
+  }
   .table th:nth-child(5),
   .table td:nth-child(5) {
-    width: 160px !important;
-    min-width: 160px !important;
-    max-width: 160px !important;
+    width: 120px !important;
+    min-width: 120px !important;
+    max-width: 120px !important;
     white-space: normal;
     word-wrap: break-word;
     word-break: break-word;
@@ -531,10 +628,38 @@ table.dataTable td[data-order*="Completed"] {
     vertical-align: top;
     table-layout: fixed;
   }
+
+  /* Deadline column (7) – biarkan DataTables yang atur */
+  .table th:nth-child(7),
+  .table td:nth-child(7) {
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    white-space: normal !important;
+    text-overflow: initial !important;
+    overflow: visible !important;
+    vertical-align: middle !important;
+  }
+
+  /* Status column (8) – biarkan DataTables yang atur; jaga nowrap */
+  .table th:nth-child(8),
+  .table td:nth-child(8) {
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    white-space: nowrap !important;
+    text-overflow: initial !important;
+    overflow: visible !important;
+    vertical-align: middle !important;
+  }
+
+/* Explicit width hooks (if needed later) */
+.deadline-col { width: 100px !important; }
+.status-col { width: auto !important; min-width: 84px !important; white-space: nowrap !important; }
   
   /* Ensure problem category badges can wrap text */
   .table td:nth-child(5) .badge {
-    max-width: 150px !important;
+    max-width: 110px !important;
     width: 100% !important;
     white-space: normal !important;
     word-wrap: break-word !important;
@@ -542,8 +667,8 @@ table.dataTable td[data-order*="Completed"] {
     overflow-wrap: break-word !important;
     display: inline-block !important;
     line-height: 1.3 !important;
-    padding: 0.25rem 0.5rem !important;
-    font-size: 0.75rem !important;
+    padding: 0.2rem 0.4rem !important;
+    font-size: 0.65rem !important;
     text-align: center !important;
     height: auto !important;
     min-height: auto !important;
@@ -551,7 +676,7 @@ table.dataTable td[data-order*="Completed"] {
   
   /* Additional specific styling for problem category badges */
   .table td:nth-child(5) .badge[style*="background-color"] {
-    max-width: 150px !important;
+    max-width: 110px !important;
     white-space: normal !important;
     word-wrap: break-word !important;
     word-break: break-word !important;
@@ -563,7 +688,7 @@ table.dataTable td[data-order*="Completed"] {
   
   /* Force badge wrapping with more specific selectors */
   .table tbody tr td:nth-child(5) .badge {
-    max-width: 150px !important;
+    max-width: 110px !important;
     white-space: normal !important;
     word-wrap: break-word !important;
     word-break: break-word !important;
@@ -576,7 +701,7 @@ table.dataTable td[data-order*="Completed"] {
   
   /* Specific styling for problem-category-badge class */
   .problem-category-badge {
-    max-width: 150px !important;
+    max-width: 110px !important;
     white-space: normal !important;
     word-wrap: break-word !important;
     word-break: break-word !important;
@@ -585,8 +710,450 @@ table.dataTable td[data-order*="Completed"] {
     line-height: 1.3 !important;
     height: auto !important;
     width: 100% !important;
-    font-size: 0.75rem !important;
+    font-size: 0.65rem !important;
+    padding: 0.2rem 0.4rem !important;
+    text-align: center !important;
+  }
+
+  /* Smaller header for Problem Category */
+  .dataTables_wrapper table.dataTable thead th:nth-child(5) {
+    font-size: 0.8rem !important;
+    line-height: 1.1 !important;
+    white-space: normal !important;
+  }
+
+  /* Smaller headers for Area/Station and Deadline */
+  .dataTables_wrapper table.dataTable thead th:nth-child(4),
+  .dataTables_wrapper table.dataTable thead th:nth-child(7),
+  .dataTables_wrapper table.dataTable thead th:nth-child(8) {
+    font-size: 0.8rem !important;
+    line-height: 1.1 !important;
+    white-space: normal !important;
+  }
+}
+
+/* ===== History table explicit widths (stronger specificity) ===== */
+@media (min-width: 992px) {
+  #sejarahTable { table-layout: fixed !important; }
+  #sejarahTable thead th:nth-child(1),
+  #sejarahTable tbody td:nth-child(1) { width: 50px !important; min-width: 50px !important; }
+  #sejarahTable thead th:nth-child(2),
+  #sejarahTable tbody td:nth-child(2) { width: 120px !important; min-width: 120px !important; }
+  #sejarahTable thead th:nth-child(3),
+  #sejarahTable tbody td:nth-child(3) { width: 80px !important; min-width: 80px !important; }
+  #sejarahTable thead th:nth-child(4),
+  #sejarahTable tbody td:nth-child(4) { width: 180px !important; min-width: 180px !important; }
+  #sejarahTable thead th:nth-child(5),
+  #sejarahTable tbody td:nth-child(5) { width: 160px !important; min-width: 160px !important; }
+  #sejarahTable thead th:nth-child(6),
+  #sejarahTable tbody td:nth-child(6) { width: 200px !important; min-width: 200px !important; }
+  #sejarahTable thead th:nth-child(7),
+  #sejarahTable tbody td:nth-child(7) { width: 100px !important; min-width: 100px !important; }
+  #sejarahTable thead th:nth-child(8),
+  #sejarahTable tbody td:nth-child(8) { width: 120px !important; min-width: 120px !important; }
+  #sejarahTable thead th:nth-child(9),
+  #sejarahTable tbody td:nth-child(9) { width: 100px !important; min-width: 100px !important; }
+  #sejarahTable thead th:nth-child(10),
+  #sejarahTable tbody td:nth-child(10) { width: 100px !important; min-width: 100px !important; }
+}
+
+/* DataTables scrollX clones for sejarah table: enforce widths on cloned header/body tables */
+@media (min-width: 992px) {
+  #sejarahTable_wrapper .dataTables_scrollHeadInner table,
+  #sejarahTable_wrapper .dataTables_scrollBody table { table-layout: fixed !important; }
+  
+  /* Ensure cloned tables have same styling as original */
+  #sejarahTable_wrapper .dataTables_scrollHeadInner table thead th,
+  #sejarahTable_wrapper .dataTables_scrollBody table tbody td {
+    padding: 0.5rem 0.5rem !important;
+    font-size: 0.95rem !important;
+    line-height: 1.3 !important;
+    vertical-align: middle !important;
+    text-align: center !important;
+  }
+  
+  /* Special alignment for description column in cloned table */
+  #sejarahTable_wrapper .dataTables_scrollBody table tbody td:nth-child(6) {
+    text-align: left !important;
+  }
+
+  #sejarahTable_wrapper .dataTables_scrollHeadInner table thead th:nth-child(1),
+  #sejarahTable_wrapper .dataTables_scrollBody table tbody td:nth-child(1) { width: 50px !important; min-width: 50px !important; }
+  #sejarahTable_wrapper .dataTables_scrollHeadInner table thead th:nth-child(2),
+  #sejarahTable_wrapper .dataTables_scrollBody table tbody td:nth-child(2) { width: 120px !important; min-width: 120px !important; }
+  #sejarahTable_wrapper .dataTables_scrollHeadInner table thead th:nth-child(3),
+  #sejarahTable_wrapper .dataTables_scrollBody table tbody td:nth-child(3) { width: 80px !important; min-width: 80px !important; }
+  #sejarahTable_wrapper .dataTables_scrollHeadInner table thead th:nth-child(4),
+  #sejarahTable_wrapper .dataTables_scrollBody table tbody td:nth-child(4) { width: 180px !important; min-width: 180px !important; }
+  #sejarahTable_wrapper .dataTables_scrollHeadInner table thead th:nth-child(5),
+  #sejarahTable_wrapper .dataTables_scrollBody table tbody td:nth-child(5) { width: 160px !important; min-width: 160px !important; }
+  #sejarahTable_wrapper .dataTables_scrollHeadInner table thead th:nth-child(6),
+  #sejarahTable_wrapper .dataTables_scrollBody table tbody td:nth-child(6) { width: 200px !important; min-width: 200px !important; }
+  #sejarahTable_wrapper .dataTables_scrollHeadInner table thead th:nth-child(7),
+  #sejarahTable_wrapper .dataTables_scrollBody table tbody td:nth-child(7) { width: 100px !important; min-width: 100px !important; }
+  #sejarahTable_wrapper .dataTables_scrollHeadInner table thead th:nth-child(8),
+  #sejarahTable_wrapper .dataTables_scrollBody table tbody td:nth-child(8) { width: 120px !important; min-width: 120px !important; }
+  #sejarahTable_wrapper .dataTables_scrollHeadInner table thead th:nth-child(9),
+  #sejarahTable_wrapper .dataTables_scrollBody table tbody td:nth-child(9) { width: 100px !important; min-width: 100px !important; }
+  #sejarahTable_wrapper .dataTables_scrollHeadInner table thead th:nth-child(10),
+  #sejarahTable_wrapper .dataTables_scrollBody table tbody td:nth-child(10) { width: 100px !important; min-width: 100px !important; }
+}
+
+/* ===== Small Laptop Optimization (enable horizontal scroll + unify th/td) ===== */
+@media (min-width: 768px) and (max-width: 1366px) {
+  .table-responsive { overflow-x: auto !important; overflow-y: visible !important; }
+  /* Force wider tables to allow horizontal scroll on small laptops */
+  #reportsTable { min-width: 1330px !important; table-layout: fixed; }
+  #sejarahTable { min-width: 1250px !important; table-layout: fixed; }
+  /* Ensure header and body widths are synced under scaling */
+  .dataTables_scrollHeadInner, .dataTables_scrollHeadInner table { width: 100% !important; }
+  .dataTables_scrollBody table { width: 100% !important; }
+
+  /* Force horizontal scroll areas in DataTables */
+  .dataTables_wrapper { overflow-x: visible !important; }
+  .dataTables_scroll { overflow: visible !important; }
+  .dataTables_scrollBody { overflow-x: auto !important; overflow-y: auto !important; }
+  .dataTables_scrollHead { overflow: hidden !important; }
+
+  /* Unify header and cell typography so they match */
+  #reportsTable thead th, #reportsTable tbody td,
+  #sejarahTable thead th, #sejarahTable tbody td {
+    font-size: 0.95rem !important;
+    line-height: 1.25 !important;
+    padding: 0.55rem 0.5rem !important;
+  }
+
+  /* Slightly larger badges for readability */
+  #reportsTable .problem-category-badge,
+  #sejarahTable .problem-category-badge,
+  #reportsTable .status-badge,
+  #sejarahTable .status-badge {
+    font-size: 0.7rem !important;
     padding: 0.25rem 0.5rem !important;
     text-align: center !important;
   }
+}
+
+/* Ensure inner tables are wide enough to trigger scroll (global safety) */
+.dataTables_scrollHeadInner table,
+.dataTables_scrollBody > table {
+  min-width: 1280px !important; /* kembali ke ukuran sebelumnya */
+}
+
+/* Pastikan area body DataTables bisa di-scroll horizontal */
+.dataTables_scroll,
+.dataTables_scrollBody {
+  overflow-x: auto !important;
+  overflow-y: visible;
+}
+
+/* Saat sidebar membuka/menutup, hindari memotong konten tabel */
+body.sb-sidenav-toggled .dataTables_scroll,
+body.sb-sidenav-toggled .dataTables_scrollBody {
+  overflow-x: auto !important;
+}
+
+/* Pastikan scroll horizontal selalu tersedia untuk history table */
+body.sb-sidenav-toggled #sejarahTable_wrapper .dataTables_scrollBody,
+body:not(.sb-sidenav-toggled) #sejarahTable_wrapper .dataTables_scrollBody {
+  overflow-x: scroll !important;
+}
+
+/* Desktop: paksa lebar tabel sedikit lebih besar agar scrollbar muncul */
+@media (min-width: 768px) {
+  .dataTables_scroll { width: 100% !important; }
+  .dataTables_scrollHeadInner table,
+  .dataTables_scrollBody > table { min-width: 1366px !important; }
+  
+  /* Force horizontal scroll untuk semua ukuran layar */
+  .table-scroll-x {
+    overflow-x: scroll !important; /* selalu tampilkan scrollbar */
+  }
+  
+  /* Pastikan tabel history selalu bisa di-scroll horizontal */
+  #sejarahTable_wrapper .dataTables_scrollBody {
+    overflow-x: scroll !important;
+    overflow-y: auto !important;
+  }
+}
+
+/* Paksa tabel Report/History sedikit lebih lebar agar selalu memunculkan scrollbar */
+#reportsTable_wrapper .dataTables_scrollHeadInner table,
+#reportsTable_wrapper .dataTables_scrollBody > table,
+#laporanTable_wrapper .dataTables_scrollHeadInner table,
+#laporanTable_wrapper .dataTables_scrollBody > table {
+  min-width: 1330px !important;
+}
+
+#sejarahTable_wrapper .dataTables_scrollHeadInner table,
+#sejarahTable_wrapper .dataTables_scrollBody > table {
+  width: 100% !important; /* gunakan 100% lebar container untuk maksimalkan ruang */
+  min-width: 1250px !important; /* sesuai dengan total lebar kolom history */
+}
+
+/* Hilangkan celah kanan (padding sinkronisasi scrollbar bawaan DataTables) */
+#sejarahTable_wrapper .dataTables_scrollBody { padding-right: 0 !important; }
+#sejarahTable_wrapper .dataTables_scrollHead { margin-right: 0 !important; }
+#sejarahTable_wrapper .dataTables_scrollHeadInner { width: 100% !important; }
+
+/* Native horizontal scroll wrapper for tables (outside DataTables scroll) */
+.table-scroll-x {
+  width: 100%;
+  overflow-x: auto !important; /* tampilkan scrollbar horizontal saat diperlukan */
+  scrollbar-gutter: stable both-edges; /* menjaga layout saat scrollbar muncul */
+  border: 1px solid #dee2e6; /* border untuk memperjelas area scroll */
+  border-radius: 0.375rem; /* rounded corners */
+}
+
+/* DataTables bottom controls alignment for History: info + pagination on the left */
+#sejarahTable_wrapper .dataTables_info {
+  float: none !important;
+  text-align: left !important;
+}
+#sejarahTable_wrapper .dataTables_paginate {
+  float: none !important;
+  text-align: left !important;
+}
+
+/* Fix Date, Problem Category, Deadline and Status column alignment for Reports table */
+#laporanTable_wrapper .dataTables_scrollHeadInner table th:nth-child(2),
+#laporanTable_wrapper .dataTables_scrollBody table td:nth-child(2) {
+  width: 110px !important;
+  min-width: 110px !important;
+  max-width: 110px !important;
+}
+
+#laporanTable_wrapper .dataTables_scrollHeadInner table th:nth-child(5),
+#laporanTable_wrapper .dataTables_scrollBody table td:nth-child(5) {
+  width: 110px !important;
+  min-width: 110px !important;
+  max-width: 110px !important;
+}
+
+#laporanTable_wrapper .dataTables_scrollHeadInner table th:nth-child(6),
+#laporanTable_wrapper .dataTables_scrollBody table td:nth-child(6) {
+  width: 200px !important;
+  min-width: 200px !important;
+  max-width: 200px !important;
+}
+
+#laporanTable_wrapper .dataTables_scrollHeadInner table th:nth-child(7),
+#laporanTable_wrapper .dataTables_scrollBody table td:nth-child(7) {
+  width: 110px !important;
+  min-width: 110px !important;
+  max-width: 110px !important;
+}
+
+#laporanTable_wrapper .dataTables_scrollHeadInner table th:nth-child(8),
+#laporanTable_wrapper .dataTables_scrollBody table td:nth-child(8) {
+  width: 140px !important;
+  min-width: 140px !important;
+  max-width: 140px !important;
+}
+
+/* Filter button styling */
+.filter-btn-container .dropdown > button,
+.history-filter-btn-container .dropdown > button {
+  border: 2px solid #6c757d !important;
+  padding: 0.5rem 1rem !important;
+  font-size: 0.95rem !important;
+  height: 38px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  margin-top: 0px !important;
+}
+
+.filter-btn-container .dropdown > button:hover,
+.history-filter-btn-container .dropdown > button:hover {
+  background-color: #6c757d !important;
+  color: white !important;
+  border-color: #6c757d !important;
+}
+
+/* Filter dropdown styling */
+.filter-btn-container .dropdown-menu,
+.history-filter-btn-container .dropdown-menu {
+  max-height: 450px !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+  border: 1px solid #dee2e6 !important;
+  z-index: 9999 !important;
+  position: fixed !important;
+}
+
+/* Smooth scrollbar for dropdown */
+.filter-btn-container .dropdown-menu::-webkit-scrollbar,
+.history-filter-btn-container .dropdown-menu::-webkit-scrollbar {
+  width: 6px;
+}
+
+.filter-btn-container .dropdown-menu::-webkit-scrollbar-track,
+.history-filter-btn-container .dropdown-menu::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.filter-btn-container .dropdown-menu::-webkit-scrollbar-thumb,
+.history-filter-btn-container .dropdown-menu::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+
+.filter-btn-container .dropdown-menu::-webkit-scrollbar-thumb:hover,
+.history-filter-btn-container .dropdown-menu::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Prevent dropdown from being cut off - critical overrides */
+.card,
+.card-body,
+#laporanTable_wrapper,
+#sejarahTable_wrapper,
+.dataTables_wrapper,
+.dataTables_wrapper .row,
+.dataTables_wrapper .col-sm-6,
+.dataTables_wrapper .col-sm-12 {
+  overflow: visible !important;
+}
+
+/* Only apply overflow-x to the actual table container */
+.table-scroll-x {
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+}
+
+/* Ensure dropdown container has proper stacking */
+.filter-btn-container,
+.history-filter-btn-container {
+  position: static !important;
+}
+
+.filter-btn-container .dropdown,
+.history-filter-btn-container .dropdown {
+  position: static !important;
+}
+
+/* Align filter button with search input */
+.dataTables_wrapper .dataTables_filter {
+  margin-top: 0px !important;
+  position: relative !important;
+}
+
+/* Hide the "Search:" label */
+.dataTables_wrapper .dataTables_filter label {
+  display: flex !important;
+  align-items: center !important;
+  margin: 0 !important;
+}
+
+.dataTables_wrapper .dataTables_filter label::before {
+  content: '\f002' !important;
+  font-family: 'Font Awesome 6 Free' !important;
+  font-weight: 900 !important;
+  position: absolute !important;
+  left: 12px !important;
+  color: #6c757d !important;
+  pointer-events: none !important;
+  z-index: 1 !important;
+}
+
+.dataTables_wrapper .dataTables_filter input {
+  height: 38px !important;
+  border: 1px solid #ced4da !important;
+  padding-left: 35px !important;
+  border-radius: 0.25rem !important;
+}
+
+.dataTables_wrapper .dataTables_filter input::placeholder {
+  color: #6c757d !important;
+  opacity: 0.7 !important;
+}
+
+/* Settlement/Completion modal photo sizing */
+#modalPenyelesaianBody img {
+  max-height: 400px !important;
+  max-width: 100% !important;
+  object-fit: contain !important;
+}
+
+#modalPenyelesaianBody .img-thumbnail {
+  max-height: 100px !important;
+  max-width: 100px !important;
+  object-fit: cover !important;
+}
+
+#penyelesaianPhotoCarousel img {
+  max-height: 400px !important;
+  object-fit: contain !important;
+}
+
+/* Completion carousel arrow visibility */
+#penyelesaianPhotoCarousel .carousel-control-prev,
+#penyelesaianPhotoCarousel .carousel-control-next {
+  opacity: 1 !important;
+  z-index: 10;
+}
+
+#penyelesaianPhotoCarousel .carousel-control-prev-icon,
+#penyelesaianPhotoCarousel .carousel-control-next-icon {
+  filter: none !important;
+  background-color: rgba(0, 0, 0, 0.7) !important;
+  padding: 20px !important;
+  border-radius: 50% !important;
+  width: 40px !important;
+  height: 40px !important;
+}
+
+#penyelesaianPhotoCarousel .carousel-control-prev:hover .carousel-control-prev-icon,
+#penyelesaianPhotoCarousel .carousel-control-next:hover .carousel-control-next-icon {
+  background-color: rgba(0, 0, 0, 0.9) !important;
+}
+
+/* Completion thumbnail hover effect */
+.completion-thumbnail {
+  transition: all 0.3s ease;
+}
+
+.completion-thumbnail:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+/* Remove gap: ensure DataTables wrapper uses full width */
+.dataTables_wrapper {
+  width: 100% !important;
+}
+
+.dataTables_scroll {
+  width: 100% !important;
+}
+
+.dataTables_scrollBody {
+  width: 100% !important;
+}
+
+/* Force scrollbar to always be visible for better UX */
+.table-scroll-x::-webkit-scrollbar {
+  height: 12px;
+}
+
+.table-scroll-x::-webkit-scrollbar-track {
+  background: #f8f9fa;
+  border-radius: 6px;
+}
+
+.table-scroll-x::-webkit-scrollbar-thumb {
+  background: #6c757d;
+  border-radius: 6px;
+  border: 2px solid #f8f9fa;
+}
+
+.table-scroll-x::-webkit-scrollbar-thumb:hover {
+  background: #495057;
+}
+
+/* Ensure the table itself is wider to trigger scroll when needed */
+.table-scroll-x > table {
+  min-width: 1250px !important; /* sesuai dengan total lebar kolom history */
 }

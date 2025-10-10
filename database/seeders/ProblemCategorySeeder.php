@@ -22,8 +22,8 @@ class ProblemCategorySeeder extends Seeder
                 'sort_order' => 1
             ],
             [
-                'name' => '5S: Seiri, Seiton, Seiketsu, Shitsuke',
-                'description' => '5S methodology including Seiri (Sort), Seiton (Set in order), Seiketsu (Standardize), and Shitsuke (Sustain)',
+                'name' => '5S: Seiri, Seiton, Seiso, Seiketsu, Shitsuke',
+                'description' => '5S methodology including Seiri (Sort), Seiton (Set in order), Seiso (Clean) Sei Seiketsu (Standardize), and Shitsuke (Sustain)',
                 'color' => '#28a745',
                 'is_active' => true,
                 'sort_order' => 2

@@ -27,6 +27,7 @@
         <form action="{{ route('laporan.update', $laporan->id) }}" method="POST" enctype="multipart/form-data">
             @csrf
             @method('PUT')
+            <input type="hidden" name="return_url" value="{{ request('return_url', route('laporan.index')) }}">
 
             <div class="mb-3">
                 <label for="Foto" class="form-label">Add New Photos:</label>
@@ -58,9 +59,15 @@
                     <div class="d-flex flex-wrap gap-2">
                         @if(!empty($laporan->Foto) && is_array($laporan->Foto))
                             @foreach($laporan->Foto as $key => $foto)
+                                @php
+                                    // Helper to resolve photo URL with fallback
+                                    $photoUrl = file_exists(public_path('images/reports/' . $foto)) 
+                                        ? asset('images/reports/' . $foto) 
+                                        : asset('images/' . $foto);
+                                @endphp
                                 <div class="position-relative">
                                     <input type="hidden" name="existing_photos[]" value="{{ $foto }}" id="existing-photo-{{ $key }}">
-                                    <img src="{{ asset('images/reports/' . $foto) }}" alt="Foto {{ $key+1 }}" class="img-thumbnail" style="width: 100px; height: 100px; object-fit: cover;">
+                                    <img src="{{ $photoUrl }}" alt="Foto {{ $key+1 }}" class="img-thumbnail" style="width: 100px; height: 100px; object-fit: cover;">
                                     <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 remove-photo" data-input-id="existing-photo-{{ $key }}">
                                         <i class="fas fa-times"></i>
                                     </button>

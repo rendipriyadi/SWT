@@ -19,6 +19,12 @@ document.addEventListener('DOMContentLoaded', function() {
             el.classList.remove('badge-ditugaskan','badge-selesai','badge-pending','badge-danger','badge','bg-warning','bg-success','bg-info');
             ['status-assigned','status-completed','status-pending','status-danger'].forEach(c => el.classList.remove(c));
             if (variant) el.classList.add(variant);
+
+            // Compress text label for in-progress to save space on small columns
+            const currentText = (el.textContent || '').trim();
+            if (variant === 'status-in-progress' && currentText.length > 0) {
+                el.textContent = 'PROCESS';
+            }
         });
     }
 
@@ -30,7 +36,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (lc === 'in progress') variant = 'status-in-progress';
         else if (lc === 'selesai' || lc === 'completed') variant = 'status-completed';
         else if (lc === 'danger' || lc === 'critical') variant = 'status-danger';
-        return `<span class="status-badge ${variant}" data-status="${lc}">${text}</span>`;
+        const label = variant === 'status-in-progress' ? 'PROCESS' : text;
+        return `<span class="status-badge ${variant}" data-status="${lc}">${label}</span>`;
     }
 
     // Initialize badges on page load
