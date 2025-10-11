@@ -23,11 +23,12 @@
 
                 <!-- Problem Category -->
                 <div class="col-md-6 col-lg-3 mb-1">
-                    <label class="form-label small mb-1">Problem Categoriesh</label>
+                    <label class="form-label small mb-1">Problem Category</label>
                     <select class="form-select form-select-sm filter-control" id="kategori" name="kategori">
                         <option value="">All Category</option>
-                        <option value="Safety: Potensi Bahaya">Safety: Potential Hazards</option>
-                        <option value="5S: Ringkas, Rapi, Resik, Rawat, dan Rajin">5S: Streamlined, Organized, Clean, Maintained, and Diligent</option>
+                        @foreach(\App\Models\ProblemCategory::active()->ordered()->get() as $category)
+                            <option value="{{ $category->id }}">{{ $category->name }}</option>
+                        @endforeach
                     </select>
                 </div>
 

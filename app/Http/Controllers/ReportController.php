@@ -3,6 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\HandlesLaporan;
+use App\Services\ReportService;
+use App\Services\FileUploadService;
+use App\Repositories\ReportRepository;
+use App\Http\Requests\StoreReportRequest;
+use App\Http\Requests\UpdateReportRequest;
+use App\Http\Requests\StoreCompletionRequest;
 use Illuminate\Http\Request;
 use App\Models\Laporan;
 use App\Models\Area;
@@ -14,63 +20,39 @@ class ReportController extends Controller
 {
     use HandlesLaporan;
 
+    protected $reportService;
+    protected $fileUploadService;
+    protected $reportRepository;
+
+    public function __construct(
+        ReportService $reportService,
+        FileUploadService $fileUploadService,
+        ReportRepository $reportRepository
+    ) {
+        $this->reportService = $reportService;
+        $this->fileUploadService = $fileUploadService;
+        $this->reportRepository = $reportRepository;
+    }
+
     public function dashboard()
     {
-        $totalLaporan = Laporan::count();
-        $laporanInProgress = Laporan::where('status', 'In Progress')->count();
-        $laporanSelesai = Laporan::where('status', 'Selesai')->count();
-
+        // Get statistics from service
+        $stats = $this->reportService->getDashboardStats();
+        
         $areas = Area::all();
+        $laporanPerBulan = $this->reportService->getReportsPerMonth();
+        $areaPerBulan = $this->reportService->getReportsByAreaPerMonth();
+        $categoryPerBulan = $this->reportService->getReportsByCategoryCurrentMonth();
 
-        $laporanPerBulan = Laporan::selectRaw('MONTH(created_at) as bulan, COUNT(*) as total')
-            ->where('created_at', '>=', now()->subMonths(11))
-            ->groupBy('bulan')
-            ->orderBy('bulan')
-            ->get();
-
-        $areaPerBulan = Laporan::join('areas', 'laporan.area_id', '=', 'areas.id')
-            ->selectRaw('areas.name as area_name, MONTH(laporan.created_at) as bulan, COUNT(*) as total')
-            ->where('laporan.created_at', '>=', now()->subMonths(11))
-            ->groupBy('areas.name', 'bulan')
-            ->orderBy('bulan')
-            ->get();
-
-        $categoryPerBulan = Laporan::with('problemCategory')
-            ->selectRaw('problem_category_id, COUNT(*) as total')
-            ->whereMonth('created_at', now()->month)
-            ->whereYear('created_at', now()->year)
-            ->groupBy('problem_category_id')
-            ->get()
-            ->map(function($item) {
-                return [
-                    'problem_category' => $item->problemCategory,
-                    'total' => $item->total
-                ];
-            });
-
-        if ($categoryPerBulan->isEmpty()) {
-            $categoryPerBulan = Laporan::with('problemCategory')
-                ->selectRaw('problem_category_id, COUNT(*) as total')
-                ->where('created_at', '>=', now()->subMonths(3))
-                ->groupBy('problem_category_id')
-                ->get()
-                ->map(function($item) {
-                    return [
-                        'problem_category' => $item->problemCategory,
-                        'total' => $item->total
-                    ];
-                });
-        }
-
-        return view('walkandtalk.dashboard', compact(
-            'totalLaporan',
-            'laporanInProgress',
-            'laporanSelesai',
-            'areas',
-            'laporanPerBulan',
-            'areaPerBulan',
-            'categoryPerBulan'
-        ));
+        return view('walkandtalk.dashboard', [
+            'totalLaporan' => $stats['total'],
+            'laporanInProgress' => $stats['in_progress'],
+            'laporanSelesai' => $stats['completed'],
+            'areas' => $areas,
+            'laporanPerBulan' => $laporanPerBulan,
+            'areaPerBulan' => $areaPerBulan,
+            'categoryPerBulan' => $categoryPerBulan,
+        ]);
     }
 
     public function create()
@@ -79,46 +61,35 @@ class ReportController extends Controller
         return view('walkandtalk.laporan', compact('areas'));
     }
 
-    public function store(Request $request)
+    public function store(StoreReportRequest $request)
     {
-        $messages = [
-            'area_id.required' => 'Area harus dipilih.',
-            'problem_category_id.required' => 'Kategori masalah harus dipilih.',
-            'deskripsi_masalah.required' => 'Deskripsi masalah harus diisi.',
-            'tenggat_waktu.required' => 'Tenggat waktu harus diisi.',
-        ];
+        try {
+            $validated = $request->validated();
 
-        $request->validate([
-            'area_id' => 'required|exists:areas,id',
-            'penanggung_jawab_id' => 'nullable|exists:penanggung_jawab,id',
-            'problem_category_id' => 'required|exists:problem_categories,id',
-            'deskripsi_masalah' => 'required|string',
-            'tenggat_waktu' => 'required|date',
-        ], $messages);
-
-        $fotoFileNames = [];
-        if ($request->hasFile('Foto')) {
-            foreach ($request->file('Foto') as $foto) {
-                $fileName = time() . '_' . $foto->getClientOriginalName();
-                $foto->move(public_path('images/reports'), $fileName);
-                $fotoFileNames[] = $fileName;
+            // Upload photos if provided
+            $photos = [];
+            if ($request->hasFile('Foto')) {
+                $photos = $this->fileUploadService->uploadReportPhotos($request->file('Foto'));
             }
+
+            // Add default supervisor ID
+            $validated['departemen_supervisor_id'] = 1;
+
+            // Create report using service
+            $laporan = $this->reportService->createReport($validated, $photos);
+
+            // $this->sendSupervisorNotifications($laporan); // Disabled email notifications
+
+            return redirect()->route('laporan.index')->with('success', 'Report created successfully.');
+            
+        } catch (\Exception $e) {
+            \Log::error('Error creating report: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Failed to create report. Please try again.');
         }
-
-        $laporan = Laporan::create([
-            'area_id' => $request->area_id,
-            'penanggung_jawab_id' => $request->penanggung_jawab_id,
-            'departemen_supervisor_id' => 1,
-            'problem_category_id' => $request->problem_category_id,
-            'deskripsi_masalah' => $request->deskripsi_masalah,
-            'tenggat_waktu' => $request->tenggat_waktu,
-            'status' => 'In Progress',
-            'Foto' => count($fotoFileNames) > 0 ? $fotoFileNames : null,
-        ]);
-
-        // $this->sendSupervisorNotifications($laporan); // Disabled email notifications
-
-        return redirect()->route('laporan.index')->with('success', 'Report created successfully.');
     }
 
     public function getPenanggungJawab($areaId)
@@ -152,27 +123,19 @@ class ReportController extends Controller
         return view('walkandtalk.edit', compact('laporan', 'areas', 'problemCategories'));
     }
 
-    public function update(Request $request, $id)
+    public function update(UpdateReportRequest $request, $id)
     {
         try {
-            $messages = [
-                'area_id.required' => 'Area harus dipilih.',
-                'problem_category_id.required' => 'Kategori masalah harus dipilih.',
-                'deskripsi_masalah.required' => 'Deskripsi masalah harus diisi.',
-                'tenggat_waktu.required' => 'Tenggat waktu harus diisi.',
-            ];
+            $laporan = $this->reportRepository->findById($id);
+            
+            if (!$laporan) {
+                return redirect()->route('laporan.index')
+                    ->with('error', 'Report not found.');
+            }
 
-            $request->validate([
-                'area_id' => 'required|exists:areas,id',
-                'penanggung_jawab_id' => 'nullable|exists:penanggung_jawab,id',
-                'problem_category_id' => 'required|exists:problem_categories,id',
-                'deskripsi_masalah' => 'required|string',
-                'tenggat_waktu' => 'required|date',
-                'Foto.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240',
-            ], $messages);
+            $validated = $request->validated();
 
-            $laporan = Laporan::findOrFail($id);
-
+            // Store old data for change detection
             $oldData = [
                 'area_id' => $laporan->area_id,
                 'penanggung_jawab_id' => $laporan->penanggung_jawab_id,
@@ -184,50 +147,30 @@ class ReportController extends Controller
             $oldArea = $laporan->area ? $laporan->area->name : '-';
             $oldPenanggungJawab = $laporan->penanggungJawab ? $laporan->penanggungJawab->name : '-';
 
+            // Handle photo management
             $existingPhotos = $request->input('existing_photos', []);
-            $newlyUploadedPhotos = [];
-
+            $newPhotos = [];
+            
             if ($request->hasFile('Foto')) {
-                foreach ($request->file('Foto') as $foto) {
-                    $fileName = time() . '_' . $foto->getClientOriginalName();
-                    $foto->move(public_path('images/reports'), $fileName);
-                    $newlyUploadedPhotos[] = $fileName;
-                }
+                $newPhotos = $this->fileUploadService->uploadReportPhotos($request->file('Foto'));
             }
 
-            $allPhotos = array_merge($existingPhotos, $newlyUploadedPhotos);
+            $allPhotos = array_merge($existingPhotos, $newPhotos);
 
+            // Delete removed photos
             $oldPhotos = $laporan->Foto ?: [];
             $photosToDelete = array_diff($oldPhotos, $existingPhotos);
-            foreach ($photosToDelete as $photo) {
-                // Try reports folder first, then fallback to legacy images folder
-                $filePath = public_path('images/reports/' . $photo);
-                if (!file_exists($filePath)) {
-                    $filePath = public_path('images/' . $photo);
-                }
-                if (file_exists($filePath)) {
-                    unlink($filePath);
-                }
+            if (!empty($photosToDelete)) {
+                $this->fileUploadService->deleteFiles($photosToDelete, 'images/reports');
             }
 
-            $laporan->update([
-                'area_id' => $request->area_id,
-                'penanggung_jawab_id' => $request->penanggung_jawab_id,
-                'problem_category_id' => $request->problem_category_id,
-                'deskripsi_masalah' => $request->deskripsi_masalah,
-                'tenggat_waktu' => $request->tenggat_waktu,
-                'Foto' => count($allPhotos) > 0 ? $allPhotos : null,
-            ]);
+            // Update report using service
+            $validated['Foto'] = $allPhotos;
+            $laporan = $this->reportService->updateReport($laporan, $validated);
 
-            $perubahan = $this->detectChanges($oldData, [
-                'area_id' => $request->area_id,
-                'penanggung_jawab_id' => $request->penanggung_jawab_id,
-                'problem_category_id' => $request->problem_category_id,
-                'deskripsi_masalah' => $request->deskripsi_masalah,
-                'tenggat_waktu' => $request->tenggat_waktu,
-            ], $oldArea, $oldPenanggungJawab);
-
-            $laporan = Laporan::with(['area', 'penanggungJawab'])->find($id);
+            // Detect changes for notifications
+            $perubahan = $this->detectChanges($oldData, $validated, $oldArea, $oldPenanggungJawab);
+            
             if (!empty($perubahan)) {
                 // $this->sendEditNotifications($laporan, $perubahan); // Disabled email notifications
             }
@@ -258,46 +201,49 @@ class ReportController extends Controller
         return view('walkandtalk.tindakan', compact('laporan'));
     }
 
-    public function storeTindakan(Request $request, $id)
+    public function storeTindakan(StoreCompletionRequest $request, $id)
     {
-        $rules = [ 'status' => 'required|string|in:In Progress,Selesai' ];
-        $messages = [ 'status.required' => 'Status harus dipilih.', 'status.in' => 'Status harus salah satu dari: In Progress, Selesai.' ];
-
-        if ($request->status === 'Selesai') {
-            $rules['Tanggal'] = 'required|date';
-            $rules['deskripsi_penyelesaian'] = 'required|string';
-            $rules['Foto'] = 'nullable|array';
-            $rules['Foto.*'] = 'image|mimes:jpg,png,jpeg,gif,svg|max:2048';
-        }
-
-        $request->validate($rules, $messages);
-
-        $laporan = Laporan::findOrFail($id);
-
-        if ($request->status === 'Selesai') {
-            $fotoFileNames = [];
-            if ($request->hasFile('Foto')) {
-                foreach ($request->file('Foto') as $file) {
-                    $fileName = time() . '-' . $file->getClientOriginalName();
-                    $file->move(public_path('images/completions'), $fileName);
-                    $fotoFileNames[] = $fileName;
-                }
+        try {
+            $validated = $request->validated();
+            
+            $laporan = $this->reportRepository->findById($id);
+            
+            if (!$laporan) {
+                return redirect()->route('dashboard')
+                    ->with('error', 'Report not found.');
             }
 
-            \App\Models\Penyelesaian::updateOrCreate(
-                ['laporan_id' => $laporan->id],
-                [ 'Tanggal' => $request->Tanggal, 'Foto' => $fotoFileNames, 'deskripsi_penyelesaian' => $request->deskripsi_penyelesaian ]
-            );
+            if ($validated['status'] === 'Selesai') {
+                // Upload completion photos if provided
+                $photos = [];
+                if ($request->hasFile('Foto')) {
+                    $photos = $this->fileUploadService->uploadCompletionPhotos($request->file('Foto'));
+                }
+
+                // Complete report using service
+                $this->reportService->completeReport($laporan, [
+                    'Tanggal' => $validated['Tanggal'],
+                    'deskripsi_penyelesaian' => $validated['deskripsi_penyelesaian'],
+                ], $photos);
+
+                return redirect()->route('sejarah.index')
+                    ->with('success', 'Report completed successfully and moved to history.');
+            }
+
+            // Just update status if not completed
+            $this->reportService->updateStatus($laporan, $validated['status']);
+
+            return redirect()->route('dashboard')
+                ->with('success', 'Report status updated successfully.');
+                
+        } catch (\Exception $e) {
+            \Log::error('Error completing report: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Failed to complete report. Please try again.');
         }
-
-        $laporan->update(['status' => $request->status]);
-
-        // Redirect to history if status is completed, otherwise to dashboard
-        if ($request->status === 'Selesai') {
-            return redirect()->route('sejarah')->with('success', 'Report completed successfully and moved to history.');
-        }
-
-        return redirect()->route('dashboard')->with('success', 'Report status updated successfully.');
     }
 
     public function dashboardDatatables(Request $request)
@@ -307,13 +253,22 @@ class ReportController extends Controller
 
         // Apply filters
         if ($request->filled('start_date')) {
-            $query->whereDate('Tanggal', '>=', $request->start_date);
+            $query->whereDate('created_at', '>=', $request->start_date);
         }
         if ($request->filled('end_date')) {
-            $query->whereDate('Tanggal', '<=', $request->end_date);
+            $query->whereDate('created_at', '<=', $request->end_date);
         }
         if ($request->filled('area_id')) {
             $query->where('area_id', $request->area_id);
+        }
+        if ($request->filled('penanggung_jawab_id')) {
+            $query->where('penanggung_jawab_id', $request->penanggung_jawab_id);
+        }
+        if ($request->filled('kategori')) {
+            $query->where('problem_category_id', $request->kategori);
+        }
+        if ($request->filled('tenggat_bulan')) {
+            $query->whereMonth('tenggat_waktu', $request->tenggat_bulan);
         }
         if ($request->filled('category_id')) {
             $query->where('problem_category_id', $request->category_id);
@@ -422,33 +377,23 @@ class ReportController extends Controller
     public function destroy($id)
     {
         try {
-            $laporan = Laporan::find($id);
+            $laporan = $this->reportRepository->findById($id);
+            
             if (!$laporan) {
                 return response()->json(['success' => true, 'message' => 'Report already removed.']);
             }
 
-            // Delete associated completion photos if any
-            $penyelesaian = \App\Models\Penyelesaian::where('laporan_id', $laporan->id)->first();
-            if ($penyelesaian && !empty($penyelesaian->Foto) && is_array($penyelesaian->Foto)) {
-            foreach ($penyelesaian->Foto as $foto) {
-                $path = public_path('images/completions/' . $foto);
-                    if (file_exists($path)) { @unlink($path); }
-                }
-                $penyelesaian->delete();
+            // Delete report using service (handles photos and completion data)
+            $deleted = $this->reportService->deleteReport($laporan);
+
+            if ($deleted) {
+                return response()->json(['success' => true, 'message' => 'Report deleted successfully.']);
             }
 
-            // Delete report photos
-            if (!empty($laporan->Foto) && is_array($laporan->Foto)) {
-                foreach ($laporan->Foto as $foto) {
-                    $path = public_path('images/reports/' . $foto);
-                    if (file_exists($path)) { @unlink($path); }
-                }
-            }
-
-            $laporan->delete();
-
-            return response()->json(['success' => true, 'message' => 'Report deleted successfully.']);
+            return response()->json(['success' => false, 'message' => 'Failed to delete report.'], 500);
+            
         } catch (\Exception $e) {
+            \Log::error('Error deleting report: ' . $e->getMessage());
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }

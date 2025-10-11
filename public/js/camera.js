@@ -8,32 +8,63 @@ document.addEventListener('DOMContentLoaded', function () {
     const fotoInput = document.getElementById('Foto');
     let stream = null;
 
-    if (!openCameraBtn) return;
+    if (!openCameraBtn || !cameraContainer || !video || !canvas || !captureBtn || !closeCameraBtn || !fotoInput) return;
+
+    function showError(msg) {
+        try { alert(msg); } catch (_) { console.error(msg); }
+    }
+
+    async function startCamera() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            showError('Kamera tidak didukung oleh browser ini. Coba gunakan Chrome/Edge/Firefox terbaru.');
+            return false;
+        }
+        try {
+            // Gunakan ideal agar tidak error jika kamera belakang tidak tersedia
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: { ideal: 'environment' } },
+                audio: false
+            });
+            video.srcObject = stream;
+            return true;
+        } catch (e) {
+            try {
+                // Fallback generic video
+                stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                video.srcObject = stream;
+                return true;
+            } catch (err) {
+                let reason = 'Tidak dapat mengakses kamera. Pastikan izin kamera diberikan.';
+                if (err && err.name === 'NotAllowedError') reason = 'Akses kamera ditolak. Mohon izinkan akses kamera di browser.';
+                if (err && (err.name === 'NotFoundError' || err.name === 'OverconstrainedError')) reason = 'Kamera tidak ditemukan pada perangkat ini.';
+                showError(reason);
+                return false;
+            }
+        }
+    }
 
     openCameraBtn.addEventListener('click', async function () {
         cameraContainer.style.display = 'block';
         openCameraBtn.style.display = 'none';
-        try {
-            stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: { exact: "environment" } }
-            });
-        } catch (e) {
-            // fallback ke kamera depan jika kamera belakang tidak tersedia
-            stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        const ok = await startCamera();
+        if (!ok) {
+            // pulihkan UI jika gagal
+            cameraContainer.style.display = 'none';
+            openCameraBtn.style.display = 'inline-block';
         }
-        video.srcObject = stream;
     });
 
     captureBtn.addEventListener('click', function () {
+        if (!video.srcObject) return;
         // Ambil gambar dari video ke canvas
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
+        canvas.width = video.videoWidth || 1280;
+        canvas.height = video.videoHeight || 720;
         canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
 
         // Konversi canvas ke blob lalu ke File dan set ke input file
         canvas.toBlob(function (blob) {
+            if (!blob) return;
             const file = new File([blob], 'camera-capture.jpg', { type: 'image/jpeg' });
-            // Buat DataTransfer untuk set file ke input file
             const dt = new DataTransfer();
             dt.items.add(file);
             fotoInput.files = dt.files;
@@ -49,11 +80,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function stopCamera() {
         if (stream) {
-            stream.getTracks().forEach(track => track.stop());
+            try { stream.getTracks().forEach(track => track.stop()); } catch(_) {}
             stream = null;
         }
-        video.srcObject = null;
+        try { video.srcObject = null; } catch(_) {}
         cameraContainer.style.display = 'none';
         openCameraBtn.style.display = 'inline-block';
     }
+
+    // Pastikan stream ditutup saat berpindah halaman/tab
+    window.addEventListener('pagehide', stopCamera);
+    window.addEventListener('beforeunload', stopCamera);
 });

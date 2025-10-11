@@ -28,13 +28,25 @@ class HistoryController extends Controller
 
         // Apply date filters
         if ($request->filled('start_date')) {
-            $query->whereDate('Tanggal', '>=', $request->start_date);
+            $query->whereDate('created_at', '>=', $request->start_date);
         }
         if ($request->filled('end_date')) {
-            $query->whereDate('Tanggal', '<=', $request->end_date);
+            $query->whereDate('created_at', '<=', $request->end_date);
         }
         if ($request->filled('area_id')) {
             $query->where('area_id', $request->area_id);
+        }
+        if ($request->filled('penanggung_jawab_id')) {
+            $query->where('penanggung_jawab_id', $request->penanggung_jawab_id);
+        }
+        if ($request->filled('kategori')) {
+            $query->where('problem_category_id', $request->kategori);
+        }
+        if ($request->filled('tenggat_bulan')) {
+            $query->whereMonth('tenggat_waktu', $request->tenggat_bulan);
+        }
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
         }
         if ($request->filled('category_id')) {
             $query->where('problem_category_id', $request->category_id);
@@ -101,7 +113,7 @@ class HistoryController extends Controller
             ->addColumn('tenggat_waktu', function ($laporan) { return Carbon::parse($laporan->tenggat_waktu)->format('l, j-n-Y'); })
             ->addColumn('status', function ($laporan) { return $laporan->status == 'Selesai' ? '<span class="status-badge status-completed"><i class="fas fa-check-circle"></i> Completed</span>' : '<span class="badge bg-secondary">' . $laporan->status . '</span>'; })
             ->addColumn('penyelesaian', function ($laporan) { return $laporan->penyelesaian ? '<button class="btn btn-sm btn-info lihat-penyelesaian-btn" data-bs-toggle="modal" data-bs-target="#modalPenyelesaian" data-id="' . $laporan->id . '"><i class="fas fa-eye"></i> View</button>' : '<a href="' . route('laporan.tindakan', $laporan->id) . '" class="btn btn-sm btn-primary"><i class="fas fa-tasks"></i> Action</a>'; })
-            ->addColumn('aksi', function ($laporan) { $returnUrl = route('sejarah'); $editUrl = route('laporan.edit', ['id' => $laporan->id, 'return_url' => $returnUrl]); $deleteUrl = route('laporan.destroy', $laporan->id); return '<div class="d-flex gap-1"><a href="' . $editUrl . '" class="btn btn-sm btn-warning" title="Edit"><i class="fas fa-edit"></i></a><button class="btn btn-sm btn-danger delete-btn" data-id="' . $laporan->id . '" data-delete-url="' . $deleteUrl . '" data-return-url="' . $returnUrl . '" title="Delete"><i class="fas fa-trash"></i></button></div>'; })
+            ->addColumn('aksi', function ($laporan) { $returnUrl = route('sejarah.index'); $editUrl = route('laporan.edit', ['id' => $laporan->id, 'return_url' => $returnUrl]); $deleteUrl = route('laporan.destroy', $laporan->id); return '<div class="d-flex gap-1"><a href="' . $editUrl . '" class="btn btn-sm btn-warning" title="Edit"><i class="fas fa-edit"></i></a><button class="btn btn-sm btn-danger delete-btn" data-id="' . $laporan->id . '" data-delete-url="' . $deleteUrl . '" data-return-url="' . $returnUrl . '" title="Delete"><i class="fas fa-trash"></i></button></div>'; })
             ->rawColumns(['foto', 'departemen', 'problem_category', 'deskripsi_masalah', 'status', 'penyelesaian', 'aksi'])
             ->make(true);
     }

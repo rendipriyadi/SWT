@@ -17,7 +17,7 @@ class DatabaseSeeder extends Seeder
             AreaSeeder::class,
             PenanggungJawabSeeder::class,
             ProblemCategorySeeder::class,
-            // LaporanSeeder::class, // disabled: no dummy reports/history
+            LaporanSeeder::class, // disabled: no dummy reports/history
         ]);
     }
 }

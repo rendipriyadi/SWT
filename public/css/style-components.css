@@ -280,11 +280,7 @@
 /* Make description typography slightly larger */
 td.wrap-cell { font-size: 1rem; line-height: 1.5; }
 
-/* Align DataTables header/body widths exactly */
-.dataTables_scrollHeadInner,
-.dataTables_scrollHeadInner table { width: auto !important; }
-.dataTables_scrollHead table,
-.dataTables_scrollBody table { table-layout: fixed !important; width: auto !important; }
+/* Removed DataTables cloned-table sync rules (scrollX disabled) */
 
 /* Unify padding/typography between thead th and tbody td to avoid drift */
 .table thead th,
@@ -305,6 +301,83 @@ td.wrap-cell { font-size: 1rem; line-height: 1.5; }
   box-sizing: border-box;
   vertical-align: middle !important;
 }
+
+/* ===== Reports table: enable native horizontal scroll (no scrollX) ===== */
+#laporanTable { 
+  table-layout: fixed !important; 
+  min-width: 1280px !important; /* sum of all column widths after widening Completion */
+}
+
+/* Header row (Show + Search) layout and vertical centering */
+#laporanTable_wrapper .row.mb-3 {
+  display: flex;
+  align-items: center; /* vertical center the row */
+}
+#laporanTable_wrapper .row.mb-3 > .col-sm-6:first-child {
+  display: flex;
+  align-items: center;  /* center Show */
+}
+#laporanTable_wrapper .row.mb-3 > .col-sm-6:last-child {
+  display: flex;
+  align-items: center;          /* center Search */
+  justify-content: flex-end;    /* keep it on the right */
+  gap: .5rem;
+}
+
+/* Apply mt-3 (margin-top: 1rem) to header columns as requested */
+#laporanTable_wrapper .row.mb-3 > .col-sm-6 {
+  margin-top: 1rem !important; /* mt-3 */
+  margin-bottom: -1rem !important;
+}
+
+/* Remove floats inside the header row to let flex do layout */
+#laporanTable_wrapper .dataTables_length,
+#laporanTable_wrapper .dataTables_filter {
+  float: none !important;
+}
+
+/* Right-align the search box for Reports and keep proper spacing */
+#laporanTable_wrapper .dataTables_filter { text-align: right !important; }
+#laporanTable_wrapper .dataTables_filter label { width: auto !important; margin: 0; }
+#laporanTable_wrapper .dataTables_filter input[type="search"] {
+  max-width: 260px;
+  margin-left: .5rem;
+}
+#laporanTable_wrapper .dataTables_length {
+  float: none !important;
+  text-align: left !important;
+}
+
+@media (max-width: 576px) {
+  #laporanTable_wrapper .dataTables_filter {
+    float: none !important;
+    text-align: left !important;
+    margin-top: .5rem;
+  }
+  #laporanTable_wrapper .dataTables_filter input[type="search"] { width: 100%; max-width: none; }
+}
+
+/* Define native widths per column for laporanTable */
+#laporanTable thead th:nth-child(1),
+#laporanTable tbody td:nth-child(1) { width: 50px !important; min-width: 50px !important; max-width: 50px !important; }
+#laporanTable thead th:nth-child(2),
+#laporanTable tbody td:nth-child(2) { width: 150px !important; min-width: 150px !important; max-width: 150px !important; }
+#laporanTable thead th:nth-child(3),
+#laporanTable tbody td:nth-child(3) { width: 80px !important; min-width: 80px !important; max-width: 80px !important; }
+#laporanTable thead th:nth-child(4),
+#laporanTable tbody td:nth-child(4) { width: 180px !important; min-width: 180px !important; max-width: 180px !important; }
+#laporanTable thead th:nth-child(5),
+#laporanTable tbody td:nth-child(5) { width: 160px !important; min-width: 160px !important; max-width: 160px !important; }
+#laporanTable thead th:nth-child(6),
+#laporanTable tbody td:nth-child(6) { width: 200px !important; min-width: 200px !important; max-width: 200px !important; }
+#laporanTable thead th:nth-child(7),
+#laporanTable tbody td:nth-child(7) { width: 120px !important; min-width: 120px !important; max-width: 120px !important; }
+#laporanTable thead th:nth-child(8),
+#laporanTable tbody td:nth-child(8) { width: 120px !important; min-width: 120px !important; max-width: 120px !important; }
+#laporanTable thead th:nth-child(9),
+#laporanTable tbody td:nth-child(9) { width: 120px !important; min-width: 120px !important; max-width: 120px !important; }
+#laporanTable thead th:nth-child(10),
+#laporanTable tbody td:nth-child(10) { width: 100px !important; min-width: 100px !important; max-width: 100px !important; }
 
 /* History table header styling */
 #sejarahTable thead th {
@@ -437,10 +510,20 @@ table td .status-badge {
 }
 
 /* Make status badges smaller inside Reports/History tables */
-#reportsTable .status-badge,
+#laporanTable .status-badge,
 #sejarahTable .status-badge {
-  font-size: 0.72rem !important;
-  padding: 2px 8px !important; /* slightly wider for PROCESS */
+  font-size: 0.70rem !important;
+  padding: 2px 6px !important;
+  gap: 4px !important;
+  line-height: 1 !important;
+}
+
+/* Shrink icons inside status badges */
+#laporanTable .status-badge i,
+#laporanTable .status-badge svg,
+#sejarahTable .status-badge i,
+#sejarahTable .status-badge svg {
+  font-size: 0.85em !important;
 }
 
   @media (max-width: 575.98px) {
@@ -752,7 +835,7 @@ table td .status-badge {
   #sejarahTable thead th:nth-child(8),
   #sejarahTable tbody td:nth-child(8) { width: 120px !important; min-width: 120px !important; }
   #sejarahTable thead th:nth-child(9),
-  #sejarahTable tbody td:nth-child(9) { width: 100px !important; min-width: 100px !important; }
+  #sejarahTable tbody td:nth-child(9) { width: 120px !important; min-width: 120px !important; }
   #sejarahTable thead th:nth-child(10),
   #sejarahTable tbody td:nth-child(10) { width: 100px !important; min-width: 100px !important; }
 }
@@ -915,21 +998,80 @@ body:not(.sb-sidenav-toggled) #sejarahTable_wrapper .dataTables_scrollBody {
   text-align: left !important;
 }
 
-/* Fix Date, Problem Category, Deadline and Status column alignment for Reports table */
+/* Fix column alignment for Reports table - Match columnDefs exactly */
+#laporanTable_wrapper .dataTables_scrollHeadInner,
+#laporanTable_wrapper .dataTables_scrollHeadInner table {
+  width: auto !important;
+}
+
+#laporanTable_wrapper .dataTables_scrollHeadInner table,
+#laporanTable_wrapper .dataTables_scrollBody table {
+  table-layout: fixed !important;
+  width: auto !important;
+  border-collapse: collapse !important;
+}
+
+/* Ensure header and body cells have identical padding and box-sizing */
+#laporanTable_wrapper .dataTables_scrollHeadInner table th,
+#laporanTable_wrapper .dataTables_scrollBody table td {
+  padding: 0.5rem 0.5rem !important;
+  box-sizing: border-box !important;
+  /* Use only top/bottom/right borders to prevent double vertical lines between cloned head/body tables */
+  border-top: 1px solid #dee2e6 !important;
+  border-bottom: 1px solid #dee2e6 !important;
+  border-right: 1px solid #dee2e6 !important;
+  border-left: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+/* Add left border back only on the first column to frame the table */
+#laporanTable_wrapper .dataTables_scrollHeadInner table th:first-child,
+#laporanTable_wrapper .dataTables_scrollBody table td:first-child {
+  border-left: 1px solid #dee2e6 !important;
+}
+
+/* Column 1: No */
+#laporanTable_wrapper .dataTables_scrollHeadInner table th:nth-child(1),
+#laporanTable_wrapper .dataTables_scrollBody table td:nth-child(1) {
+  width: 50px !important;
+  min-width: 50px !important;
+  max-width: 50px !important;
+}
+
+/* Column 2: Date */
 #laporanTable_wrapper .dataTables_scrollHeadInner table th:nth-child(2),
 #laporanTable_wrapper .dataTables_scrollBody table td:nth-child(2) {
-  width: 110px !important;
-  min-width: 110px !important;
-  max-width: 110px !important;
+  width: 150px !important;
+  min-width: 150px !important;
+  max-width: 150px !important;
 }
 
+/* Column 3: Photo */
+#laporanTable_wrapper .dataTables_scrollHeadInner table th:nth-child(3),
+#laporanTable_wrapper .dataTables_scrollBody table td:nth-child(3) {
+  width: 80px !important;
+  min-width: 80px !important;
+  max-width: 80px !important;
+}
+
+/* Column 4: Area/Station */
+#laporanTable_wrapper .dataTables_scrollHeadInner table th:nth-child(4),
+#laporanTable_wrapper .dataTables_scrollBody table td:nth-child(4) {
+  width: 180px !important;
+  min-width: 180px !important;
+  max-width: 180px !important;
+}
+
+/* Column 5: Problem Category */
 #laporanTable_wrapper .dataTables_scrollHeadInner table th:nth-child(5),
 #laporanTable_wrapper .dataTables_scrollBody table td:nth-child(5) {
-  width: 110px !important;
-  min-width: 110px !important;
-  max-width: 110px !important;
+  width: 160px !important;
+  min-width: 160px !important;
+  max-width: 160px !important;
 }
 
+/* Column 6: Description */
 #laporanTable_wrapper .dataTables_scrollHeadInner table th:nth-child(6),
 #laporanTable_wrapper .dataTables_scrollBody table td:nth-child(6) {
   width: 200px !important;
@@ -937,18 +1079,36 @@ body:not(.sb-sidenav-toggled) #sejarahTable_wrapper .dataTables_scrollBody {
   max-width: 200px !important;
 }
 
+/* Column 7: Deadline */
 #laporanTable_wrapper .dataTables_scrollHeadInner table th:nth-child(7),
 #laporanTable_wrapper .dataTables_scrollBody table td:nth-child(7) {
-  width: 110px !important;
-  min-width: 110px !important;
-  max-width: 110px !important;
+  width: 120px !important;
+  min-width: 120px !important;
+  max-width: 120px !important;
 }
 
+/* Column 8: Status */
 #laporanTable_wrapper .dataTables_scrollHeadInner table th:nth-child(8),
 #laporanTable_wrapper .dataTables_scrollBody table td:nth-child(8) {
-  width: 140px !important;
-  min-width: 140px !important;
-  max-width: 140px !important;
+  width: 120px !important;
+  min-width: 120px !important;
+  max-width: 120px !important;
+}
+
+/* Column 9: Completion */
+#laporanTable_wrapper .dataTables_scrollHeadInner table th:nth-child(9),
+#laporanTable_wrapper .dataTables_scrollBody table td:nth-child(9) {
+  width: 100px !important;
+  min-width: 100px !important;
+  max-width: 100px !important;
+}
+
+/* Column 10: Action */
+#laporanTable_wrapper .dataTables_scrollHeadInner table th:nth-child(10),
+#laporanTable_wrapper .dataTables_scrollBody table td:nth-child(10) {
+  width: 100px !important;
+  min-width: 100px !important;
+  max-width: 100px !important;
 }
 
 /* Filter button styling */

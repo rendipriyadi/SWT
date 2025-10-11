@@ -15,7 +15,7 @@
         <div class="position-absolute" style="top: 0; right: 0;">
             @php
                 // Determine back URL based on report status
-                $backUrl = $laporan->status === 'Selesai' ? route('sejarah') : route('laporan.index');
+                $backUrl = $laporan->status === 'Selesai' ? route('sejarah.index') : route('laporan.index');
                 $backText = $laporan->status === 'Selesai' ? 'Back to History' : 'Back to Reports';
             @endphp
             <a href="{{ $backUrl }}" class="btn btn-outline-secondary" style="border: 2px solid #6c757d;">

@@ -14,9 +14,11 @@
         </a>
     </div>
 
+    
+
     <div class="card">
         <div class="card-body p-0">
-        <div class="table-scroll-x">
+        <div class="table-responsive">
             <table id="laporanTable" class="table table-bordered table-striped table-hover small mb-0" data-url="{{ route('dashboard.datatables') }}">
                 <thead>
                     <tr>

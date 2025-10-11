@@ -16,7 +16,7 @@
 
     <div class="card">
         <div class="card-body p-0">
-        <div class="table-scroll-x">
+        <div class="table-responsive">
         <table id="sejarahTable" class="table table-bordered table-striped table-hover small mb-0" data-url="{{ route('sejarah.datatables') }}">
                 <thead>
                     <tr>

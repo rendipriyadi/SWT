@@ -1,4 +1,8 @@
+console.log('datatables-init.js file loaded - before document ready');
+
 $(document).ready(function() {
+    console.log('datatables-init.js - document ready fired');
+    
     // Global DataTables configuration (single source of truth)
     $.extend(true, $.fn.dataTable.defaults, {
         // Move both length (l) and filter (f) to the right
@@ -8,7 +12,7 @@ $(document).ready(function() {
              "<'row'<'col-sm-12'ip>>",
         language: {
             processing: "Loading...",
-            search: "Search:",
+            search: "",
             lengthMenu: "Show _MENU_",
             info: "_START_-_END_ of _TOTAL_",
             infoEmpty: "No data",
@@ -24,8 +28,8 @@ $(document).ready(function() {
         pageLength: 10,
         responsive: false,
         autoWidth: false,
-        scrollX: true,
-        scrollCollapse: true,
+        scrollX: false,
+        scrollCollapse: false,
         columnDefs: [
             { className: "align-middle", targets: "_all" }
         ],
@@ -38,37 +42,43 @@ $(document).ready(function() {
             if (typeof window.initStatusBadges === 'function') {
                 window.initStatusBadges();
             }
-
-            // Sync columns after draw
-            try { this.api().columns.adjust(); } catch(e) {}
+            // No column adjustments needed in single-table mode
         }
     });
 
     // Dashboard table
+    var laporanTable;
     if ($('#laporanTable').length) {
-        var table = $('#laporanTable').DataTable({
-            processing: true,
+        laporanTable = $('#laporanTable').DataTable({
             serverSide: true,
             ajax: {
                 url: $('#laporanTable').data('url'),
                 type: 'GET',
                 data: function(d) {
-                    d.start_date = $('#filter_start_date').val();
-                    d.end_date = $('#filter_end_date').val();
-                    d.area_id = $('#filter_area').val();
-                    d.category_id = $('#filter_category').val();
+                    // Reports: no date filtering; send only non-empty non-date filters
+                    var area = ($('#area_id').val() || $('#filter_area').val() || '').trim();
+                    var pj = ($('#penanggung_jawab_id').val() || '').trim();
+                    var cat = ($('#kategori').val() || $('#filter_category').val() || '').trim();
+
+                    if (area) d.area_id = area;
+                    if (pj) d.penanggung_jawab_id = pj;
+                    if (cat) d.kategori = cat;
+                },
+                error: function(xhr, status, error) {
+                    console.error('laporanTable AJAX error:', status, error, 'status:', xhr.status, 'response:', xhr.responseText);
                 }
             },
-            dom: '<"row mb-3"<"col-sm-6"l><"col-sm-6 d-flex justify-content-end align-items-center gap-2"<"filter-btn-container">f>>rtip',
-            scrollX: true,
-            scrollCollapse: true,
-            autoWidth: false,
+            // Remove inline date filter button and its handlers
+            createdRow: function(row, data) { $(row).addClass('clickable-row'); },
+            autoWidth: false, // keep fixed widths from columnDefs/CSS
+            scrollX: false,   // use native single table (no cloned header)
+            scrollCollapse: false,
             columns: [
-                { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false, className: 'text-center', width: '25px' },
-                { data: 'Tanggal', name: 'Tanggal', width: '110px' },
-                { data: 'foto', name: 'foto', orderable: false, searchable: false, width: '50px', className: 'text-center' },
-                { data: 'departemen', name: 'area.name', width: '110px', className: 'text-center'},
-                { data: 'problem_category', name: 'problemCategory.name', orderable: false, width: '110px' },
+                { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
+                { data: 'Tanggal', name: 'Tanggal' },
+                { data: 'foto', name: 'foto', orderable: false, searchable: false },
+                { data: 'departemen', name: 'area.name' },
+                { data: 'problem_category', name: 'problemCategory.name', orderable: false },
                 { 
                     data: 'deskripsi_masalah', 
                     name: 'deskripsi_masalah', 
@@ -81,14 +91,38 @@ $(document).ready(function() {
                         return data;
                     }
                 },
-                { data: 'tenggat_waktu', name: 'tenggat_waktu', width: '110px' },
-                { data: 'status', name: 'status', width: '140px', orderable: false, searchable: false },
-                { data: 'penyelesaian', name: 'penyelesaian', orderable: false, searchable: false, className: 'text-center', width: '50px' },
-                { data: 'aksi', name: 'aksi', orderable: false, searchable: false, width: '65px', className: 'text-center' }
+                { data: 'tenggat_waktu', name: 'tenggat_waktu' },
+                { data: 'status', name: 'status', orderable: false, searchable: false },
+                { data: 'penyelesaian', name: 'penyelesaian', orderable: false, searchable: false },
+                { data: 'aksi', name: 'aksi', orderable: false, searchable: false }
             ],
             order: [[1, 'desc']],
+            columnDefs: [
+                { targets: 0, width: 50, className: 'text-center align-middle no-wrap' }, // No
+                { targets: 1, width: 150, className: 'text-center align-middle no-wrap' }, // Date
+                { targets: 2, width: 80, className: 'text-center align-middle no-wrap' }, // Photo
+                { targets: 3, width: 180, className: 'text-center align-middle wrap-cell' }, // Area/Station - Can wrap
+                { targets: 4, width: 160, className: 'text-center align-middle wrap-cell' }, // Problem Category - Can wrap
+                { targets: 5, width: 200, className: 'text-center align-middle wrap-cell' }, // Description - Can wrap
+                { targets: 6, width: 120, className: 'text-center align-middle no-wrap deadline-col' }, // Deadline - Increased to 120px
+                { targets: 7, width: 120, className: 'text-center align-middle no-wrap status-col' }, // Status
+                { targets: 8, width: 120, className: 'text-center align-middle no-wrap completion-cell' }, // Completion
+                { targets: 9, width: 100, className: 'text-center align-middle no-wrap action-cell' } // Action
+            ],
+            drawCallback: function(){ 
+                // Do NOT call columns.adjust() to preserve our fixed widths
+                // try { this.api().columns.adjust(); } catch(e){} 
+            },
             createdRow: function(row, data) { $(row).addClass('clickable-row'); }
         });
+
+        // Tidy up the Reports search box: add placeholder and remove label text node
+        try {
+            $('#laporanTable_filter input').attr('placeholder', 'Search...');
+            $('#laporanTable_filter label').contents().filter(function(){ return this.nodeType === 3; }).remove();
+        } catch(_) {}
+
+        // (Removed) inline date filter for Reports
 
         // Row click -> open detail modal
         $('#laporanTable tbody').on('click', 'tr', function(e) {
@@ -102,7 +136,7 @@ $(document).ready(function() {
             const td = $(e.target).closest('td');
             if (td.length && td.index() === 2) return;
 
-            const rowData = table.row(this).data();
+            const rowData = laporanTable.row(this).data();
             if (!rowData) return;
 
             // Fill modal fields
@@ -140,75 +174,53 @@ $(document).ready(function() {
 
         // Re-adjust kolom ketika sidebar ditoggle atau window di-resize
         const adjustDashboardTable = function() {
-            try { table.columns.adjust().draw(false); } catch (e) {}
+            // Do NOT call columns.adjust() to preserve our fixed widths
+            // try { laporanTable.columns.adjust().draw(false); } catch (e) {}
         };
         $(window).on('resize', adjustDashboardTable);
         window.addEventListener('sidebar:toggled', adjustDashboardTable);
 
-        // Create filter button and dropdown
-        const filterHTML = `
-            <div class="dropdown">
-                <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" id="filterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="fas fa-calendar-alt me-1"></i>Filter
-                </button>
-                <div class="dropdown-menu dropdown-menu-end p-3" aria-labelledby="filterDropdown" style="min-width: 400px;" onclick="event.stopPropagation();">
-                    <h6 class="dropdown-header px-0">Filter Reports</h6>
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold">Start Date</label>
-                        <input type="date" class="form-control form-control-sm" id="filter_start_date">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold">End Date</label>
-                        <input type="date" class="form-control form-control-sm" id="filter_end_date">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold">Area</label>
-                        <select class="form-select form-select-sm" id="filter_area">
-                            <option value="">All Areas</option>
-                            ${window.areasData ? window.areasData.map(area => `<option value="${area.id}">${area.name}</option>`).join('') : ''}
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold">Problem Category</label>
-                        <select class="form-select form-select-sm" id="filter_category">
-                            <option value="">All Categories</option>
-                            ${window.categoriesData ? window.categoriesData.map(cat => `<option value="${cat.id}">${cat.name}</option>`).join('') : ''}
-                        </select>
-                    </div>
-                    <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-primary btn-sm flex-fill" id="btn_filter">
-                            <i class="fas fa-filter me-1"></i>Apply
-                        </button>
-                        <button type="button" class="btn btn-secondary btn-sm flex-fill" id="btn_reset">
-                            <i class="fas fa-redo me-1"></i>Reset
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        $('.filter-btn-container').html(filterHTML);
-
-        // Customize search input
-        $('#laporanTable_filter input').attr('placeholder', 'Search...');
-        $('#laporanTable_filter label').contents().filter(function() {
-            return this.nodeType === 3; // Text node
-        }).remove();
-
-        // Filter button handler
-        $(document).on('click', '#btn_filter', function() {
-            table.ajax.reload();
-        });
-
-        // Reset button handler
-        $(document).on('click', '#btn_reset', function() {
-            $('#filter_start_date').val('');
-            $('#filter_end_date').val('');
-            $('#filter_area').val('');
-            $('#filter_category').val('');
-            table.ajax.reload();
-        });
     }
+
+    // Apply filter from filter panel component (GLOBAL - outside if block)
+    console.log('Attaching event listener for #applyFilter button');
+    $(document).on('click', '#applyFilter', function() {
+        console.log('Apply filter clicked - checking tables...');
+        
+        if ($('#laporanTable').length && typeof laporanTable !== 'undefined') {
+            console.log('Reloading laporanTable');
+            laporanTable.ajax.reload();
+        } else if ($('#sejarahTable').length && typeof sejarahTable !== 'undefined') {
+            console.log('Reloading sejarahTable');
+            sejarahTable.ajax.reload();
+        } else {
+            console.log('No table found to reload');
+        }
+    });
+
+    // Reset filter from filter panel component (GLOBAL - outside if block)
+    console.log('Attaching event listener for #resetFilter button');
+    $(document).on('click', '#resetFilter', function() {
+        console.log('Reset filter clicked - clearing filters...');
+        
+        $('#start_date').val('');
+        $('#end_date').val('');
+        $('#area_id').val('');
+        $('#penanggung_jawab_id').val('').html('<option value="">All Station</option>');
+        $('#kategori').val('');
+        $('#tenggat_bulan').val('');
+        $('#status').val('');
+        
+        if ($('#laporanTable').length && typeof laporanTable !== 'undefined') {
+            console.log('Reloading laporanTable after reset');
+            laporanTable.ajax.reload();
+        } else if ($('#sejarahTable').length && typeof sejarahTable !== 'undefined') {
+            console.log('Reloading sejarahTable after reset');
+            sejarahTable.ajax.reload();
+        } else {
+            console.log('No table found to reload');
+        }
+    });
 
     // History table
     if ($('#sejarahTable').length) {
@@ -220,38 +232,23 @@ $(document).ready(function() {
                 url: $('#sejarahTable').data('url'),
                 type: 'GET',
                 data: function(d) {
-                    d.start_date = $('#history_filter_start_date').val();
-                    d.end_date = $('#history_filter_end_date').val();
-                    d.area_id = $('#history_filter_area').val();
-                    d.category_id = $('#history_filter_category').val();
+                    d.start_date = $('#start_date').val();
+                    d.end_date = $('#end_date').val();
+                    d.area_id = $('#area_id').val();
+                    d.penanggung_jawab_id = $('#penanggung_jawab_id').val();
+                    d.kategori = $('#kategori').val();
+                    d.tenggat_bulan = $('#tenggat_bulan').val();
+                    d.status = $('#status').val();
                 }
             },
             dom: '<"row mb-3"<"col-sm-6"l><"col-sm-6 d-flex justify-content-end align-items-center gap-2"<"history-filter-btn-container">f>>rtip',
-            responsive: false,
-            autoWidth: false,
-            scrollX: true,
-            scrollCollapse: true,
-            language: {
-                processing: "Loading...",
-                search: "Search:",
-                lengthMenu: "Show _MENU_",
-                info: "_START_-_END_ of _TOTAL_",
-                infoEmpty: "No data",
-                infoFiltered: "(filtered from _MAX_)",
-                zeroRecords: "No data found",
-                paginate: {
-                    first: "First",
-                    last: "Last",
-                    next: "»",
-                    previous: "«"
-                }
-            },
+            // Use global config for responsive, autoWidth, scrollX, scrollCollapse, language
             columns: [
-                { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false, className: 'text-center', width: '25px' },
-                { data: 'Tanggal', name: 'Tanggal', width: '90px' },
-                { data: 'foto', name: 'foto', orderable: false, searchable: false, width: '50px', className: 'text-center' },
-                { data: 'departemen', name: 'area.name', width: '110px', className: 'text-center' },
-                { data: 'problem_category', name: 'problemCategory.name', orderable: false, width: '110px' },
+                { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
+                { data: 'Tanggal', name: 'Tanggal' },
+                { data: 'foto', name: 'foto', orderable: false, searchable: false },
+                { data: 'departemen', name: 'area.name' },
+                { data: 'problem_category', name: 'problemCategory.name', orderable: false },
                 { 
                     data: 'deskripsi_masalah', 
                     name: 'deskripsi_masalah',
@@ -264,22 +261,22 @@ $(document).ready(function() {
                         return data;
                     }
                 },
-                { data: 'tenggat_waktu', name: 'tenggat_waktu', width: '90px' },
-                { data: 'status', name: 'status', width: '110px', orderable: false, searchable: false },
-                { data: 'penyelesaian', name: 'penyelesaian', orderable: false, searchable: false, className: 'text-center', width: '50px' },
-                { data: 'aksi', name: 'aksi', orderable: false, searchable: false, width: '65px', className: 'text-center' }
+                { data: 'tenggat_waktu', name: 'tenggat_waktu' },
+                { data: 'status', name: 'status', orderable: false, searchable: false },
+                { data: 'penyelesaian', name: 'penyelesaian', orderable: false, searchable: false },
+                { data: 'aksi', name: 'aksi', orderable: false, searchable: false }
             ],
             order: [[1, 'desc']],
             columnDefs: [
                 { targets: 0, width: 50, className: 'text-center align-middle no-wrap' }, // No
-                { targets: 1, width: 120, className: 'text-center align-middle wrap-cell' },            // Date
+                { targets: 1, width: 150, className: 'text-center align-middle no-wrap' }, // Date - Increased to 150px
                 { targets: 2, width: 80, className: 'text-center align-middle no-wrap' }, // Photo
-                { targets: 3, width: 180, className: 'text-center align-middle wrap-cell' }, // Area/Station
-                { targets: 4, width: 160, className: 'text-center align-middle wrap-cell' }, // Problem Category
-                { targets: 5, width: 200, className: 'text-center align-middle wrap-cell' },           // Description
-                { targets: 6, width: 100, className: 'text-center align-middle wrap-cell deadline-col' }, // Deadline
+                { targets: 3, width: 180, className: 'text-center align-middle wrap-cell' }, // Area/Station - Can wrap
+                { targets: 4, width: 160, className: 'text-center align-middle wrap-cell' }, // Problem Category - Can wrap
+                { targets: 5, width: 200, className: 'text-center align-middle wrap-cell' }, // Description - Can wrap
+                { targets: 6, width: 120, className: 'text-center align-middle no-wrap deadline-col' }, // Deadline - Increased to 120px
                 { targets: 7, width: 120, className: 'text-center align-middle no-wrap status-col' }, // Status
-                { targets: 8, width: 100, className: 'text-center align-middle no-wrap completion-cell' }, // Completion
+                { targets: 8, width: 120, className: 'text-center align-middle no-wrap completion-cell' }, // Completion
                 { targets: 9, width: 100, className: 'text-center align-middle no-wrap action-cell' } // Action
             ],
             drawCallback: function(){ try { this.api().columns.adjust(); } catch(e){} },
@@ -351,22 +348,7 @@ $(document).ready(function() {
         }).remove();
     }
 
-    // Ensure the filter button is shown
-    function ensureFilterButton() {
-        var filterBtn = $('#filterIconBtn');
-        if (filterBtn.length && $('.dataTables_filter').length) {
-            if (!$.contains($('.dataTables_filter')[0], filterBtn[0])) {
-                $('.dataTables_filter label').before(filterBtn.show());
-            } else {
-                filterBtn.show();
-            }
-        }
-    }
-
-    // Add filter button after table is drawn
-    $('.dataTable').on('draw.dt', function() {
-        ensureFilterButton();
-    });
+    // (Removed) Reports floating filter helpers
 
     // Global handler for description detail links
     $(document).on('click', 'a.view-description', function(e) {
