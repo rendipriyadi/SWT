@@ -9,54 +9,65 @@
             <h3 class="mb-1">Report History</h3>
             <p class="text-muted mb-0">Completed and archived reports</p>
         </div>
-        <a href="{{ route('sejarah.download') }}" class="btn btn-primary">
+        <a href="{{ route('sejarah.download') }}" id="historyExportPdf" class="btn btn-primary">
             <i class="fas fa-file-pdf me-2"></i>Export PDF
             </a>
     </div>
 
     <div class="card">
-        <div class="card-body p-0">
-        <div class="table-responsive">
-        <table id="sejarahTable" class="table table-bordered table-striped table-hover small mb-0" data-url="{{ route('sejarah.datatables') }}">
-                <thead>
-                    <tr>
-                        <th>No</th>
-                        <th>Date</th>
-                        <th>Photo</th>
-                        <th>Area/Station</th>
-                        <th>Problem Category</th>
-                        <th>Description</th>
-                        <th>Deadline</th>
-                        <th>Status</th>
-                        <th>Completion</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-        </table>
+        <div class="card-body">
+        <!-- History date filter dropdown (visible, right-aligned) -->
+        <div id="historyControlsContainer" class="d-flex justify-content-end align-items-center gap-2 mb-2">
+            <button type="button" id="historyResetExternal" class="btn btn-outline-secondary btn-sm d-none border border-secondary fs-6 mt-4">
+                <i class="fas fa-redo me-1"></i>Reset
+            </button>
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary btn-sm border border-secondary fs-6 mt-4" type="button" id="historyCreatedBtn" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                    <i class="fas fa-calendar-alt me-1"></i>Filter
+                </button>
+                <div class="dropdown-menu dropdown-menu-end p-3" aria-labelledby="historyCreatedBtn" style="min-width: 420px;" onclick="event.stopPropagation();">
+                    <h6 class="dropdown-header px-0">Filter by Created Date</h6>
+                    <div class="row g-2 mb-2">
+                        <div class="col-12 col-md-6">
+                            <label class="form-label small fw-bold" for="history_created_start">Start</label>
+                            <input type="text" id="history_created_start" class="form-control form-control-sm" placeholder="Start date" />
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label small fw-bold" for="history_created_end">End</label>
+                            <input type="text" id="history_created_end" class="form-control form-control-sm" placeholder="End date" />
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-primary btn-sm" id="history_created_apply">
+                            <i class="fas fa-filter me-1"></i>Apply
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="p-0">
+            <div class="table-responsive">
+                <table id="sejarahTable" class="table table-bordered table-striped table-hover small mb-0" data-url="{{ route('sejarah.datatables') }}">
+                    <thead>
+                        <tr>
+                            <th>No</th>
+                            <th>Date</th>
+                            <th>Photo</th>
+                            <th>Area/Station</th>
+                            <th>Problem Category</th>
+                            <th>Description</th>
+                            <th>Deadline</th>
+                            <th>Status</th>
+                            <th>Completion</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
         </div>
         </div>
     </div>
-</div>
-
-<!-- Simple modal for photo preview -->
-<div class="modal fade" id="modalFotoFull" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-lg">
-    <div class="modal-content bg-transparent border-0">
-      <div class="modal-body text-center p-0">
-        <div id="photoCarousel" class="carousel slide">
-          <div class="carousel-inner"></div>
-          <button class="carousel-control-prev" type="button" data-bs-target="#photoCarousel" data-bs-slide="prev">
-            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-            <span class="visually-hidden">Previous</span>
-          </button>
-          <button class="carousel-control-next" type="button" data-bs-target="#photoCarousel" data-bs-slide="next">
-            <span class="carousel-control-next-icon" aria-hidden="true"></span>
-            <span class="visually-hidden">Next</span>
-          </button>
-        </div>
-      </div>
     </div>
-  </div>
 </div>
 
 <!-- Modal Row Detail -->
@@ -105,7 +116,12 @@
 @endsection
 
 @push('scripts')
+<!-- Flatpickr for consistent datepicker UI and disabled dates -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
 <style>
+/* Ensure flatpickr overlays above dropdown and table */
+.flatpickr-calendar { z-index: 2005 !important; }
 /* Lebar kolom dipindahkan ke columnDefs DataTables untuk sinkron thead/td */
 
 /* Make table rows look clickable and add hover feedback */

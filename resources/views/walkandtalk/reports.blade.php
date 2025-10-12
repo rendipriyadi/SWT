@@ -17,7 +17,36 @@
     
 
     <div class="card">
-        <div class="card-body p-0">
+        <div class="card-body">
+        <!-- Creation date filter dropdown (visible, right-aligned) -->
+        <div id="reportsCreatedDropdownContainer" class="d-flex justify-content-end align-items-center gap-2 mb-2">
+            <button type="button" id="reportsCreatedResetExternal" class="btn btn-outline-secondary btn-sm d-none border border-secondary fs-6">
+                <i class="fas fa-redo me-1"></i>Reset
+            </button>
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary btn-sm border border-secondary fs-6" type="button" id="reportsCreatedBtn" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                    <i class="fas fa-calendar-alt me-1"></i>Filter
+                </button>
+                <div class="dropdown-menu dropdown-menu-end p-3" aria-labelledby="reportsCreatedBtn" style="min-width: 420px;" onclick="event.stopPropagation();">
+                    <h6 class="dropdown-header px-0">Filter by Created Date</h6>
+                    <div class="row g-2 mb-2">
+                        <div class="col-12 col-md-6">
+                            <label class="form-label small fw-bold" for="report_created_start">Start</label>
+                            <input type="text" id="report_created_start" class="form-control form-control-sm" placeholder="Start date" />
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label small fw-bold" for="report_created_end">End</label>
+                            <input type="text" id="report_created_end" class="form-control form-control-sm" placeholder="End date" />
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-primary btn-sm" id="report_created_apply">
+                            <i class="fas fa-filter me-1"></i>Apply
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
         <div class="table-responsive">
             <table id="laporanTable" class="table table-bordered table-striped table-hover small mb-0" data-url="{{ route('dashboard.datatables') }}">
                 <thead>
@@ -142,7 +171,12 @@
 @endsection
 
 @push('scripts')
+<!-- Flatpickr for consistent datepicker UI (same as History) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
 <style>
+/* Ensure flatpickr overlays above dropdown and table */
+.flatpickr-calendar { z-index: 2005 !important; }
 /* Lebar kolom dipindahkan ke columnDefs DataTables untuk sinkron thead/td */
 
 /* Make table rows look clickable and add hover feedback */

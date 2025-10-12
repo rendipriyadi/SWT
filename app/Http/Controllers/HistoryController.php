@@ -53,9 +53,14 @@ class HistoryController extends Controller
         }
 
         $query = $this->applyFilters($request, $query);
-        
-        // Order by date descending (newest first)
-        $query = $query->orderBy('Tanggal', 'desc');
+
+        // If a date filter is active, sort chronologically (oldest->newest),
+        // else keep default newest-first to match previous behavior
+        if ($request->filled('start_date') || $request->filled('end_date')) {
+            $query = $query->orderBy('created_at', 'asc');
+        } else {
+            $query = $query->orderBy('Tanggal', 'desc');
+        }
 
         // Helper to resolve report photo URL with fallback to legacy folder
         $resolveReportUrl = function(string $filename) {
@@ -124,6 +129,12 @@ class HistoryController extends Controller
             $query = Laporan::with(['area', 'penanggungJawab', 'penyelesaian', 'problemCategory'])
                 ->where('status', 'Selesai');
             $query = $this->applyFilters($request, $query);
+            // Order like the table: if a date filter is active, oldest -> newest; else newest-first
+            if ($request->filled('start_date') || $request->filled('end_date')) {
+                $query = $query->orderBy('created_at', 'asc');
+            } else {
+                $query = $query->orderBy('created_at', 'desc');
+            }
             $laporan = $query->get();
 
             $periode = 'Semua Waktu';

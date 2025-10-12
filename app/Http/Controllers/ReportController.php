@@ -274,7 +274,12 @@ class ReportController extends Controller
             $query->where('problem_category_id', $request->category_id);
         }
 
-        $query->orderBy('Tanggal', 'desc');
+        // Ordering: if date filter is applied, sort chronologically (start->end). Otherwise, latest first.
+        if ($request->filled('start_date') || $request->filled('end_date')) {
+            $query->orderBy('created_at', 'asc');
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
 
         // Helper to resolve report photo URL with fallback to legacy folder
         $resolveReportUrl = function(string $filename) {

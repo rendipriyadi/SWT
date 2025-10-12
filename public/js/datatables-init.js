@@ -49,17 +49,23 @@ $(document).ready(function() {
     // Dashboard table
     var laporanTable;
     if ($('#laporanTable').length) {
+        // Stable in-memory state for creation-date filter
+        window.reportsCreatedDateFilter = window.reportsCreatedDateFilter || { start: '', end: '' };
         laporanTable = $('#laporanTable').DataTable({
             serverSide: true,
             ajax: {
                 url: $('#laporanTable').data('url'),
                 type: 'GET',
                 data: function(d) {
-                    // Reports: no date filtering; send only non-empty non-date filters
+                    // Reports: creation-date filter (Tanggal) from stable state
+                    var sd = (window.reportsCreatedDateFilter.start || '').trim();
+                    var ed = (window.reportsCreatedDateFilter.end || '').trim();
                     var area = ($('#area_id').val() || $('#filter_area').val() || '').trim();
                     var pj = ($('#penanggung_jawab_id').val() || '').trim();
                     var cat = ($('#kategori').val() || $('#filter_category').val() || '').trim();
 
+                    if (sd) d.start_date = sd; // Tanggal mulai
+                    if (ed) d.end_date = ed;   // Tanggal akhir
                     if (area) d.area_id = area;
                     if (pj) d.penanggung_jawab_id = pj;
                     if (cat) d.kategori = cat;
@@ -116,13 +122,209 @@ $(document).ready(function() {
             createdRow: function(row, data) { $(row).addClass('clickable-row'); }
         });
 
-        // Tidy up the Reports search box: add placeholder and remove label text node
-        try {
-            $('#laporanTable_filter input').attr('placeholder', 'Search...');
-            $('#laporanTable_filter label').contents().filter(function(){ return this.nodeType === 3; }).remove();
-        } catch(_) {}
+        // Place DataTables length/search into our header next to Filter/Reset
+        function placeReportsControls() {
+            try {
+                const $header = $('#reportsCreatedDropdownContainer');
+                const $length = $('#laporanTable_length');
+                const $filter = $('#laporanTable_filter');
+                if (!($header.length && $length.length && $filter.length)) return;
 
-        // (Removed) inline date filter for Reports
+                // Ensure header acts as flex row with space between
+                $header.addClass('d-flex align-items-center');
+
+                // Create right group container (search + reset + filter)
+                let $right = $header.find('.reports-controls-right');
+                if (!$right.length) {
+                    $right = $('<div class="reports-controls-right d-flex align-items-center gap-2 flex-grow-1"></div>');
+                    $header.append($right);
+                }
+
+                // Style tweaks
+                $length.addClass('mb-0 me-2 flex-shrink-0');
+                $filter.removeClass('mt-n4').addClass('mb-0 flex-grow-1 mt-4').css({ flex: '1 1 auto', minWidth: 0 });
+                // Remove label text node and add placeholder/sizing
+                const $input = $filter.find('input');
+                const $label = $filter.find('label');
+                $label.contents().filter(function(){ return this.nodeType === 3; }).remove();
+                $label.addClass('w-100 d-flex');
+                $input.attr('placeholder', 'Search...').addClass('form-control form-control-sm w-100 flex-grow-1 fs-6');
+
+                // Enlarge Show select as well
+                const $lengthSelect = $length.find('select');
+                $lengthSelect.addClass('form-select form-select-sm fs-6');
+
+                // Move Show to far left (prepend into header)
+                if (!$length.data('moved-left')) { $header.prepend($length); $length.data('moved-left', true); }
+
+                // Build right side order: Search | Reset | Filter
+                const $resetBtn = $('#reportsCreatedResetExternal').removeClass('mt-n4').addClass('mt-4');
+                const $filterBtnWrap = $header.find('> .dropdown');
+                const $filterBtn = $('#reportsCreatedBtn').removeClass('mt-n4').addClass('mt-4');
+                if ($right.length) {
+                    if (!$filter.data('moved-right')) { $right.append($filter); $filter.data('moved-right', true); }
+                    if ($resetBtn.length && !$resetBtn.data('moved-right')) { $right.append($resetBtn); $resetBtn.data('moved-right', true); }
+                    if ($filterBtnWrap.length && !$filterBtnWrap.data('moved-right')) { $right.append($filterBtnWrap); $filterBtnWrap.data('moved-right', true); }
+                }
+            } catch(_) {}
+        }
+        placeReportsControls();
+        // Also run on DataTables init (in case of reinit)
+        try { $('#laporanTable').on('init.dt', placeReportsControls); } catch(_) {}
+
+        // Use the Blade-provided creation-date dropdown as-is (no relocation)
+
+        // ------- Reports flatpickr + Start-first (same as History) -------
+        function ensureFlatpickrAssetsReports(cb){
+            if (window.flatpickr) { cb && cb(); return; }
+            if (document.getElementById('flatpickr-js-loader')) {
+                setTimeout(function(){ if (window.flatpickr) cb && cb(); }, 200);
+                return;
+            }
+            try {
+                if (!document.querySelector('link[data-flatpickr-css]')) {
+                    var l = document.createElement('link'); l.rel='stylesheet'; l.href='https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css'; l.setAttribute('data-flatpickr-css','1'); document.head.appendChild(l);
+                }
+                var s = document.createElement('script'); s.src='https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js'; s.id='flatpickr-js-loader'; s.onload=function(){ try{ cb && cb(); }catch(_){}}; document.head.appendChild(s);
+            } catch(_) {}
+        }
+
+        function initReportsDatepickers(){
+            const $start = $('#report_created_start');
+            const $end = $('#report_created_end');
+            if (!$start.length || !$end.length) return;
+            // Destroy any other pickers and previous instances
+            try { if ($start[0]._flatpickr) $start[0]._flatpickr.destroy(); } catch(_) {}
+            try { if ($end[0]._flatpickr) $end[0]._flatpickr.destroy(); } catch(_) {}
+
+            const commonOpts = { dateFormat: 'Y-m-d', allowInput: true, disableMobile: true, static: true };
+            const startPicker = window.flatpickr($start[0], {
+                ...commonOpts,
+                onReady: function(sel,str,inst){ try{ inst.setDate($start.val() || null, false); inst._positionCalendar(); }catch(_){}}
+            });
+            const endPicker = window.flatpickr($end[0], {
+                ...commonOpts,
+                clickOpens: true
+            });
+
+            const syncMin = function(){
+                const sd = ($start.val() || '').trim();
+                if (sd){
+                    try { endPicker.set('minDate', sd); endPicker.jumpToDate(sd, true);} catch(_) {}
+                    $end.prop('disabled', false);
+                    const ed = ($end.val() || '').trim();
+                    if (ed && ed < sd){ $end.val(''); try { endPicker.clear(); } catch(_) {} }
+                } else {
+                    try { endPicker.set('minDate', null);} catch(_) {}
+                    $end.prop('disabled', true).val('');
+                    try { endPicker.clear(); } catch(_) {}
+                }
+            };
+            $start.on('change.flatpickrSyncReports', syncMin);
+            syncMin();
+        }
+
+        function enforceStartFirst(){
+            const $start = $('#report_created_start');
+            const $end = $('#report_created_end');
+            if (!$start.length || !$end.length) return;
+            const sd = ($start.val() || '').trim();
+            if (sd){
+                $end.prop('disabled', false).attr('min', sd);
+                try { if ($end[0] && $end[0]._flatpickr){ $end[0]._flatpickr.set('minDate', sd); } } catch(_) {}
+            } else {
+                $end.prop('disabled', true).removeAttr('min').val('');
+                try { if ($end[0] && $end[0]._flatpickr){ $end[0]._flatpickr.set('minDate', null); $end[0]._flatpickr.clear(); } } catch(_) {}
+            }
+        }
+        // Initialize on dropdown open, input focus, and eagerly after ready
+        $(document)
+            .off('shown.bs.dropdown.reports1')
+            .on('shown.bs.dropdown.reports1', '#reportsCreatedBtn', function(){ if (window.flatpickr) { initReportsDatepickers(); enforceStartFirst(); } else { ensureFlatpickrAssetsReports(function(){ initReportsDatepickers(); enforceStartFirst(); }); } })
+            .off('shown.bs.dropdown.reports2')
+            .on('shown.bs.dropdown.reports2', '#reportsCreatedDropdownContainer .dropdown', function(){ if (window.flatpickr) { initReportsDatepickers(); enforceStartFirst(); } else { ensureFlatpickrAssetsReports(function(){ initReportsDatepickers(); enforceStartFirst(); }); } });
+        $(document)
+            .off('focus.reports', '#report_created_start, #report_created_end')
+            .on('focus.reports', '#report_created_start, #report_created_end', function(){ if (!this._flatpickr){ if (window.flatpickr) { initReportsDatepickers(); enforceStartFirst(); try { this._flatpickr && this._flatpickr.open(); } catch(_) {} } else { ensureFlatpickrAssetsReports(function(){ initReportsDatepickers(); enforceStartFirst(); try { this._flatpickr && this._flatpickr.open(); } catch(_) {} }.bind(this)); } } });
+        setTimeout(function(){ if (window.flatpickr) { initReportsDatepickers(); enforceStartFirst(); } else { ensureFlatpickrAssetsReports(function(){ initReportsDatepickers(); enforceStartFirst(); }); } }, 0);
+        setTimeout(function(){ var el = document.getElementById('report_created_start'); if (el && !el._flatpickr){ if (window.flatpickr){ initReportsDatepickers(); enforceStartFirst(); } } }, 400);
+
+        // Delegated handlers for creation-date filter
+        try { console.log('[Reports] Binding handlers for Apply/Reset/Change'); } catch(_) {}
+
+        // Helper: toggle external Reset button visibility
+        function toggleExternalResetButton() {
+            const btn = document.getElementById('reportsCreatedResetExternal');
+            if (!btn) return;
+            const hasAny = Boolean((window.reportsCreatedDateFilter && (window.reportsCreatedDateFilter.start || window.reportsCreatedDateFilter.end))
+                || ($('#report_created_start').val() || $('#report_created_end').val()));
+            if (hasAny) btn.classList.remove('d-none'); else btn.classList.add('d-none');
+        }
+        // Initialize visibility on load
+        toggleExternalResetButton();
+        function handleReportApply(e){
+            try { console.log('[Reports][Apply Handler] event:', e && e.type); } catch(_) {}
+            e.preventDefault(); e.stopPropagation();
+            const sd = $('#report_created_start').val();
+            const ed = $('#report_created_end').val();
+            // Silent validation like History
+            if (!sd && ed) { $('#report_created_end').val(''); $('#report_created_start').focus(); return; }
+            if (sd && ed && ed < sd) { $('#report_created_end').val(''); $('#report_created_end').focus(); return; }
+            // Update stable state (only on Apply)
+            window.reportsCreatedDateFilter = { start: sd || '', end: ed || '' };
+            try { console.log('[Reports][Filter Apply]', { start_date: sd, end_date: ed }); } catch(_) {}
+            toggleExternalResetButton();
+            try {
+                if (typeof laporanTable !== 'undefined') {
+                    laporanTable.order([1,'asc']).ajax.reload(null, true);
+                } else if ($.fn.DataTable.isDataTable('#laporanTable')) {
+                    $('#laporanTable').DataTable().order([1,'asc']).ajax.reload(null, true);
+                }
+            } catch(_) {}
+            try { bootstrap.Dropdown.getOrCreateInstance(document.getElementById('reportsCreatedBtn')).hide(); } catch(_) {}
+        }
+        // Bind multiple triggers to avoid dropdown swallowing the click
+        $(document)
+            .off('click', '#report_created_apply')
+            .on('click', '#report_created_apply', handleReportApply)
+            .off('mousedown', '#report_created_apply')
+            .on('mousedown', '#report_created_apply', function(e){ if (e.which === 1) handleReportApply(e); })
+            .off('touchstart', '#report_created_apply')
+            .on('touchstart', '#report_created_apply', handleReportApply);
+        $(document).off('click', '#report_created_reset, #reportsCreatedResetExternal').on('click', '#report_created_reset, #reportsCreatedResetExternal', function(e){
+            e.preventDefault(); e.stopPropagation();
+            const s = document.getElementById('report_created_start');
+            const e2 = document.getElementById('report_created_end');
+            if (s) { s.value = ''; try { s.valueAsDate = null; } catch(_) {} }
+            if (e2) { e2.value = ''; try { e2.valueAsDate = null; } catch(_) {} }
+            // Clear stable state
+            window.reportsCreatedDateFilter = { start: '', end: '' };
+            enforceStartFirst();
+            try { console.log('[Reports][Filter Reset]'); } catch(_) {}
+            toggleExternalResetButton();
+            try {
+                if ($.fn.DataTable.isDataTable('#laporanTable')) {
+                    $('#laporanTable').DataTable().order([1,'desc']).ajax.reload(null, true);
+                } else if (typeof laporanTable !== 'undefined') {
+                    laporanTable.order([1,'desc']).ajax.reload(null, true);
+                }
+            } catch(_) {}
+            try { bootstrap.Dropdown.getOrCreateInstance(document.getElementById('reportsCreatedBtn')).hide(); } catch(_) {}
+        });
+
+        // On change: only enforce constraints; do NOT update state or reload automatically. Update Reset button visibility.
+        $(document).off('change', '#report_created_start, #report_created_end').on('change', '#report_created_start, #report_created_end', function(){
+            enforceStartFirst();
+            toggleExternalResetButton();
+        });
+        $(document).off('keydown', '#report_created_start, #report_created_end').on('keydown', '#report_created_start, #report_created_end', function(e){
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                $('#report_created_apply').trigger('click');
+            }
+        });
+
+        // Remove any interception of datepicker Clear; allow normal behavior without auto-reset
 
         // Row click -> open detail modal
         $('#laporanTable tbody').on('click', 'tr', function(e) {
@@ -225,6 +427,8 @@ $(document).ready(function() {
     // History table
     if ($('#sejarahTable').length) {
         const isMobile = false; // force horizontal scroll always
+        // Stable in-memory state for History date filter (like Reports)
+        window.sejarahDateFilter = window.sejarahDateFilter || { start: '', end: '' };
         var sejarahTable = $('#sejarahTable').DataTable({
             processing: true,
             serverSide: true,
@@ -232,8 +436,14 @@ $(document).ready(function() {
                 url: $('#sejarahTable').data('url'),
                 type: 'GET',
                 data: function(d) {
-                    d.start_date = $('#start_date').val();
-                    d.end_date = $('#end_date').val();
+                    // Use History's in-memory date state so it persists regardless of DOM
+                    var sd = (window.sejarahDateFilter.start || '').trim();
+                    var ed = (window.sejarahDateFilter.end || '').trim();
+                    if (sd) d.start_date = sd;
+                    if (ed) d.end_date = ed;
+                    // Hint backend to order created_at by asc when filter active, else desc
+                    d.created_order = (sd || ed) ? 'asc' : 'desc';
+                    // Keep other global filters (if present in the page)
                     d.area_id = $('#area_id').val();
                     d.penanggung_jawab_id = $('#penanggung_jawab_id').val();
                     d.kategori = $('#kategori').val();
@@ -241,7 +451,8 @@ $(document).ready(function() {
                     d.status = $('#status').val();
                 }
             },
-            dom: '<"row mb-3"<"col-sm-6"l><"col-sm-6 d-flex justify-content-end align-items-center gap-2"<"history-filter-btn-container">f>>rtip',
+            // Use global default DOM; we'll relocate controls into Blade header
+            dom: "<'row mb-3'<'col-sm-6'l><'col-sm-6 text-end'f>><'row'<'col-sm-12'tr>><'row'<'col-sm-12'ip>>",
             // Use global config for responsive, autoWidth, scrollX, scrollCollapse, language
             columns: [
                 { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
@@ -285,6 +496,19 @@ $(document).ready(function() {
             }
         });
 
+        // Enforce order based on filter state before every AJAX call
+        try {
+            $('#sejarahTable').off('preXhr.dt.historyOrder').on('preXhr.dt.historyOrder', function(){
+                const hasFilter = Boolean((window.sejarahDateFilter && (window.sejarahDateFilter.start || window.sejarahDateFilter.end))
+                    || ($('#history_created_start').val() || $('#history_created_end').val()));
+                if (hasFilter) {
+                    sejarahTable.order([1,'asc']);
+                } else {
+                    sejarahTable.order([1,'desc']);
+                }
+            });
+        } catch(_) {}
+
         // Re-adjust kolom ketika sidebar ditoggle atau window di-resize
         const adjustHistoryTable = function() {
             try { sejarahTable.columns.adjust().draw(false); } catch (e) {}
@@ -297,55 +521,285 @@ $(document).ready(function() {
             $('#sejarahTable tbody').off('click', 'tr');
         }
 
-        // Create filter button and dropdown for History table
-        const historyFilterHTML = `
-            <div class="dropdown">
-                <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" id="historyFilterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="fas fa-calendar-alt me-1"></i>Filter
-                </button>
-                <div class="dropdown-menu dropdown-menu-end p-3" aria-labelledby="historyFilterDropdown" style="min-width: 400px;" onclick="event.stopPropagation();">
-                    <h6 class="dropdown-header px-0">Filter History</h6>
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold">Start Date</label>
-                        <input type="date" class="form-control form-control-sm" id="history_filter_start_date">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold">End Date</label>
-                        <input type="date" class="form-control form-control-sm" id="history_filter_end_date">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold">Area</label>
-                        <select class="form-select form-select-sm" id="history_filter_area">
-                            <option value="">All Areas</option>
-                            ${window.areasData ? window.areasData.map(area => `<option value="${area.id}">${area.name}</option>`).join('') : ''}
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold">Problem Category</label>
-                        <select class="form-select form-select-sm" id="history_filter_category">
-                            <option value="">All Categories</option>
-                            ${window.categoriesData ? window.categoriesData.map(cat => `<option value="${cat.id}">${cat.name}</option>`).join('') : ''}
-                        </select>
-                    </div>
-                    <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-primary btn-sm flex-fill" id="history_btn_filter">
-                            <i class="fas fa-filter me-1"></i>Apply
-                        </button>
-                        <button type="button" class="btn btn-secondary btn-sm flex-fill" id="history_btn_reset">
-                            <i class="fas fa-redo me-1"></i>Reset
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        $('.history-filter-btn-container').html(historyFilterHTML);
+        // Blade already provides header controls; just relocate DataTables controls below into it
 
-        // Customize search input for History table
-        $('#sejarahTable_filter input').attr('placeholder', 'Search...');
-        $('#sejarahTable_filter label').contents().filter(function() {
-            return this.nodeType === 3; // Text node
-        }).remove();
+        // Place History controls similar to Reports: Show left, Search expands, Reset & Filter right
+        function placeHistoryControls() {
+            try {
+                const $header = $('#historyControlsContainer');
+                const $length = $('#sejarahTable_length');
+                const $filter = $('#sejarahTable_filter');
+                if (!($header.length && $length.length && $filter.length)) return;
+
+                // Ensure header is flex row
+                $header.addClass('d-flex align-items-center');
+
+                // Right group
+                let $right = $header.find('.history-controls-right');
+                if (!$right.length) {
+                    $right = $('<div class="history-controls-right d-flex align-items-center gap-2 flex-grow-1"></div>');
+                    $header.append($right);
+                }
+
+                // Style
+                $length.addClass('mb-0 me-2 flex-shrink-0');
+                $filter.addClass('mb-0 flex-grow-1 mt-4').css({ flex: '1 1 auto', minWidth: 0 });
+                const $input = $filter.find('input');
+                const $label = $filter.find('label');
+                $label.contents().filter(function(){ return this.nodeType === 3; }).remove();
+                $label.addClass('w-100 d-flex');
+                $input.attr('placeholder', 'Search...').addClass('form-control form-control-sm w-100 flex-grow-1 fs-6');
+                const $lengthSelect = $length.find('select');
+                $lengthSelect.addClass('form-select form-select-sm fs-6');
+
+                // Left: Show
+                if (!$length.data('moved-left')) { $header.prepend($length); $length.data('moved-left', true); }
+                // Right: Search | Reset | Filter
+                if (!$filter.data('moved-right')) { $right.append($filter); $filter.data('moved-right', true); }
+                const $resetBtn = $('#historyResetExternal');
+                if ($resetBtn.length && !$resetBtn.data('moved-right')) { $right.append($resetBtn); $resetBtn.data('moved-right', true); }
+                const $filterWrap = $header.find('> .dropdown');
+                if ($filterWrap.length && !$filterWrap.data('moved-right')) { $right.append($filterWrap); $filterWrap.data('moved-right', true); }
+            } catch(_) {}
+        }
+        placeHistoryControls();
+        try { $('#sejarahTable').on('init.dt', placeHistoryControls); } catch(_) {}
+
+        // (Reverted) No helper: use direct Bootstrap hide on the button when needed
+
+        // Build Export PDF URL with current filters
+        function buildHistoryExportUrl() {
+            const base = (document.getElementById('historyExportPdf') || {}).getAttribute('href') || '/sejarah/download';
+            const params = new URLSearchParams();
+            // Use in-memory state first, fallback to inputs
+            const sd = (window.sejarahDateFilter && window.sejarahDateFilter.start) || ($('#history_created_start').val() || '').trim();
+            const ed = (window.sejarahDateFilter && window.sejarahDateFilter.end) || ($('#history_created_end').val() || '').trim();
+            if (sd) params.set('start_date', sd);
+            if (ed) params.set('end_date', ed);
+            // Include other filters on the page for consistency
+            const area = ($('#area_id').val() || '').trim();
+            const pj = ($('#penanggung_jawab_id').val() || '').trim();
+            const cat = ($('#kategori').val() || '').trim();
+            const month = ($('#tenggat_bulan').val() || '').trim();
+            const status = ($('#status').val() || '').trim();
+            if (area) params.set('area_id', area);
+            if (pj) params.set('penanggung_jawab_id', pj);
+            if (cat) params.set('kategori', cat);
+            if (month) params.set('tenggat_bulan', month);
+            if (status) params.set('status', status);
+            const url = base + (base.includes('?') ? '&' : '?') + params.toString();
+            return url;
+        }
+        // Attach click handler to Export PDF
+        $(document).off('click', '#historyExportPdf').on('click', '#historyExportPdf', function(e){
+            // If no filters selected, let default link work
+            e.preventDefault();
+            const url = buildHistoryExportUrl();
+            try { window.location.href = url; } catch(_) { this.setAttribute('href', url); this.click(); }
+        });
+
+        // Ensure flatpickr assets are available (dynamic loader as fallback if CDN not yet loaded)
+        function ensureFlatpickrAssets(cb){
+            if (window.flatpickr) { cb && cb(); return; }
+            // Prevent multiple loads
+            if (document.getElementById('flatpickr-js-loader')) { 
+                // Wait a bit and retry
+                setTimeout(function(){ if (window.flatpickr) cb && cb(); }, 200);
+                return;
+            }
+            try {
+                // CSS
+                if (!document.querySelector('link[data-flatpickr-css]')) {
+                    var l = document.createElement('link');
+                    l.rel = 'stylesheet';
+                    l.href = 'https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css';
+                    l.setAttribute('data-flatpickr-css','1');
+                    document.head.appendChild(l);
+                }
+                // JS
+                var s = document.createElement('script');
+                s.src = 'https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js';
+                s.id = 'flatpickr-js-loader';
+                s.onload = function(){ try { cb && cb(); } catch(_) {} };
+                document.head.appendChild(s);
+            } catch(_) { /* ignore */ }
+        }
+
+        // Initialize datepicker widgets for History using ONLY flatpickr (avoid duplicates)
+        function initHistoryDatepickers() {
+            const $start = $('#history_created_start');
+            const $end = $('#history_created_end');
+            if (!$start.length || !$end.length) return;
+
+            // 1) Destroy any previously attached non-flatpickr pickers to prevent duplicates
+            try { // bootstrap-datepicker
+                if (typeof $.fn.datepicker === 'function') {
+                    if ($start.data('datepicker')) { try { $start.datepicker('destroy'); } catch(_) {} }
+                    if ($end.data('datepicker')) { try { $end.datepicker('destroy'); } catch(_) {} }
+                }
+            } catch(_) {}
+            try { // vanillajs-datepicker
+                if (window.Datepicker) {
+                    const sInst = window.Datepicker.getInstance($start[0]);
+                    const eInst = window.Datepicker.getInstance($end[0]);
+                    if (sInst && typeof sInst.destroy === 'function') sInst.destroy();
+                    if (eInst && typeof eInst.destroy === 'function') eInst.destroy();
+                }
+            } catch(_) {}
+            try { // Litepicker
+                if ($start[0] && $start[0]._litepicker && typeof $start[0]._litepicker.destroy === 'function') $start[0]._litepicker.destroy();
+                if ($end[0] && $end[0]._litepicker && typeof $end[0]._litepicker.destroy === 'function') $end[0]._litepicker.destroy();
+                $start[0]._litepicker = null; $end[0]._litepicker = null;
+            } catch(_) {}
+
+            // 2) Initialize flatpickr only
+            var doInit = function(){
+                // Destroy existing flatpickr first to avoid duplicate instances
+                try { if ($start[0]._flatpickr) $start[0]._flatpickr.destroy(); } catch(_) {}
+                try { if ($end[0]._flatpickr) $end[0]._flatpickr.destroy(); } catch(_) {}
+
+                // Render calendars statically under inputs to avoid off-screen placement inside dropdown
+                const commonOpts = { dateFormat: 'Y-m-d', allowInput: true, disableMobile: true, static: true };
+                const startPicker = window.flatpickr($start[0], {
+                    ...commonOpts,
+                    onReady: function(selDates, str, inst){ try { inst.setDate($start.val() || null, false); inst._positionCalendar(); } catch(_) {} },
+                    onOpen: function(selDates, str, inst){ try { inst._positionCalendar(); } catch(_) {} }
+                });
+                const endPicker = window.flatpickr($end[0], {
+                    ...commonOpts,
+                    clickOpens: true,
+                    onOpen: function(selDates, str, inst){ try { inst._positionCalendar(); } catch(_) {} }
+                });
+
+                // Sync minDate on End based on Start
+                const syncMin = function(){
+                    const sd = ($start.val() || '').trim();
+                    if (sd) {
+                        try { endPicker.set('minDate', sd); endPicker.jumpToDate(sd, true); } catch(_) {}
+                        $end.prop('disabled', false);
+                        const ed = ($end.val() || '').trim();
+                        if (ed && ed < sd) { $end.val(''); try { endPicker.clear(); } catch(_) {} }
+                    } else {
+                        try { endPicker.set('minDate', null); } catch(_) {}
+                        $end.prop('disabled', true).val('');
+                        try { endPicker.clear(); } catch(_) {}
+                    }
+                };
+                $start.on('change.flatpickrSync', syncMin);
+                syncMin();
+            };
+            if (window.flatpickr) doInit(); else ensureFlatpickrAssets(doInit);
+        }
+
+        // Enforce Start-first for History: End min follows Start and End disabled until Start set
+        function enforceHistoryStartFirst() {
+            const $start = $('#history_created_start');
+            const $end = $('#history_created_end');
+            if (!$start.length || !$end.length) return;
+            const sd = ($start.val() || '').trim();
+            if (sd) {
+                $end.prop('disabled', false).attr('min', sd);
+                const ed = ($end.val() || '').trim();
+                if (ed && ed < sd) { $end.val(''); }
+                // Flatpickr-only sync
+                try {
+                    if ($end[0] && $end[0]._flatpickr) {
+                        $end[0]._flatpickr.set('minDate', sd);
+                        try { $end[0]._flatpickr.jumpToDate(sd); } catch(_) {}
+                    }
+                } catch(_) {}
+            } else {
+                $end.prop('disabled', true).removeAttr('min').val('');
+                // Clear flatpickr constraint
+                try { if ($end[0] && $end[0]._flatpickr) { $end[0]._flatpickr.set('minDate', null); $end[0]._flatpickr.clear(); } } catch(_) {}
+            }
+        }
+
+        // Toggle external Reset button visibility for History
+        function toggleHistoryResetButton() {
+            const btn = document.getElementById('historyResetExternal');
+            if (!btn) return;
+            const hasAny = Boolean(($('#history_created_start').val() || $('#history_created_end').val()) || (window.sejarahDateFilter.start || window.sejarahDateFilter.end));
+            if (hasAny) btn.classList.remove('d-none'); else btn.classList.add('d-none');
+        }
+        // When dropdown opens, ensure pickers are initialized and constraints applied
+        // Bind to both the toggle button and the dropdown wrapper to be safe across Bootstrap versions
+        $(document)
+            .off('shown.bs.dropdown.history1')
+            .on('shown.bs.dropdown.history1', '#historyCreatedBtn', function(){ initHistoryDatepickers(); enforceHistoryStartFirst(); })
+            .off('shown.bs.dropdown.history2')
+            .on('shown.bs.dropdown.history2', '#historyControlsContainer .dropdown', function(){ initHistoryDatepickers(); enforceHistoryStartFirst(); });
+        // Fallback: if user focuses an input and flatpickr is not yet initialized, init lazily
+        $(document)
+            .off('focus.history', '#history_created_start, #history_created_end')
+            .on('focus.history', '#history_created_start, #history_created_end', function(){
+                const el = this;
+                if (!el._flatpickr) {
+                    initHistoryDatepickers();
+                    enforceHistoryStartFirst();
+                    // Open immediately after lazy init for better UX
+                    try { if (el._flatpickr) el._flatpickr.open(); } catch(_) {}
+                }
+            });
+        enforceHistoryStartFirst();
+        toggleHistoryResetButton();
+        // External Reset click -> clear, reload latest, hide button, close dropdown if open
+        $(document).off('click', '#historyResetExternal').on('click', '#historyResetExternal', function(e){
+            e.preventDefault(); e.stopPropagation();
+            $('#history_created_start').val('');
+            $('#history_created_end').val('');
+            window.sejarahDateFilter = { start: '', end: '' };
+            enforceHistoryStartFirst();
+            toggleHistoryResetButton();
+            try { if ($.fn.DataTable.isDataTable('#sejarahTable')) { $('#sejarahTable').DataTable().order([1,'desc']).ajax.reload(null, true); } } catch(_) {}
+            try { bootstrap.Dropdown.getOrCreateInstance(document.getElementById('historyCreatedBtn')).hide(); } catch(_) {}
+        });
+        // Toggle button when inputs change
+        // When Start changes, update End constraints; when End changes, just update Reset visibility
+        $(document)
+            .off('change', '#history_created_start')
+            .on('change', '#history_created_start', function(){ enforceHistoryStartFirst(); toggleHistoryResetButton(); })
+            .off('change', '#history_created_end')
+            .on('change', '#history_created_end', function(){ toggleHistoryResetButton(); });
+
+        // Apply handler for History (match Reports behavior)
+        function handleHistoryApply(e){
+            try { console.log('[History][Apply Handler] event:', e && e.type); } catch(_) {}
+            e.preventDefault(); e.stopPropagation();
+            const $start = $('#history_created_start');
+            const $end = $('#history_created_end');
+            const sd = ($start.val() || '').trim();
+            const ed = ($end.val() || '').trim();
+            // Require Start first: if End set without Start, just focus Start and block silently
+            if (!sd && ed) { $end.val(''); $start.focus(); return; }
+            // If both set but End < Start, clear End and focus End without alert
+            if (sd && ed && ed < sd) { $end.val(''); $end.focus(); return; }
+            // Update state
+            window.sejarahDateFilter = { start: sd || '', end: ed || '' };
+            toggleHistoryResetButton();
+            try {
+                if ($.fn.DataTable.isDataTable('#sejarahTable')) {
+                    $('#sejarahTable').DataTable().order([1,'asc']).ajax.reload(null, true);
+                }
+            } catch(_) {}
+            // Close dropdown like Reports
+            try { bootstrap.Dropdown.getOrCreateInstance(document.getElementById('historyCreatedBtn')).hide(); } catch(_) {}
+        }
+        $(document)
+            .off('click', '#history_created_apply')
+            .on('click', '#history_created_apply', handleHistoryApply)
+            .off('mousedown', '#history_created_apply')
+            .on('mousedown', '#history_created_apply', function(e){ if (e.which === 1) handleHistoryApply(e); })
+            .off('touchstart', '#history_created_apply')
+            .on('touchstart', '#history_created_apply', handleHistoryApply);
+        // Enter-to-apply on inputs (only when valid)
+        $(document).off('keydown', '#history_created_start, #history_created_end').on('keydown', '#history_created_start, #history_created_end', function(e){
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                enforceHistoryStartFirst();
+                $('#history_created_apply').trigger('click');
+            }
+        });
     }
 
     // (Removed) Reports floating filter helpers
@@ -364,34 +818,11 @@ $(document).ready(function() {
             alert(fullText);
         }
     });
-
-    // History filter handlers
-    $(document).on('click', '#history_btn_filter', function() {
-        if ($('#sejarahTable').length) {
-            $('#sejarahTable').DataTable().ajax.reload();
-        }
-    });
-
-    $(document).on('click', '#history_btn_reset', function() {
-        $('#history_filter_start_date').val('');
-        $('#history_filter_end_date').val('');
-        $('#history_filter_area').val('');
-        $('#history_filter_category').val('');
-        if ($('#sejarahTable').length) {
-            $('#sejarahTable').DataTable().ajax.reload();
-        }
-    });
 });
 
 // Format tanggal untuk Indonesia
 function formatTanggalIndonesia(tanggal) {
     if (!tanggal) return '-';
-    
-    const options = { 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
-    };
-    
+    const options = { year: 'numeric', month: 'long', day: 'numeric' };
     return new Date(tanggal).toLocaleDateString('id-ID', options);
 }

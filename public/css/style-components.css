@@ -303,7 +303,28 @@ td.wrap-cell { font-size: 1rem; line-height: 1.5; }
 }
 
 /* ===== Reports table: enable native horizontal scroll (no scrollX) ===== */
-#laporanTable { 
+
+/* ===== Compact creation-date filter (Reports) ===== */
+.compact-filter {
+  gap: .5rem !important;
+  display: flex;
+  flex-wrap: wrap;
+}
+.compact-filter .input-group-text {
+  padding: .25rem .4rem;
+}
+.compact-filter .form-control {
+  padding: .25rem .5rem;
+  height: calc(1.5em + .5rem + 2px);
+}
+.compact-filter .btn {
+  padding: .25rem .6rem;
+}
+@media (max-width: 768px) {
+  .compact-filter { justify-content: stretch !important; }
+  .compact-filter > .input-group { flex: 1 1 46%; min-width: 160px; }
+}
+#laporanTable {
   table-layout: fixed !important; 
   min-width: 1280px !important; /* sum of all column widths after widening Completion */
 }
