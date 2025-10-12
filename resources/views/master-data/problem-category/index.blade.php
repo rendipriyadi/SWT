@@ -106,6 +106,41 @@
     :root[data-theme="dark"] .color-preview {
       border-color: var(--border-color) !important;
     }
+    
+    /* Mobile table styles */
+    .mobile-table-row {
+      cursor: pointer;
+    }
+    .mobile-table-row:hover {
+      background-color: rgba(13,110,253,0.08);
+    }
+    :root[data-theme="dark"] .mobile-table-row:hover {
+      background-color: rgba(102,170,255,0.12) !important;
+    }
+    .mobile-arrow {
+      transition: transform 0.3s ease;
+      font-size: 0.75rem;
+    }
+    .mobile-table-row[aria-expanded="true"] .mobile-arrow {
+      transform: rotate(180deg);
+    }
+    .mobile-details {
+      background-color: #f8f9fa;
+      border-top: 1px solid #dee2e6;
+    }
+    :root[data-theme="dark"] .mobile-details {
+      background-color: var(--bg-surface);
+      border-top-color: var(--border-color);
+    }
+    .mobile-action-buttons {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .mobile-action-btn {
+      flex: 1;
+      min-width: 100px;
+    }
     </style>
     <!-- Page Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -136,7 +171,8 @@
             @endif
 
             @if($categories->count() > 0)
-                <div class="table-responsive">
+                <!-- Desktop Table -->
+                <div class="table-responsive d-none d-md-block">
                     <table class="table table-hover problem-category-table">
                         <thead>
                             <tr>
@@ -187,6 +223,64 @@
                             @endforeach
                         </tbody>
                     </table>
+                </div>
+
+                <!-- Mobile Table -->
+                <div class="d-block d-md-none">
+                    <div class="table-responsive">
+                        <table class="table table-bordered problem-category-table-mobile">
+                            <thead>
+                                <tr>
+                                    <th style="width: 50px;">No</th>
+                                    <th>Category</th>
+                                    <th style="width: 80px;">Color</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($categories as $index => $category)
+                                <tr class="mobile-table-row" data-bs-toggle="collapse" data-bs-target="#details{{ $category->id }}" aria-expanded="false">
+                                    <td class="text-center">
+                                        <span class="d-flex align-items-center justify-content-center gap-1">
+                                            {{ $index + 1 }}
+                                            <i class="fas fa-chevron-down mobile-arrow"></i>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="color-preview me-2" style="width: 16px; height: 16px; background-color: {{ $category->color }}; border-radius: 3px; border: 1px solid #ddd;"></div>
+                                            <strong>{{ $category->name }}</strong>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <small class="text-muted">{{ $category->color }}</small>
+                                    </td>
+                                </tr>
+                                <tr class="collapse" id="details{{ $category->id }}">
+                                    <td colspan="3" class="p-0">
+                                        <div class="mobile-details">
+                                            @if($category->description)
+                                            <div class="row p-3">
+                                                <div class="col-12">
+                                                    <strong>Description:</strong><br>
+                                                    <span class="text-muted">{{ strip_tags($category->description) }}</span>
+                                                </div>
+                                            </div>
+                                            @endif
+                                            <div class="mobile-action-buttons p-3 pt-0">
+                                                <a href="{{ route('master-data.problem-category.edit', $category) }}" class="btn btn-sm btn-warning mobile-action-btn">
+                                                    <i class="fas fa-edit"></i> Edit
+                                                </a>
+                                                <button type="button" class="btn btn-sm btn-danger mobile-action-btn delete-problem-category-btn" data-id="{{ $category->id }}" data-name="{{ $category->name }}">
+                                                    <i class="fas fa-trash"></i> Delete
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             @else
                 <div class="text-center py-5">
@@ -242,7 +336,7 @@
 
 @push('scripts')
 <script>
-// Row click to open detail modal
+// Row click to open detail modal (desktop only)
 document.addEventListener('click', function(e){
     const row = e.target.closest('tr.category-row');
     if (!row) return;
@@ -256,6 +350,23 @@ document.addEventListener('click', function(e){
     document.getElementById('vc_color_swatch').style.backgroundColor = color;
     document.getElementById('vc_description').textContent = desc;
     new bootstrap.Modal(document.getElementById('viewCategoryModal')).show();
+});
+
+// Mobile collapse handler
+$('.mobile-table-row').on('click', function(e) {
+    // Don't trigger if clicking on action buttons
+    if ($(e.target).closest('a, button').length > 0) return;
+    
+    const targetId = $(this).data('bs-target');
+    const isExpanded = $(this).attr('aria-expanded') === 'true';
+    
+    // Close all other rows first
+    $('.mobile-table-row').not(this).each(function() {
+        if ($(this).attr('aria-expanded') === 'true') {
+            const otherTargetId = $(this).data('bs-target');
+            bootstrap.Collapse.getInstance(document.querySelector(otherTargetId))?.hide();
+        }
+    });
 });
 
 // SweetAlert2 delete for problem categories
@@ -274,16 +385,28 @@ document.addEventListener('click', function(e){
         return;
     }
 
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const theme = isDark ? {
+        background: '#1e1e1e',
+        color: '#e0e0e0',
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d'
+    } : {
+        background: '#ffffff',
+        color: '#212529',
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d'
+    };
+    
     Swal.fire({
         title: 'Delete Confirmation',
         html: `Are you sure you want to delete the category <strong>${name}</strong>?<br><span class="text-danger small">This action cannot be undone.</span>`,
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonColor: '#dc3545',
-        cancelButtonColor: '#6c757d',
         confirmButtonText: 'Delete',
         cancelButtonText: 'Cancel',
-        reverseButtons: true
+        reverseButtons: true,
+        ...theme
     }).then((result) => {
         if (result.isConfirmed) {
             const form = document.getElementById('deleteProblemCategoryForm');

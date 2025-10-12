@@ -84,35 +84,31 @@
                                 <th style="width: 50px;">No</th>
                                 <th>Supervisor</th>
                                 <th>Department</th>
-                                <th>Work Group</th>
-                                <th>Email</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($departments as $index => $department)
-                            <tr class="mobile-table-row" data-bs-toggle="collapse" data-bs-target="#details{{ $department->id }}" aria-expanded="false" data-id="{{ $department->id }}" data-supervisor="{{ $department->supervisor }}" data-department="{{ $department->departemen ?? $department->name }}" data-workgroup="{{ $department->workgroup ?: '-' }}" data-email="{{ $department->email ?: '-' }}">
+                            <tr class="mobile-table-row" data-bs-toggle="collapse" data-bs-target="#details{{ $department->id }}" aria-expanded="false">
                                 <td class="text-center">
-                                    <span class="d-flex align-items-center justify-content-center gap-1">
+                                    <span class="d-flex align-items-center gap-1 ms-2">
                                         {{ $index + 1 }}
                                         <i class="fas fa-chevron-down mobile-arrow"></i>
                                     </span>
                                 </td>
                                 <td>{{ $department->supervisor }}</td>
                                 <td>{{ $department->departemen ?? $department->name }}</td>
-                                <td>{{ $department->workgroup ?: '-' }}</td>
-                                <td>{{ $department->email ?: '-' }}</td>
                             </tr>
                             <tr class="collapse" id="details{{ $department->id }}">
                                 <td colspan="3" class="p-0">
-                                    <div class="mobile-details">
+                                    <div class="mobile-details ps-3">
                                         <div class="row p-3">
                                             <div class="col-6">
                                                 <strong>Work Group:</strong><br>
-                                                <span class="text-muted">{{ $department->workgroup ?: '-' }}</span>
+                                                <span class="text-muted ms-2">{{ $department->workgroup ?: '-' }}</span>
                                             </div>
                                             <div class="col-6">
                                                 <strong>Email:</strong><br>
-                                                <span class="text-muted">{{ $department->email ?: '-' }}</span>
+                                                <span class="text-muted ms-2">{{ $department->email ?: '-' }}</span>
                                             </div>
                                         </div>
                                         <div class="mobile-action-buttons p-3 pt-0">
@@ -269,16 +265,28 @@ $(document).ready(function() {
             return;
         }
 
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const theme = isDark ? {
+            background: '#1e1e1e',
+            color: '#e0e0e0',
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d'
+        } : {
+            background: '#ffffff',
+            color: '#212529',
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d'
+        };
+        
         Swal.fire({
             title: 'Delete Confirmation',
             html: `Are you sure you want to delete the department <strong>${deptName}</strong>?<br><span class="text-danger small">Deleted data cannot be recovered!</span>`,
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#dc3545',
-            cancelButtonColor: '#6c757d',
             confirmButtonText: 'Yes, Delete',
             cancelButtonText: 'Cancel',
-            reverseButtons: true
+            reverseButtons: true,
+            ...theme
         }).then((result) => {
             if (result.isConfirmed) {
                 const form = document.getElementById('deleteDepartmentHiddenForm');

@@ -19,11 +19,11 @@
         <!-- History date filter dropdown (visible, right-aligned) -->
         <div id="historyControlsContainer" class="d-flex justify-content-end align-items-center gap-2 mb-2">
             <button type="button" id="historyResetExternal" class="btn btn-outline-secondary btn-sm d-none border border-secondary fs-6 mt-4">
-                <i class="fas fa-redo me-1"></i>Reset
+                <i class="fas fa-redo me-1"></i><span class="btn-text">Reset</span>
             </button>
             <div class="dropdown">
                 <button class="btn btn-outline-secondary btn-sm border border-secondary fs-6 mt-4" type="button" id="historyCreatedBtn" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
-                    <i class="fas fa-calendar-alt me-1"></i>Filter
+                    <i class="fas fa-calendar-alt me-1"></i><span class="btn-text">Filter</span>
                 </button>
                 <div class="dropdown-menu dropdown-menu-end p-3" aria-labelledby="historyCreatedBtn" style="min-width: 420px;" onclick="event.stopPropagation();">
                     <h6 class="dropdown-header px-0">Filter by Created Date</h6>
@@ -46,23 +46,41 @@
             </div>
         </div>
         <div class="p-0">
-            <div class="table-responsive">
-                <table id="sejarahTable" class="table table-bordered table-striped table-hover small mb-0" data-url="{{ route('sejarah.datatables') }}">
-                    <thead>
-                        <tr>
-                            <th>No</th>
-                            <th>Date</th>
-                            <th>Photo</th>
-                            <th>Area/Station</th>
-                            <th>Problem Category</th>
-                            <th>Description</th>
-                            <th>Deadline</th>
-                            <th>Status</th>
-                            <th>Completion</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                </table>
+            <!-- Desktop Table -->
+            <div class="d-none d-md-block">
+                <div class="table-responsive">
+                    <table id="sejarahTable" class="table table-bordered table-striped table-hover small mb-0" data-url="{{ route('sejarah.datatables') }}">
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Date</th>
+                                <th>Photo</th>
+                                <th>Area/Station</th>
+                                <th>Problem Category</th>
+                                <th>Description</th>
+                                <th>Deadline</th>
+                                <th>Status</th>
+                                <th>Completion</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Mobile Table -->
+            <div class="d-block d-md-none">
+                <div class="table-responsive">
+                    <table id="sejarahTableMobile" class="table table-bordered small mb-0" data-url="{{ route('sejarah.datatables') }}">
+                        <thead>
+                            <tr>
+                                <th style="width: 60px;">No</th>
+                                <th style="width: 35%;">Date</th>
+                                <th style="width: auto;">Area</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
             </div>
         </div>
         </div>
@@ -138,34 +156,197 @@
 /* Remove inner border on scroll wrapper when placed inside a card to maximize usable width */
 .card .table-scroll-x { border: 0 !important; border-radius: 0 !important; }
 
-/* Date column specific styling - allow text wrapping and proper spacing */
-#sejarahTable tbody td:nth-child(2) {
+/* Better table layout and column widths */
+#sejarahTable {
+  table-layout: fixed !important;
+  width: 100% !important;
+}
+
+/* Column widths - fixed layout for consistent sizing */
+#sejarahTable th:nth-child(1), #sejarahTable td:nth-child(1) { width: 60px !important; } /* No */
+#sejarahTable th:nth-child(2), #sejarahTable td:nth-child(2) { width: 120px !important; } /* Date */
+#sejarahTable th:nth-child(3), #sejarahTable td:nth-child(3) { width: 100px !important; } /* Photo */
+#sejarahTable th:nth-child(4), #sejarahTable td:nth-child(4) { width: 150px !important; } /* Area */
+#sejarahTable th:nth-child(5), #sejarahTable td:nth-child(5) { width: 180px !important; } /* Category */
+#sejarahTable th:nth-child(6), #sejarahTable td:nth-child(6) { width: 200px !important; } /* Description */
+#sejarahTable th:nth-child(7), #sejarahTable td:nth-child(7) { width: 120px !important; } /* Deadline */
+#sejarahTable th:nth-child(8), #sejarahTable td:nth-child(8) { width: 120px !important; } /* Status */
+#sejarahTable th:nth-child(9), #sejarahTable td:nth-child(9) { width: 120px !important; } /* Completion */
+#sejarahTable th:nth-child(10), #sejarahTable td:nth-child(10) { width: 100px !important; } /* Action */
+
+/* Text wrapping and alignment for all cells */
+#sejarahTable td, #sejarahTable th {
   white-space: normal !important;
   word-wrap: break-word !important;
   word-break: break-word !important;
-  line-height: 1.3 !important;
+  overflow-wrap: break-word !important;
   vertical-align: middle !important;
+  text-align: center !important;
   padding: 0.75rem 0.5rem !important;
-  min-height: 50px !important;
+  line-height: 1.4 !important;
 }
 
-/* Override any conflicting styles for date column */
-#sejarahTable tbody td:nth-child(2).wrap-cell {
-  white-space: normal !important;
-  word-break: break-word !important;
-  height: auto !important;
+/* Header styling */
+#sejarahTable th {
+  background-color: #f8f9fa !important;
+  font-weight: 600 !important;
+  font-size: 0.875rem !important;
+  white-space: nowrap !important;
 }
 
-/* Ensure table rows have consistent height when content wraps */
+/* Row styling */
 #sejarahTable tbody tr {
   height: auto !important;
-  min-height: 60px;
+  min-height: 60px !important;
 }
 
-/* Better text wrapping for all table cells */
-#sejarahTable td {
-  word-wrap: break-word;
-  overflow-wrap: break-word;
+/* Specific column alignments */
+#sejarahTable td:nth-child(1) { text-align: center !important; } /* No - center */
+#sejarahTable td:nth-child(6) { text-align: left !important; padding-left: 1rem !important; } /* Description - left align */
+
+/* Mobile table styles */
+.mobile-table-row {
+  cursor: pointer;
+}
+.mobile-table-row:hover {
+  background-color: rgba(13,110,253,0.08);
+}
+
+/* Mobile table layout */
+#sejarahTableMobile {
+  table-layout: fixed !important;
+  width: 100% !important;
+}
+#sejarahTableMobile td {
+  white-space: normal !important;
+  word-wrap: break-word !important;
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
+}
+#sejarahTableMobile th {
+  white-space: nowrap;
+}
+
+/* Specific mobile column widths */
+#sejarahTableMobile td:nth-child(1) {
+  width: 60px !important;
+}
+#sejarahTableMobile td:nth-child(2) {
+  width: 35% !important;
+}
+#sejarahTableMobile td:nth-child(3) {
+  width: auto !important;
+}
+
+.mobile-arrow {
+  transition: transform 0.3s ease;
+  font-size: 0.75rem;
+  display: inline-block;
+  transform: rotate(0deg);
+}
+.mobile-arrow.rotate-180 {
+  transform: rotate(180deg) !important;
+}
+
+.mobile-details {
+  background-color: #f8f9fa;
+  border-top: 1px solid #dee2e6;
+  text-align: center;
+  padding: 1rem;
+}
+.mobile-details > div {
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #e9ecef;
+}
+.mobile-details > div:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+.mobile-details strong {
+  display: block;
+  color: #6c757d;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.35rem;
+}
+.mobile-details span {
+  display: block;
+  color: #212529;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* Force detail rows to be hidden by default */
+#sejarahTableMobile tbody tr.detail-row {
+  display: none !important;
+}
+#sejarahTableMobile tbody tr.detail-row.show {
+  display: table-row !important;
+}
+
+:root[data-theme="dark"] .mobile-details {
+  background-color: var(--bg-surface);
+  border-top-color: var(--border-color);
+}
+:root[data-theme="dark"] .mobile-details > div {
+  border-bottom-color: var(--border-color);
+}
+:root[data-theme="dark"] .mobile-details strong {
+  color: #adb5bd;
+}
+:root[data-theme="dark"] .mobile-details span {
+  color: #e9ecef;
+}
+
+.mobile-action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 0.5rem;
+}
+.mobile-action-btn {
+  flex: 0 1 auto;
+}
+
+/* Force hide desktop table on mobile */
+@media (max-width: 767.98px) {
+  #sejarahTable_wrapper {
+    display: none !important;
+  }
+  .d-none.d-md-block {
+    display: none !important;
+  }
+}
+
+/* Force hide mobile table on desktop */
+@media (min-width: 768px) {
+  #sejarahTableMobile_wrapper {
+    display: none !important;
+  }
+  .d-block.d-md-none {
+    display: none !important;
+  }
+}
+
+/* Hide button text on mobile - show icons only */
+@media (max-width: 767.98px) {
+  #historyResetExternal .btn-text,
+  #historyCreatedBtn .btn-text {
+    display: none !important;
+  }
+  #historyResetExternal {
+    padding: 0.375rem 0.75rem;
+  }
+  #historyCreatedBtn {
+    padding: 0.375rem 0.75rem;
+  }
+  #historyResetExternal i,
+  #historyCreatedBtn i {
+    margin-right: 0 !important;
+  }
 }
 </style>
 <script>
@@ -273,6 +454,38 @@ $(document).ready(function() {
         $('#rowDetailModal').modal('show');
     });
     
+});
+
+// Mobile collapse handler for History - Manual toggle
+$(document).on('click', '#sejarahTableMobile .mobile-table-row', function(e) {
+    // Don't trigger if clicking on action buttons
+    if ($(e.target).closest('a, button').length > 0) return;
+    
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const $clickedRow = $(this);
+    const targetId = $clickedRow.attr('data-bs-target');
+    const $detailRow = $(targetId);
+    
+    // Check if detail row is currently visible
+    const isCurrentlyExpanded = $detailRow.hasClass('show') && $detailRow.css('display') === 'table-row';
+    
+    // First, close ALL rows
+    $('#sejarahTableMobile .mobile-table-row').each(function() {
+        const $row = $(this);
+        const rowTargetId = $row.attr('data-bs-target');
+        const $rowDetail = $(rowTargetId);
+        
+        $rowDetail.removeClass('show').css('display', 'none');
+        $row.find('.mobile-arrow').removeClass('rotate-180');
+    });
+    
+    // Then, if the clicked row was collapsed, expand it
+    if (!isCurrentlyExpanded) {
+        $detailRow.addClass('show').css('display', 'table-row');
+        $clickedRow.find('.mobile-arrow').addClass('rotate-180');
+    }
 });
 
 // Data for filter dropdowns

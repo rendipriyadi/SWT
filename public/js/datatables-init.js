@@ -1,7 +1,4 @@
-console.log('datatables-init.js file loaded - before document ready');
-
 $(document).ready(function() {
-    console.log('datatables-init.js - document ready fired');
     
     // Global DataTables configuration (single source of truth)
     $.extend(true, $.fn.dataTable.defaults, {
@@ -121,6 +118,131 @@ $(document).ready(function() {
             },
             createdRow: function(row, data) { $(row).addClass('clickable-row'); }
         });
+
+        // Mobile Reports Table (simplified columns with collapse)
+        var laporanTableMobile;
+        if ($('#laporanTableMobile').length) {
+            laporanTableMobile = $('#laporanTableMobile').DataTable({
+                serverSide: true,
+                ajax: {
+                    url: $('#laporanTableMobile').data('url'),
+                    type: 'GET',
+                    data: function(d) {
+                        var sd = (window.reportsCreatedDateFilter && window.reportsCreatedDateFilter.start) || '';
+                        var ed = (window.reportsCreatedDateFilter && window.reportsCreatedDateFilter.end) || '';
+                        var area = ($('#area_id').val() || $('#filter_area').val() || '').trim();
+                        var pj = ($('#penanggung_jawab_id').val() || '').trim();
+                        var cat = ($('#kategori').val() || $('#filter_category').val() || '').trim();
+
+                        if (sd) d.start_date = sd;
+                        if (ed) d.end_date = ed;
+                        if (area) d.area_id = area;
+                        if (pj) d.penanggung_jawab_id = pj;
+                        if (cat) d.kategori = cat;
+                    }
+                },
+                dom: "<'row'<'col-sm-12'tr>><'row'<'col-sm-12'ip>>", // table + pagination + info
+                pageLength: 10,
+                lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
+                autoWidth: false,
+                scrollX: false,
+                scrollCollapse: false,
+                columns: [
+                    { 
+                        data: 'DT_RowIndex', 
+                        name: 'DT_RowIndex', 
+                        orderable: false, 
+                        searchable: false,
+                        render: function(data, type, row) {
+                            return '<span class="d-flex align-items-center gap-1 ms-2">' + data + '<i class="fas fa-chevron-down mobile-arrow"></i></span>';
+                        }
+                    },
+                    { data: 'Tanggal', name: 'Tanggal' },
+                    { data: 'departemen', name: 'area.name' }
+                ],
+                order: [[1, 'desc']],
+                createdRow: function(row, data, dataIndex) {
+                    // IMPORTANT: Use dataIndex only for consistency
+                    // data.id is the database ID which may not be sequential
+                    
+                    $(row).addClass('mobile-table-row');
+                    // Don't use data-bs-toggle to avoid Bootstrap auto-init
+                    $(row).attr('data-bs-target', '#mobile-detail-' + dataIndex);
+                    $(row).attr('data-row-index', dataIndex);
+                    
+                    // Store data in row for later use
+                    $(row).data('rowData', data);
+                },
+                drawCallback: function() {
+                    var api = this.api();
+                    
+                    // Remove old detail rows
+                    $('#laporanTableMobile tbody tr.detail-row').remove();
+                    
+                    // Add detail row after each data row
+                    $('#laporanTableMobile tbody tr.mobile-table-row').each(function(index) {
+                        var $row = $(this);
+                        var data = $row.data('rowData');
+                        var dataIndex = $row.attr('data-row-index');
+                        
+                        if (!data || dataIndex === undefined) {
+                            return;
+                        }
+                        
+                        // Build detail content
+                        var detailContent = '<div class="mobile-details ps-3 p-3">';
+                        
+                        if (data.foto) {
+                            detailContent += '<div class="mb-2"><strong>Photo:</strong><br><span class="ms-2">' + data.foto + '</span></div>';
+                        }
+                        detailContent += '<div class="mb-2"><strong>Problem Category:</strong><br><span class="ms-2">' + (data.problem_category || '-') + '</span></div>';
+                        
+                        var desc = data.deskripsi_masalah || '-';
+                        if (desc && desc.length > 100) desc = desc.substring(0, 100) + '...';
+                        detailContent += '<div class="mb-2"><strong>Description:</strong><br><span class="ms-2">' + desc + '</span></div>';
+                        
+                        detailContent += '<div class="mb-2"><strong>Deadline:</strong><br><span class="ms-2">' + (data.tenggat_waktu || '-') + '</span></div>';
+                        detailContent += '<div class="mb-2"><strong>Status:</strong><br><span class="ms-2">' + (data.status || '-') + '</span></div>';
+                        detailContent += '<div class="mb-2"><strong>Completion:</strong><br><span class="ms-2">' + (data.penyelesaian || '-') + '</span></div>';
+                        
+                        if (data.aksi) {
+                            detailContent += '<div class="mobile-action-buttons mt-3">' + data.aksi + '</div>';
+                        }
+                        
+                        detailContent += '</div>';
+                        
+                        // Create and insert detail row - start collapsed, use same dataIndex
+                        var detailRow = $('<tr class="collapse detail-row" id="mobile-detail-' + dataIndex + '"><td colspan="3" class="p-0">' + detailContent + '</td></tr>');
+                        $row.after(detailRow);
+                    });
+                    
+                    // After all rows inserted, ensure all are collapsed and hidden
+                    $('#laporanTableMobile tbody tr.detail-row').each(function() {
+                        $(this).removeClass('show').css('display', 'none');
+                    });
+                    
+                    // Ensure all data rows have aria-expanded="false"
+                    $('#laporanTableMobile tbody tr.mobile-table-row').each(function() {
+                        $(this).attr('aria-expanded', 'false');
+                        $(this).find('.mobile-arrow').removeClass('rotate-180');
+                    });
+                }
+            });
+            
+            // Sync desktop search to mobile
+            $('#laporanTable_filter input').on('keyup search', function() {
+                if (laporanTableMobile) {
+                    laporanTableMobile.search(this.value).draw();
+                }
+            });
+            
+            // Sync desktop page length to mobile
+            $('#laporanTable_length select').on('change', function() {
+                if (laporanTableMobile) {
+                    laporanTableMobile.page.len($(this).val()).draw();
+                }
+            });
+        }
 
         // Place DataTables length/search into our header next to Filter/Reset
         function placeReportsControls() {
@@ -250,7 +372,6 @@ $(document).ready(function() {
         setTimeout(function(){ var el = document.getElementById('report_created_start'); if (el && !el._flatpickr){ if (window.flatpickr){ initReportsDatepickers(); enforceStartFirst(); } } }, 400);
 
         // Delegated handlers for creation-date filter
-        try { console.log('[Reports] Binding handlers for Apply/Reset/Change'); } catch(_) {}
 
         // Helper: toggle external Reset button visibility
         function toggleExternalResetButton() {
@@ -263,7 +384,6 @@ $(document).ready(function() {
         // Initialize visibility on load
         toggleExternalResetButton();
         function handleReportApply(e){
-            try { console.log('[Reports][Apply Handler] event:', e && e.type); } catch(_) {}
             e.preventDefault(); e.stopPropagation();
             const sd = $('#report_created_start').val();
             const ed = $('#report_created_end').val();
@@ -272,13 +392,15 @@ $(document).ready(function() {
             if (sd && ed && ed < sd) { $('#report_created_end').val(''); $('#report_created_end').focus(); return; }
             // Update stable state (only on Apply)
             window.reportsCreatedDateFilter = { start: sd || '', end: ed || '' };
-            try { console.log('[Reports][Filter Apply]', { start_date: sd, end_date: ed }); } catch(_) {}
             toggleExternalResetButton();
             try {
                 if (typeof laporanTable !== 'undefined') {
                     laporanTable.order([1,'asc']).ajax.reload(null, true);
                 } else if ($.fn.DataTable.isDataTable('#laporanTable')) {
                     $('#laporanTable').DataTable().order([1,'asc']).ajax.reload(null, true);
+                }
+                if (typeof laporanTableMobile !== 'undefined') {
+                    laporanTableMobile.order([1,'asc']).ajax.reload(null, true);
                 }
             } catch(_) {}
             try { bootstrap.Dropdown.getOrCreateInstance(document.getElementById('reportsCreatedBtn')).hide(); } catch(_) {}
@@ -300,13 +422,15 @@ $(document).ready(function() {
             // Clear stable state
             window.reportsCreatedDateFilter = { start: '', end: '' };
             enforceStartFirst();
-            try { console.log('[Reports][Filter Reset]'); } catch(_) {}
             toggleExternalResetButton();
             try {
                 if ($.fn.DataTable.isDataTable('#laporanTable')) {
                     $('#laporanTable').DataTable().order([1,'desc']).ajax.reload(null, true);
                 } else if (typeof laporanTable !== 'undefined') {
                     laporanTable.order([1,'desc']).ajax.reload(null, true);
+                }
+                if (typeof laporanTableMobile !== 'undefined') {
+                    laporanTableMobile.order([1,'desc']).ajax.reload(null, true);
                 }
             } catch(_) {}
             try { bootstrap.Dropdown.getOrCreateInstance(document.getElementById('reportsCreatedBtn')).hide(); } catch(_) {}
@@ -385,25 +509,23 @@ $(document).ready(function() {
     }
 
     // Apply filter from filter panel component (GLOBAL - outside if block)
-    console.log('Attaching event listener for #applyFilter button');
     $(document).on('click', '#applyFilter', function() {
-        console.log('Apply filter clicked - checking tables...');
-        
         if ($('#laporanTable').length && typeof laporanTable !== 'undefined') {
-            console.log('Reloading laporanTable');
             laporanTable.ajax.reload();
-        } else if ($('#sejarahTable').length && typeof sejarahTable !== 'undefined') {
-            console.log('Reloading sejarahTable');
+        }
+        if ($('#laporanTableMobile').length && typeof laporanTableMobile !== 'undefined') {
+            laporanTableMobile.ajax.reload();
+        }
+        if ($('#sejarahTable').length && typeof sejarahTable !== 'undefined') {
             sejarahTable.ajax.reload();
-        } else {
-            console.log('No table found to reload');
+        }
+        if ($('#sejarahTableMobile').length && typeof sejarahTableMobile !== 'undefined') {
+            sejarahTableMobile.ajax.reload();
         }
     });
 
     // Reset filter from filter panel component (GLOBAL - outside if block)
-    console.log('Attaching event listener for #resetFilter button');
     $(document).on('click', '#resetFilter', function() {
-        console.log('Reset filter clicked - clearing filters...');
         
         $('#start_date').val('');
         $('#end_date').val('');
@@ -414,13 +536,16 @@ $(document).ready(function() {
         $('#status').val('');
         
         if ($('#laporanTable').length && typeof laporanTable !== 'undefined') {
-            console.log('Reloading laporanTable after reset');
             laporanTable.ajax.reload();
-        } else if ($('#sejarahTable').length && typeof sejarahTable !== 'undefined') {
-            console.log('Reloading sejarahTable after reset');
+        }
+        if ($('#laporanTableMobile').length && typeof laporanTableMobile !== 'undefined') {
+            laporanTableMobile.ajax.reload();
+        }
+        if ($('#sejarahTable').length && typeof sejarahTable !== 'undefined') {
             sejarahTable.ajax.reload();
-        } else {
-            console.log('No table found to reload');
+        }
+        if ($('#sejarahTableMobile').length && typeof sejarahTableMobile !== 'undefined') {
+            sejarahTableMobile.ajax.reload();
         }
     });
 
@@ -478,23 +603,117 @@ $(document).ready(function() {
                 { data: 'aksi', name: 'aksi', orderable: false, searchable: false }
             ],
             order: [[1, 'desc']],
-            columnDefs: [
-                { targets: 0, width: 50, className: 'text-center align-middle no-wrap' }, // No
-                { targets: 1, width: 150, className: 'text-center align-middle no-wrap' }, // Date - Increased to 150px
-                { targets: 2, width: 80, className: 'text-center align-middle no-wrap' }, // Photo
-                { targets: 3, width: 180, className: 'text-center align-middle wrap-cell' }, // Area/Station - Can wrap
-                { targets: 4, width: 160, className: 'text-center align-middle wrap-cell' }, // Problem Category - Can wrap
-                { targets: 5, width: 200, className: 'text-center align-middle wrap-cell' }, // Description - Can wrap
-                { targets: 6, width: 120, className: 'text-center align-middle no-wrap deadline-col' }, // Deadline - Increased to 120px
-                { targets: 7, width: 120, className: 'text-center align-middle no-wrap status-col' }, // Status
-                { targets: 8, width: 120, className: 'text-center align-middle no-wrap completion-cell' }, // Completion
-                { targets: 9, width: 100, className: 'text-center align-middle no-wrap action-cell' } // Action
-            ],
             drawCallback: function(){ try { this.api().columns.adjust(); } catch(e){} },
             createdRow: function(row, data) {
                 $(row).addClass('clickable-row');
             }
         });
+
+        // Mobile History Table
+        if ($('#sejarahTableMobile').length) {
+            var sejarahTableMobile = $('#sejarahTableMobile').DataTable({
+                processing: true,
+                serverSide: true,
+                ajax: {
+                    url: $('#sejarahTableMobile').data('url'),
+                    type: 'GET',
+                    data: function(d) {
+                        // Use History's in-memory date state
+                        var sd = (window.sejarahDateFilter.start || '').trim();
+                        var ed = (window.sejarahDateFilter.end || '').trim();
+                        if (sd) d.start_date = sd;
+                        if (ed) d.end_date = ed;
+                        d.created_order = (sd || ed) ? 'asc' : 'desc';
+                        d.area_id = $('#area_id').val();
+                        d.penanggung_jawab_id = $('#penanggung_jawab_id').val();
+                        d.kategori = $('#kategori').val();
+                        d.tenggat_bulan = $('#tenggat_bulan').val();
+                        d.status = $('#status').val();
+                    }
+                },
+                dom: 'tip',
+                columns: [
+                    { 
+                        data: 'DT_RowIndex', 
+                        name: 'DT_RowIndex', 
+                        orderable: false, 
+                        searchable: false,
+                        render: function(data, type, row) {
+                            return '<span class="d-flex align-items-center gap-1 ms-2">' + data + '<i class="fas fa-chevron-down mobile-arrow"></i></span>';
+                        }
+                    },
+                    { data: 'Tanggal', name: 'Tanggal' },
+                    { data: 'departemen', name: 'area.name' }
+                ],
+                order: [[1, 'desc']],
+                createdRow: function(row, data, dataIndex) {
+                    $(row).addClass('mobile-table-row');
+                    $(row).attr('data-bs-target', '#mobile-detail-' + dataIndex);
+                    $(row).attr('data-row-index', dataIndex);
+                    $(row).data('rowData', data);
+                },
+                drawCallback: function() {
+                    var api = this.api();
+                    
+                    // Remove old detail rows
+                    $('#sejarahTableMobile tbody tr.detail-row').remove();
+                    
+                    // Add detail row after each data row
+                    $('#sejarahTableMobile tbody tr.mobile-table-row').each(function(index) {
+                        var $row = $(this);
+                        var data = $row.data('rowData');
+                        var dataIndex = $row.attr('data-row-index');
+                        
+                        if (!data || dataIndex === undefined) {
+                            return;
+                        }
+                        
+                        // Build detail content
+                        var detailContent = '<div class="mobile-details ps-3 p-3">';
+                        
+                        if (data.foto) {
+                            detailContent += '<div class="mb-2"><strong>Photo:</strong><br><span class="ms-2">' + data.foto + '</span></div>';
+                        }
+                        detailContent += '<div class="mb-2"><strong>Problem Category:</strong><br><span class="ms-2">' + (data.problem_category || '-') + '</span></div>';
+                        
+                        var desc = data.deskripsi_masalah || '-';
+                        if (desc && desc.length > 100) desc = desc.substring(0, 100) + '...';
+                        detailContent += '<div class="mb-2"><strong>Description:</strong><br><span class="ms-2">' + desc + '</span></div>';
+                        
+                        detailContent += '<div class="mb-2"><strong>Deadline:</strong><br><span class="ms-2">' + (data.tenggat_waktu || '-') + '</span></div>';
+                        detailContent += '<div class="mb-2"><strong>Status:</strong><br><span class="ms-2">' + (data.status || '-') + '</span></div>';
+                        detailContent += '<div class="mb-2"><strong>Completion:</strong><br><span class="ms-2">' + (data.penyelesaian || '-') + '</span></div>';
+                        
+                        if (data.aksi) {
+                            detailContent += '<div class="mobile-action-buttons mt-3">' + data.aksi + '</div>';
+                        }
+                        
+                        detailContent += '</div>';
+                        
+                        // Create and insert detail row
+                        var detailRow = $('<tr class="collapse detail-row" id="mobile-detail-' + dataIndex + '"><td colspan="3" class="p-0">' + detailContent + '</td></tr>');
+                        $row.after(detailRow);
+                    });
+                    
+                    // Ensure all detail rows are collapsed and hidden
+                    $('#sejarahTableMobile tbody tr.detail-row').each(function() {
+                        $(this).removeClass('show').css('display', 'none');
+                    });
+                    
+                    // Ensure all data rows have proper state
+                    $('#sejarahTableMobile tbody tr.mobile-table-row').each(function() {
+                        $(this).find('.mobile-arrow').removeClass('rotate-180');
+                    });
+                }
+            });
+            
+            // Sync desktop search to mobile
+            $('#sejarahTable_filter input').on('keyup search', function() {
+                if (sejarahTableMobile) {
+                    sejarahTableMobile.search(this.value).draw();
+                }
+            });
+        }
 
         // Enforce order based on filter state before every AJAX call
         try {
@@ -751,7 +970,14 @@ $(document).ready(function() {
             window.sejarahDateFilter = { start: '', end: '' };
             enforceHistoryStartFirst();
             toggleHistoryResetButton();
-            try { if ($.fn.DataTable.isDataTable('#sejarahTable')) { $('#sejarahTable').DataTable().order([1,'desc']).ajax.reload(null, true); } } catch(_) {}
+            try { 
+                if ($.fn.DataTable.isDataTable('#sejarahTable')) { 
+                    $('#sejarahTable').DataTable().order([1,'desc']).ajax.reload(null, true); 
+                } 
+                if ($.fn.DataTable.isDataTable('#sejarahTableMobile')) { 
+                    $('#sejarahTableMobile').DataTable().order([1,'desc']).ajax.reload(null, true); 
+                } 
+            } catch(_) {}
             try { bootstrap.Dropdown.getOrCreateInstance(document.getElementById('historyCreatedBtn')).hide(); } catch(_) {}
         });
         // Toggle button when inputs change
@@ -764,7 +990,6 @@ $(document).ready(function() {
 
         // Apply handler for History (match Reports behavior)
         function handleHistoryApply(e){
-            try { console.log('[History][Apply Handler] event:', e && e.type); } catch(_) {}
             e.preventDefault(); e.stopPropagation();
             const $start = $('#history_created_start');
             const $end = $('#history_created_end');
@@ -780,6 +1005,9 @@ $(document).ready(function() {
             try {
                 if ($.fn.DataTable.isDataTable('#sejarahTable')) {
                     $('#sejarahTable').DataTable().order([1,'asc']).ajax.reload(null, true);
+                }
+                if ($.fn.DataTable.isDataTable('#sejarahTableMobile')) {
+                    $('#sejarahTableMobile').DataTable().order([1,'asc']).ajax.reload(null, true);
                 }
             } catch(_) {}
             // Close dropdown like Reports
@@ -809,10 +1037,22 @@ $(document).ready(function() {
         e.preventDefault();
         var fullText = $(this).data('description') || '';
         if (typeof Swal !== 'undefined') {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const theme = isDark ? {
+                background: '#1e1e1e',
+                color: '#e0e0e0',
+                confirmButtonColor: '#0d6efd'
+            } : {
+                background: '#ffffff',
+                color: '#212529',
+                confirmButtonColor: '#0d6efd'
+            };
+            
             Swal.fire({
                 title: 'Description',
                 html: '<div style="text-align:left;white-space:pre-wrap">' + fullText + '</div>',
-                confirmButtonText: 'Close'
+                confirmButtonText: 'Close',
+                ...theme
             });
         } else {
             alert(fullText);

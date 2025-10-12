@@ -125,15 +125,27 @@ document.addEventListener('DOMContentLoaded', function() {
         const stationName = stationItem.find('input[name="stations[]"]').val() || 'this station';
         
         if (typeof Swal !== 'undefined') {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const theme = isDark ? {
+                background: '#1e1e1e',
+                color: '#e0e0e0',
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d'
+            } : {
+                background: '#ffffff',
+                color: '#212529',
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d'
+            };
+            
             Swal.fire({
                 title: 'Delete Station',
                 text: `Are you sure you want to delete "${stationName}"?`,
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
                 confirmButtonText: 'Yes, delete it!',
-                cancelButtonText: 'Cancel'
+                cancelButtonText: 'Cancel',
+                ...theme
             }).then((result) => {
                 if (result.isConfirmed) {
                     stationItem.remove();

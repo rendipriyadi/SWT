@@ -122,16 +122,28 @@ document.addEventListener('DOMContentLoaded', function() {
         const areaName = $(this).data('name');
         const actionUrl = '{{ route("master-data.area.destroy", ":id") }}'.replace(':id', areaId);
 
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const theme = isDark ? {
+            background: '#1e1e1e',
+            color: '#e0e0e0',
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d'
+        } : {
+            background: '#ffffff',
+            color: '#212529',
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d'
+        };
+
         Swal.fire({
             title: 'Delete Confirmation',
             html: `Are you sure you want to delete the area <strong>${areaName}</strong>?<br><span class="text-danger small">Deleted data cannot be recovered!</span>`,
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#dc3545',
-            cancelButtonColor: '#6c757d',
             confirmButtonText: 'Yes, Delete',
             cancelButtonText: 'Cancel',
-            reverseButtons: true
+            reverseButtons: true,
+            ...theme
         }).then((result) => {
             if (result.isConfirmed) {
                 const form = document.getElementById('deleteForm');

@@ -108,6 +108,26 @@
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
+
+/* Mobile table styles */
+.mobile-table-row {
+    cursor: pointer;
+}
+.mobile-table-row:hover {
+    background-color: rgba(13,110,253,0.08);
+}
+.mobile-arrow {
+    transition: transform 0.3s ease;
+    font-size: 0.75rem;
+}
+.mobile-table-row[aria-expanded="true"] .mobile-arrow {
+    transform: rotate(180deg);
+}
+.mobile-details {
+    background-color: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+    padding: 1rem;
+}
 </style>
 @endpush
 
@@ -148,7 +168,8 @@
         </div>
 
         @if($area->penanggungJawabs->count() > 0)
-            <div class="table-responsive">
+            <!-- Desktop Table -->
+            <div class="table-responsive d-none d-md-block">
                 <table class="table table-hover">
                     <thead>
                         <tr>
@@ -185,6 +206,55 @@
                     </tbody>
                 </table>
             </div>
+
+            <!-- Mobile Table -->
+            <div class="d-block d-md-none">
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th style="width: 50px;">No</th>
+                                <th>Station</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($area->penanggungJawabs as $index => $pj)
+                            <tr class="mobile-table-row" data-bs-toggle="collapse" data-bs-target="#station{{ $pj->id }}" aria-expanded="false">
+                                <td class="text-center">
+                                    <span class="d-flex align-items-center gap-1 ms-2">
+                                        {{ $index + 1 }}
+                                        <i class="fas fa-chevron-down mobile-arrow"></i>
+                                    </span>
+                                </td>
+                                <td>
+                                    <strong>{{ $pj->station }}</strong>
+                                </td>
+                            </tr>
+                            <tr class="collapse" id="station{{ $pj->id }}">
+                                <td colspan="2" class="p-0">
+                                    <div class="mobile-details ps-3">
+                                        <div class="mb-2">
+                                            <strong>Person in Charge:</strong><br>
+                                            <span class="text-muted ms-2">{{ $pj->name }}</span>
+                                        </div>
+                                        <div>
+                                            <strong>Email:</strong><br>
+                                            <span class="ms-2">
+                                                @if($pj->email)
+                                                    <span class="email-badge">{{ $pj->email }}</span>
+                                                @else
+                                                    <span class="no-email-badge">No email assigned</span>
+                                                @endif
+                                            </span>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         @else
             <div class="text-center py-5">
                 <i class="fas fa-exclamation-circle text-muted fa-3x mb-3"></i>
@@ -213,8 +283,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Add hover effects to table rows
-    const tableRows = document.querySelectorAll('.table tbody tr');
+    // Add hover effects to table rows (desktop only)
+    const tableRows = document.querySelectorAll('.d-none.d-md-block .table tbody tr');
     tableRows.forEach(row => {
         row.addEventListener('mouseenter', function() {
             this.style.backgroundColor = '#f8f9fa';
@@ -225,6 +295,20 @@ document.addEventListener('DOMContentLoaded', function() {
         row.addEventListener('mouseleave', function() {
             this.style.backgroundColor = '';
             this.style.transform = 'translateX(0)';
+        });
+    });
+
+    // Mobile collapse handler
+    $('.mobile-table-row').on('click', function(e) {
+        const targetId = $(this).data('bs-target');
+        const isExpanded = $(this).attr('aria-expanded') === 'true';
+        
+        // Close all other rows first
+        $('.mobile-table-row').not(this).each(function() {
+            if ($(this).attr('aria-expanded') === 'true') {
+                const otherTargetId = $(this).data('bs-target');
+                bootstrap.Collapse.getInstance(document.querySelector(otherTargetId))?.hide();
+            }
         });
     });
 });

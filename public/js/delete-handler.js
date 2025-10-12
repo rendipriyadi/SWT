@@ -4,6 +4,25 @@ $.ajaxSetup({
     }
 });
 
+// Helper: Get SweetAlert2 theme options based on current mode
+function getSwalTheme() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    if (isDark) {
+        return {
+            background: '#1e1e1e',
+            color: '#e0e0e0',
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d'
+        };
+    }
+    return {
+        background: '#ffffff',
+        color: '#212529',
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d'
+    };
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // Delegasi event untuk menangani tombol delete di dalam dropdown
     $(document).on('click', '.delete-btn', function(e) {
@@ -18,16 +37,16 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('Delete URL:', deleteUrl);
         
         // Show confirmation dialog using SweetAlert2
+        const theme = getSwalTheme();
         Swal.fire({
-             title: 'Delete Confirmation',
+            title: 'Delete Confirmation',
             text: "Are you sure you want to delete this report?",
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#dc3545',
-            cancelButtonColor: '#6c757d',
             confirmButtonText: 'Yes, Delete',
             cancelButtonText: 'Cancel',
-            reverseButtons: true
+            reverseButtons: true,
+            ...theme
         }).then((result) => {
             if (result.isConfirmed) {
                 // Show loading state
@@ -37,7 +56,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     allowOutsideClick: false,
                     didOpen: () => {
                         Swal.showLoading();
-                    }
+                    },
+                    ...theme
                 });
                 
                 // Send AJAX DELETE request
@@ -57,18 +77,20 @@ document.addEventListener('DOMContentLoaded', function() {
                                 text: response.message,
                                 icon: 'success',
                                 timer: 1500,
-                                showConfirmButton: false
+                                showConfirmButton: false,
+                                ...theme
                             }).then(() => {
                                 // Reload DataTable
                                 $('.dataTable').DataTable().ajax.reload();
                             });
                         } else {
                             // Handle non-success response
-                            Swal.fire(
-                                'Error!',
-                                response.message || 'An error occurred while deleting the report.',
-                                'error'
-                            );
+                            Swal.fire({
+                                title: 'Error!',
+                                text: response.message || 'An error occurred while deleting the report.',
+                                icon: 'error',
+                                ...theme
+                            });
                         }
                     },
                     error: function(xhr) {
@@ -79,11 +101,12 @@ document.addEventListener('DOMContentLoaded', function() {
                             errorMsg = xhr.responseJSON.message;
                         }
                         
-                        Swal.fire(
-                            'Error!',
-                            errorMsg,
-                            'error'
-                        );
+                        Swal.fire({
+                            title: 'Error!',
+                            text: errorMsg,
+                            icon: 'error',
+                            ...theme
+                        });
                     }
                 });
             }
