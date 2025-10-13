@@ -62,8 +62,6 @@
     </script>
     
     <style>
-    /* Loading overlay removed */
-
     /* Default state: expanded (full sidebar) to prevent flash */
 
     body:not(.sidebar-initialized) #layoutSidenav_nav {

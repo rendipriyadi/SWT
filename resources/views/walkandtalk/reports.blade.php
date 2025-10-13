@@ -201,7 +201,30 @@
 #rowDetailModal .modal-dialog { max-width: 900px; }
 #rowDetailModal .modal-body { font-size: 1rem; }
 #rowDetailModal .modal-title { font-size: 1.25rem; }
+#rowDetailModal .fw-semibold { color: #6c757d; }
 #rowDetailModal .value { font-size: 1.05rem; color: var(--text-primary); }
+
+/* Dark mode styling for modal */
+:root[data-theme="dark"] #rowDetailModal .modal-header {
+  background-color: var(--bg-surface) !important;
+  border-bottom-color: var(--border-color) !important;
+}
+:root[data-theme="dark"] #rowDetailModal .modal-footer {
+  background-color: var(--bg-surface) !important;
+  border-top-color: var(--border-color) !important;
+}
+:root[data-theme="dark"] #rowDetailModal .modal-title {
+  color: #e9ecef !important;
+}
+:root[data-theme="dark"] #rowDetailModal .modal-title .text-primary {
+  color: #6ea8fe !important;
+}
+:root[data-theme="dark"] #rowDetailModal .fw-semibold {
+  color: #adb5bd !important;
+}
+:root[data-theme="dark"] #rowDetailModal .value {
+  color: #e9ecef !important;
+}
 
 /* Remove inner border on scroll wrapper when placed inside a card to maximize usable width */
 .card .table-scroll-x { border: 0 !important; border-radius: 0 !important; }
