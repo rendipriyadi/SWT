@@ -95,7 +95,7 @@ class ReportController extends Controller
     public function getPenanggungJawab($areaId)
     {
         $areaId = (int) $areaId;
-        $area = \App\Models\Area::with('penanggungJawabs')->find($areaId);
+        $area = Area::with('penanggungJawabs')->find($areaId);
         if (!$area) {
             return response()->json(['error' => 'Area tidak ditemukan'], 404);
         }
@@ -445,10 +445,7 @@ class ReportController extends Controller
             'success' => true,
             'Tanggal' => Carbon::parse($laporan->penyelesaian->Tanggal)->locale('en')->isoFormat('dddd, D MMMM YYYY'),
             'Foto' => $fotoUrls,
-            'deskripsi_penyelesaian' => $laporan->penyelesaian->deskripsi_penyelesaian
+            'deskripsi_penyelesaian' => $laporan->penyelesaian->deskripsi_penyelesaian ?? ''
         ]);
     }
 }
-
-
-

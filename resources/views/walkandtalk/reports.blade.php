@@ -27,17 +27,19 @@
                 <button class="btn btn-outline-secondary btn-sm border border-secondary fs-6" type="button" id="reportsCreatedBtn" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
                     <i class="fas fa-calendar-alt me-1"></i><span class="btn-text">Filter</span>
                 </button>
-                <div class="dropdown-menu dropdown-menu-end p-3 date-filter-dropdown" aria-labelledby="reportsCreatedBtn" onclick="event.stopPropagation();">
-                    <h6 class="dropdown-header px-0 mb-2">Filter by Created Date</h6>
-                    <div class="mb-2">
-                        <label class="form-label small fw-bold mb-1" for="report_created_start">Start</label>
-                        <input type="text" id="report_created_start" class="form-control form-control-sm" placeholder="Start date" />
+                <div class="dropdown-menu dropdown-menu-end p-3" aria-labelledby="reportsCreatedBtn" style="min-width: 420px;" onclick="event.stopPropagation();">
+                    <h6 class="dropdown-header px-0">Filter by Created Date</h6>
+                    <div class="row g-2 mb-2">
+                        <div class="col-12 col-md-6">
+                            <label class="form-label small fw-bold" for="report_created_start">Start</label>
+                            <input type="text" id="report_created_start" class="form-control form-control-sm" placeholder="Start date" />
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label small fw-bold" for="report_created_end">End</label>
+                            <input type="text" id="report_created_end" class="form-control form-control-sm" placeholder="End date" />
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold mb-1" for="report_created_end">End</label>
-                        <input type="text" id="report_created_end" class="form-control form-control-sm" placeholder="End date" />
-                    </div>
-                    <div class="d-grid">
+                    <div class="d-flex justify-content-end gap-2">
                         <button type="button" class="btn btn-primary btn-sm" id="report_created_apply">
                             <i class="fas fa-filter me-1"></i>Apply
                         </button>

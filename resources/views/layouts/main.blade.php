@@ -12,10 +12,11 @@
     <!-- Preload Critical Assets -->
     <link rel="preload" href="{{ asset('css/styles.css') }}" as="style">
 
-    <!-- Google Fonts -->
+    <!-- Google Fonts - Inter (Optimized) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="{{ asset('css/inter-font.css') }}" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"></noscript>
     
     <!-- Stylesheets -->
     <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet" />
@@ -32,7 +33,10 @@
     <link href="{{ asset('css/elegant-datepicker.css') }}?v={{ time() }}" rel="stylesheet">
     
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="{{ asset('images/static/favicon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/static/favicon.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('images/static/favicon.png') }}">
+    <link rel="shortcut icon" type="image/png" href="{{ asset('images/static/favicon.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/static/favicon.png') }}">
     <link rel="manifest" href="{{ asset('manifest.json') }}">
 
     <!-- CSRF Token -->
@@ -1110,6 +1114,8 @@
     <script src="{{ asset('js/datatables-responsive.min.js') }}"></script>
     <script src="{{ asset('js/responsive-bootstrap5.min.js') }}"></script>
     <script src="{{ asset('js/datatables-init.js') }}?v={{ time() }}_{{ rand(1000, 9999) }}"></script>
+    <!-- Flatpickr Fix - Prevent infinite loop -->
+    <script src="{{ asset('js/flatpickr-fix.js') }}?v={{ time() }}"></script>
     <script src="{{ asset('js/filter-icon.js') }}"></script>
     <!-- SweetAlert2 for reports and history only -->
     <script src="{{ asset('js/sweetalert2.min.js') }}"></script>
