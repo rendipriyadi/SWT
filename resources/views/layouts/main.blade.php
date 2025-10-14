@@ -994,11 +994,18 @@
                     <i class="fas fa-moon" id="themeIcon"></i>
                 </button>
             </li>
-            <li class="nav-item">
-                <span class="nav-link d-flex align-items-center">
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                     <span class="me-2 text-dark fw-semibold">Admin</span>
                     <i class="fa-regular fa-circle-user text-dark" style="font-size: 2rem;"></i>
-                </span>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                    <li>
+                        <a class="dropdown-item" href="/">
+                            <i class="fas fa-sign-out-alt me-2"></i>Logout
+                        </a>
+                    </li>
+                </ul>
             </li>
         </ul>
         </div>
@@ -1114,8 +1121,6 @@
     <script src="{{ asset('js/datatables-responsive.min.js') }}"></script>
     <script src="{{ asset('js/responsive-bootstrap5.min.js') }}"></script>
     <script src="{{ asset('js/datatables-init.js') }}?v={{ time() }}_{{ rand(1000, 9999) }}"></script>
-    <!-- Flatpickr Fix - Prevent infinite loop -->
-    <script src="{{ asset('js/flatpickr-fix.js') }}?v={{ time() }}"></script>
     <script src="{{ asset('js/filter-icon.js') }}"></script>
     <!-- SweetAlert2 for reports and history only -->
     <script src="{{ asset('js/sweetalert2.min.js') }}"></script>
