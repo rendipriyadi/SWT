@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\Validator;
 class DepartmentController extends Controller
 {
     /**
-     * Display a listing of the resource.
      */
     public function index()
     {
@@ -32,25 +31,6 @@ class DepartmentController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'supervisor' => 'required|string|max:255',
-            'name' => 'required|string|max:255',
-            'workgroup' => 'nullable|string|max:255',
-            'email' => 'nullable|email|max:255',
-        ]);
-
-        if ($validator->fails()) {
-            return redirect()->back()
-                ->withErrors($validator)
-                ->withInput();
-        }
-
-        Department::create([
-            'supervisor' => $request->supervisor,
             'departemen' => $request->name,
             'workgroup' => $request->workgroup,
             'email' => $request->email,
@@ -80,29 +60,10 @@ class DepartmentController extends Controller
         
         \SharedManager::saveLog('log_sitime', "Accessed the [Edit Department/Supervisor] page for ID: {$id} swt.");
         
-        return view('master-data.department.edit', compact('department'));
+        return view('master-data department.edit', compact('department'));
     }
 
     /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Department $department)
-    {
-        $validator = Validator::make($request->all(), [
-            'supervisor' => 'required|string|max:255',
-            'name' => 'required|string|max:255',
-            'workgroup' => 'nullable|string|max:255',
-            'email' => 'nullable|email|max:255',
-        ]);
-
-        if ($validator->fails()) {
-            return redirect()->back()
-                ->withErrors($validator)
-                ->withInput();
-        }
-
-        $department->update([
-            'supervisor' => $request->supervisor,
             'departemen' => $request->name,
             'workgroup' => $request->workgroup,
             'email' => $request->email,
@@ -110,7 +71,7 @@ class DepartmentController extends Controller
 
         \SharedManager::saveLog('log_sitime', "Updated department/supervisor ID: {$department->id} swt.");
         
-        return redirect()->route('master-data.department.index')
+        return redirect()->route('master-data department.index')
             ->with('success', 'Supervisor updated successfully.');
     }
 
@@ -124,7 +85,7 @@ class DepartmentController extends Controller
 
         \SharedManager::saveLog('log_sitime', "Deleted department/supervisor ID: {$id} swt.");
         
-        return redirect()->route('master-data.department.index')
+        return redirect()->route('master-data department.index')
             ->with('success', 'Supervisor deleted successfully.');
     }
 

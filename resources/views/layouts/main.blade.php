@@ -972,6 +972,9 @@
         }
     }
     </style>
+    
+    <!-- Ziggy Routes -->
+    @routes
 </head>
 {{-- <body class="sb-nav-fixed"> --}}
 <body class="sb-nav-fixed">

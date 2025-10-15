@@ -31,8 +31,9 @@
     27 => 'NunoMaduro\\Collision\\Adapters\\Laravel\\CollisionServiceProvider',
     28 => 'Termwind\\Laravel\\TermwindServiceProvider',
     29 => 'Spatie\\LaravelIgnition\\IgnitionServiceProvider',
-    30 => 'Yajra\\DataTables\\DataTablesServiceProvider',
-    31 => 'App\\Providers\\AppServiceProvider',
+    30 => 'Tighten\\Ziggy\\ZiggyServiceProvider',
+    31 => 'Yajra\\DataTables\\DataTablesServiceProvider',
+    32 => 'App\\Providers\\AppServiceProvider',
   ),
   'eager' => 
   array (
@@ -51,8 +52,9 @@
     12 => 'NunoMaduro\\Collision\\Adapters\\Laravel\\CollisionServiceProvider',
     13 => 'Termwind\\Laravel\\TermwindServiceProvider',
     14 => 'Spatie\\LaravelIgnition\\IgnitionServiceProvider',
-    15 => 'Yajra\\DataTables\\DataTablesServiceProvider',
-    16 => 'App\\Providers\\AppServiceProvider',
+    15 => 'Tighten\\Ziggy\\ZiggyServiceProvider',
+    16 => 'Yajra\\DataTables\\DataTablesServiceProvider',
+    17 => 'App\\Providers\\AppServiceProvider',
   ),
   'deferred' => 
   array (

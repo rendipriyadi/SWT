@@ -9,7 +9,8 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        fetch(`/get-supervisor/${departemenId}`)
+        // Menggunakan Ziggy route helper
+        fetch(route('get.supervisor', departemenId))
             .then(response => response.json())
             .then(data => {
                 // Set supervisor value from response

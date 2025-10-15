@@ -9,7 +9,10 @@ document.addEventListener('DOMContentLoaded', function() {
     let fetchedStations = [];
     async function fetchStations(areaId) {
         try {
-            const response = await fetch(`/get-penanggung-jawab/${areaId}`);
+            // Menggunakan Ziggy route helper
+            const url = route('get.penanggung.jawab', areaId);
+            
+            const response = await fetch(url);
             if (!response.ok) throw new Error('Failed to fetch stations');
             return await response.json();
         } catch (e) {

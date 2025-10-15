@@ -91,7 +91,8 @@ class ReportController extends Controller
             // $this->sendSupervisorNotifications($laporan); // Disabled email notifications
             \SharedManager::saveLog('log_sitime', "Created new report swt.");
             
-            return redirect()->route('dashboard')->with('success', 'Report created successfully.');
+            // Redirect to report list page instead of dashboard
+            return redirect()->route('laporan.index')->with('success', 'Report created successfully.');
             
         } catch (\Exception $e) {
             \Log::error('Error creating report: ' . $e->getMessage());

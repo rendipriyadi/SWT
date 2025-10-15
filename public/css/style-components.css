@@ -696,7 +696,7 @@ table td .status-badge {
   .toast-info {
     border-left: 4px solid var(--siemens-secondary);
   }
-}
+
 
 /* Allow horizontal scroll when needed */
 .table-responsive { overflow-x: auto !important; overflow-y: visible; }
