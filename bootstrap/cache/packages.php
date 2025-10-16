@@ -57,13 +57,6 @@
       0 => 'Spatie\\LaravelIgnition\\IgnitionServiceProvider',
     ),
   ),
-  'tightenco/ziggy' => 
-  array (
-    'providers' => 
-    array (
-      0 => 'Tighten\\Ziggy\\ZiggyServiceProvider',
-    ),
-  ),
   'yajra/laravel-datatables-oracle' => 
   array (
     'aliases' => 

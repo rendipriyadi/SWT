@@ -379,7 +379,7 @@ $(document).on('click', '.lihat-penyelesaian-btn', function() {
     const reportId = $(this).data('id');
     
     $.ajax({
-        url: `/laporan/penyelesaian/${reportId}`,
+        url: `/laporan/${reportId}/penyelesaian`,
         type: 'GET',
         success: function(response) {
             if (response.success) {
@@ -418,12 +418,15 @@ $(document).on('click', '.lihat-penyelesaian-btn', function() {
                 `);
                 
                 $('#modalPenyelesaian').modal('show');
-                        } else {
-                alert('No completion details found for this report.');
+            } else {
+                alert(response.message || 'No completion details found for this report.');
             }
         },
-        error: function() {
-            alert('Error loading completion details.');
+        error: function(xhr, status, error) {
+            console.error('Error loading completion details:', error);
+            console.error('Response:', xhr.responseText);
+            const errorMsg = xhr.responseJSON?.message || 'Error loading completion details.';
+            alert(errorMsg);
         }
     });
 });

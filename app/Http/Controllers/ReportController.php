@@ -89,7 +89,7 @@ class ReportController extends Controller
             $laporan = $this->reportService->createReport($validated, $photos);
 
             // $this->sendSupervisorNotifications($laporan); // Disabled email notifications
-            \SharedManager::saveLog('log_sitime', "Created new report swt.");
+            // \SharedManager::saveLog('log_sitime', "Created new report swt.");
             
             // Redirect to report list page instead of dashboard
             return redirect()->route('laporan.index')->with('success', 'Report created successfully.');
@@ -444,32 +444,49 @@ class ReportController extends Controller
 
     public function getPenyelesaian($id)
     {
-        $laporan = Laporan::with('penyelesaian')->find($id);
-        if (!$laporan || !$laporan->penyelesaian) { return response()->json(['success' => false]); }
-        
-        // Helper to resolve completion photo URL with fallback to legacy folder
-        $resolveCompletionUrl = function(string $filename) {
-            $candidates = [
-                public_path('images/completions/' . $filename),
-                public_path('images/' . $filename),
-            ];
-            foreach ($candidates as $idx => $path) {
-                if (file_exists($path)) {
-                    return $idx === 0 ? asset('images/completions/' . $filename) : asset('images/' . $filename);
+        try {
+            $laporan = Laporan::with('penyelesaian')->find($id);
+            
+            if (!$laporan || !$laporan->penyelesaian) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Completion data not found.'
+                ]);
+            }
+            
+            // Helper to resolve completion photo URL with fallback to legacy folder
+            $resolveCompletionUrl = function(string $filename) {
+                $candidates = [
+                    public_path('images/completions/' . $filename),
+                    public_path('images/' . $filename),
+                ];
+                foreach ($candidates as $idx => $path) {
+                    if (file_exists($path)) {
+                        return $idx === 0 ? asset('images/completions/' . $filename) : asset('images/' . $filename);
+                    }
+                }
+                return asset('images/' . $filename);
+            };
+            
+            $fotoUrls = [];
+            if (!empty($laporan->penyelesaian->Foto) && is_array($laporan->penyelesaian->Foto)) {
+                foreach ($laporan->penyelesaian->Foto as $foto) {
+                    $fotoUrls[] = $resolveCompletionUrl($foto);
                 }
             }
-            return asset('images/' . $filename);
-        };
-        
-        $fotoUrls = [];
-        if (!empty($laporan->penyelesaian->Foto) && is_array($laporan->penyelesaian->Foto)) {
-            foreach ($laporan->penyelesaian->Foto as $foto) { $fotoUrls[] = $resolveCompletionUrl($foto); }
+            
+            return response()->json([
+                'success' => true,
+                'Tanggal' => Carbon::parse($laporan->penyelesaian->Tanggal)->locale('en')->isoFormat('dddd, D MMMM YYYY'),
+                'Foto' => $fotoUrls,
+                'deskripsi_penyelesaian' => $laporan->penyelesaian->deskripsi_penyelesaian ?? ''
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error getting completion data: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve completion data. Please try again.'
+            ], 500);
         }
-        return response()->json([
-            'success' => true,
-            'Tanggal' => Carbon::parse($laporan->penyelesaian->Tanggal)->locale('en')->isoFormat('dddd, D MMMM YYYY'),
-            'Foto' => $fotoUrls,
-            'deskripsi_penyelesaian' => $laporan->penyelesaian->deskripsi_penyelesaian ?? ''
-        ]);
     }
 }

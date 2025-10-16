@@ -197,8 +197,8 @@ document.addEventListener('DOMContentLoaded', function() {
         modalBody.html('<div class="text-center my-4"><div class="spinner-border text-primary" role="status"></div><p class="mt-2">Memuat data...</p></div>');
         modalHandlers.register('modalPenyelesaian');
         
-        // Menggunakan Ziggy route helper 
-        $.get(route('laporan.penyelesaian', id), function(res) {
+        // Menggunakan URL langsung
+        $.get('/laporan/' + id + '/penyelesaian', function(res) {
             if (res.success) {
                 var html = '';
                 

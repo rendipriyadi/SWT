@@ -42,7 +42,7 @@ Route::prefix('laporan')->name('laporan.')->group(function () {
     Route::post('/{id}/tindakan', [ReportController::class, 'storeTindakan'])->name('storeTindakan');
     
     // AJAX Endpoints
-    Route::get('/penyelesaian/{id}', [ReportController::class, 'getPenyelesaian'])->name('penyelesaian');
+    Route::get('/{id}/penyelesaian', [ReportController::class, 'getPenyelesaian'])->name('penyelesaian');
 });
 
 // ============================================================================
@@ -57,8 +57,8 @@ Route::prefix('sejarah')->name('sejarah.')->group(function () {
 // ============================================================================
 // AJAX HELPERS
 // ============================================================================
-Route::get('/get-supervisor/{id}', [ReportController::class, 'getSupervisor'])->name('get.supervisor');
-Route::get('/get-penanggung-jawab/{areaId}', [ReportController::class, 'getPenanggungJawab'])->name('get.penanggung.jawab');
+Route::get('/supervisor/{id}', [ReportController::class, 'getSupervisor'])->name('supervisor');
+Route::get('/penanggung-jawab/{areaId}', [ReportController::class, 'getPenanggungJawab'])->name('penanggung.jawab');
 
 // Master Data Routes (now public - admin mode)
 Route::prefix('master-data')->name('master-data.')->group(function () {

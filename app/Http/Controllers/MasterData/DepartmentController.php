@@ -30,8 +30,11 @@ class DepartmentController extends Controller
         return view('master-data.department.create');
     }
 
-    /**
+    public function store(Request $request)
+    {
+        Department::create([
             'departemen' => $request->name,
+            'supervisor' => $request->supervisor ?? $request->name,
             'workgroup' => $request->workgroup,
             'email' => $request->email,
         ]);
@@ -60,18 +63,22 @@ class DepartmentController extends Controller
         
         \SharedManager::saveLog('log_sitime', "Accessed the [Edit Department/Supervisor] page for ID: {$id} swt.");
         
-        return view('master-data department.edit', compact('department'));
+        return view('master-data.department.edit', compact('department'));
     }
 
-    /**
+    public function update(Request $request, $id)
+    {
+        $department = Department::findOrFail($id);
+        $department->update([
             'departemen' => $request->name,
+            'supervisor' => $request->supervisor ?? $request->name,
             'workgroup' => $request->workgroup,
             'email' => $request->email,
         ]);
 
         \SharedManager::saveLog('log_sitime', "Updated department/supervisor ID: {$department->id} swt.");
         
-        return redirect()->route('master-data department.index')
+        return redirect()->route('master-data.department.index')
             ->with('success', 'Supervisor updated successfully.');
     }
 
@@ -85,7 +92,7 @@ class DepartmentController extends Controller
 
         \SharedManager::saveLog('log_sitime', "Deleted department/supervisor ID: {$id} swt.");
         
-        return redirect()->route('master-data department.index')
+        return redirect()->route('master-data.department.index')
             ->with('success', 'Supervisor deleted successfully.');
     }
 

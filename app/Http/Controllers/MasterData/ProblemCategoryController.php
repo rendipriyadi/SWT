@@ -121,8 +121,8 @@ class ProblemCategoryController extends Controller
         }
 
         $problemCategory->delete();
-
         \SharedManager::saveLog('log_sitime', "Deleted problem category ID: {$problemCategory->id} swt.");
+
         
         return redirect()->route('master-data.problem-category.index')
             ->with('success', 'Problem category deleted successfully.');
