@@ -49,7 +49,7 @@ class ReportController extends Controller
         $areaPerBulan = $this->reportService->getReportsByAreaPerMonth();
         $categoryPerBulan = $this->reportService->getReportsByCategoryCurrentMonth();
 
-        \SharedManager::saveLog('log_sitime', "Accessed the [Dashboard] page swt.");
+        \SharedManager::saveLog('log_swt', "Accessed the [Dashboard] page swt.");
         
         return view('walkandtalk.dashboard', [
             'totalLaporan' => $stats['total'],
@@ -66,7 +66,7 @@ class ReportController extends Controller
     {
         $areas = Area::with('penanggungJawabs')->get();
         
-        \SharedManager::saveLog('log_sitime', "Accessed the [Create Report] page swt.");
+        \SharedManager::saveLog('log_swt', "Accessed the [Create Report] page swt.");
         
         return view('walkandtalk.laporan', compact('areas'));
     }
@@ -89,7 +89,7 @@ class ReportController extends Controller
             $laporan = $this->reportService->createReport($validated, $photos);
 
             // $this->sendSupervisorNotifications($laporan); // Disabled email notifications
-            // \SharedManager::saveLog('log_sitime', "Created new report swt.");
+            // \SharedManager::saveLog('log_swt', "Created new report swt.");
             
             // Redirect to report list page instead of dashboard
             return redirect()->route('laporan.index')->with('success', 'Report created successfully.');
@@ -133,7 +133,7 @@ class ReportController extends Controller
         $areas = Area::with('penanggungJawabs')->get();
         $problemCategories = \App\Models\ProblemCategory::active()->ordered()->get();
         
-        \SharedManager::saveLog('log_sitime', "Accessed the [Edit Report] page for ID: {$id} swt.");
+        \SharedManager::saveLog('log_swt', "Accessed the [Edit Report] page for ID: {$id} swt.");
         
         return view('walkandtalk.edit', compact('laporan', 'areas', 'problemCategories'));
     }
@@ -197,7 +197,7 @@ class ReportController extends Controller
                 $returnUrl = route('laporan.index');
             }
             
-            \SharedManager::saveLog('log_sitime', "Updated report ID: {$id} swt.");
+            \SharedManager::saveLog('log_swt', "Updated report ID: {$id} swt.");
             
             return redirect($returnUrl)->with('success', 'Report updated successfully.');
             
@@ -215,7 +215,7 @@ class ReportController extends Controller
     {
         $laporan = Laporan::with(['area', 'area.penanggungJawabs', 'penanggungJawab', 'problemCategory', 'penyelesaian'])->findOrFail($id);
         
-        \SharedManager::saveLog('log_sitime', "Accessed the [Completion Action] page for ID: {$id} swt.");
+        \SharedManager::saveLog('log_swt', "Accessed the [Completion Action] page for ID: {$id} swt.");
         
         return view('walkandtalk.tindakan', compact('laporan'));
     }
@@ -245,7 +245,7 @@ class ReportController extends Controller
                     'deskripsi_penyelesaian' => $validated['deskripsi_penyelesaian'],
                 ], $photos);
 
-                \SharedManager::saveLog('log_sitime', "Completed report ID: {$id} swt.");
+                \SharedManager::saveLog('log_swt', "Completed report ID: {$id} swt.");
                 
                 return redirect()->route('sejarah.index')
                     ->with('success', 'Report completed successfully and moved to history.');
@@ -254,7 +254,7 @@ class ReportController extends Controller
             // Just update status if not completed
             $this->reportService->updateStatus($laporan, $validated['status']);
 
-            \SharedManager::saveLog('log_sitime', "Updated report status ID: {$id} swt.");
+            \SharedManager::saveLog('log_swt', "Updated report status ID: {$id} swt.");
             
             return redirect()->route('dashboard')
                 ->with('success', 'Report created successfully.');
@@ -414,7 +414,7 @@ class ReportController extends Controller
             $deleted = $this->reportService->deleteReport($laporan);
 
             if ($deleted) {
-                \SharedManager::saveLog('log_sitime', "Deleted report ID: {$id} swt.");
+                \SharedManager::saveLog('log_swt', "Deleted report ID: {$id} swt.");
             
                 return response()->json(['success' => true, 'message' => 'Report deleted successfully.']);
             }
