@@ -16,7 +16,7 @@
             <h6 class="m-0 font-weight-bold font-dark">Form Edit Supervisor</h6>
         </div>
         <div class="card-body">
-            <form action="{{ route('master-data.department.update', $department->id) }}" method="POST">
+            <form action="{{ route('master-data.department.update', $department) }}" method="POST">
                 @csrf
                 @method('PUT')
                 <div class="row">

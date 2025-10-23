@@ -1,15 +1,22 @@
-// Penyelesaian Modal Handler
+/**
+ * Penyelesaian (Completion) Modal Handler
+ * Handles displaying completion details in a modal with photo carousel
+ */
 document.addEventListener('DOMContentLoaded', function() {
-    // Modal dinamis untuk melihat penyelesaian
+    /**
+     * Handle click event for viewing completion details
+     */
     $(document).on('click', '.lihat-penyelesaian-btn', function() {
-        var id = $(this).data('id');
-        var modalBody = $('#modalPenyelesaianBody');
+        const encryptedId = $(this).data('encrypted-id');
+        const modalBody = $('#modalPenyelesaianBody');
         
-        modalBody.html('<div class="text-center my-4"><div class="spinner-border text-primary" role="status"></div><p class="mt-2">Memuat data...</p></div>');
+        // Show loading spinner
+        modalBody.html('<div class="text-center my-4"><div class="spinner-border text-primary" role="status"></div><p class="mt-2">Loading data...</p></div>');
         
-        // Menggunakan URL langsung
-        $.get('/laporan/' + id + '/penyelesaian', function(res) {
-            console.log('Response:', res); // Debug response
+        // Use global route configuration
+        const url = window.routes.penyelesaian.replace(':encryptedId', encryptedId);
+        
+        $.get(url, function(res) {
             
             if (res.success) {
                 var html = '';

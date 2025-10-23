@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('area-station.js loaded');
 
     const areaSelect = document.getElementById('area_id');
     const stationSelect = document.getElementById('penanggung_jawab_id');
@@ -9,11 +8,13 @@ document.addEventListener('DOMContentLoaded', function() {
     let fetchedStations = [];
     async function fetchStations(areaId) {
         try {
-            // Menggunakan basic route
-            const url = `/penanggung-jawab/${areaId}`;
-            
+            const url = window.routes.penanggungJawab.replace(
+                ":areaId",
+                areaId
+            );
+
             const response = await fetch(url);
-            if (!response.ok) throw new Error('Failed to fetch stations');
+            if (!response.ok) throw new Error("Failed to fetch stations");
             return await response.json();
         } catch (e) {
             console.error(e);
@@ -40,8 +41,6 @@ document.addEventListener('DOMContentLoaded', function() {
             option.textContent = station.station;
             stationSelect.appendChild(option);
         });
-        
-        console.log(`Stations updated for area ID: ${areaId}`);
         
         // Jika ini adalah form edit, coba pilih station yang tersimpan
         const selectedStation = stationSelect.getAttribute('data-selected');

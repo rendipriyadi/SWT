@@ -65,18 +65,9 @@ class HistoryController extends Controller
             $query = $query->orderBy('Tanggal', 'desc');
         }
 
-        // Helper to resolve report photo URL with fallback to legacy folder
+        // Helper to resolve report photo URL
         $resolveReportUrl = function(string $filename) {
-            $candidates = [
-                public_path('images/reports/' . $filename),
-                public_path('images/' . $filename),
-            ];
-            foreach ($candidates as $idx => $path) {
-                if (file_exists($path)) {
-                    return $idx === 0 ? asset('images/reports/' . $filename) : asset('images/' . $filename);
-                }
-            }
-            return asset('images/' . $filename);
+            return asset('images/reports/' . $filename);
         };
 
         return DataTables::of($query)
@@ -120,8 +111,8 @@ class HistoryController extends Controller
             })
             ->addColumn('tenggat_waktu', function ($laporan) { return Carbon::parse($laporan->tenggat_waktu)->format('l, j-n-Y'); })
             ->addColumn('status', function ($laporan) { return $laporan->status == 'Selesai' ? '<span class="status-badge status-completed"><i class="fas fa-check-circle"></i> Completed</span>' : '<span class="badge bg-secondary">' . $laporan->status . '</span>'; })
-            ->addColumn('penyelesaian', function ($laporan) { return $laporan->penyelesaian ? '<button class="btn btn-sm btn-info lihat-penyelesaian-btn" data-bs-toggle="modal" data-bs-target="#modalPenyelesaian" data-id="' . $laporan->id . '"><i class="fas fa-eye"></i> View</button>' : '<a href="' . route('laporan.tindakan', $laporan->id) . '" class="btn btn-sm btn-primary"><i class="fas fa-tasks"></i> Action</a>'; })
-            ->addColumn('aksi', function ($laporan) { $returnUrl = route('sejarah.index'); $editUrl = route('laporan.edit', ['id' => $laporan->id, 'return_url' => $returnUrl]); $deleteUrl = route('laporan.destroy', $laporan->id); return '<div class="d-flex gap-1"><a href="' . $editUrl . '" class="btn btn-sm btn-warning" title="Edit"><i class="fas fa-edit"></i></a><button class="btn btn-sm btn-danger delete-btn" data-id="' . $laporan->id . '" data-delete-url="' . $deleteUrl . '" data-return-url="' . $returnUrl . '" title="Delete"><i class="fas fa-trash"></i></button></div>'; })
+            ->addColumn('penyelesaian', function ($laporan) { return $laporan->penyelesaian ? '<button class="btn btn-sm btn-info lihat-penyelesaian-btn" data-bs-toggle="modal" data-bs-target="#modalPenyelesaian" data-encrypted-id="' . encrypt($laporan->id) . '"><i class="fas fa-eye"></i> View</button>' : '<a href="' . route('laporan.tindakan', $laporan) . '" class="btn btn-sm btn-primary"><i class="fas fa-tasks"></i> Action</a>'; })
+            ->addColumn('aksi', function ($laporan) { $returnUrl = route('sejarah.index'); $editUrl = route('laporan.edit', ['laporan' => $laporan, 'return_url' => $returnUrl]); $deleteUrl = route('laporan.destroy', $laporan); return '<div class="d-flex gap-1"><a href="' . $editUrl . '" class="btn btn-sm btn-warning" title="Edit"><i class="fas fa-edit"></i></a><button class="btn btn-sm btn-danger delete-btn" data-encrypted-id="' . encrypt($laporan->id) . '" data-delete-url="' . $deleteUrl . '" data-return-url="' . $returnUrl . '" title="Delete"><i class="fas fa-trash"></i></button></div>'; })
             ->rawColumns(['foto', 'departemen', 'problem_category', 'deskripsi_masalah', 'status', 'penyelesaian', 'aksi'])
             ->make(true);
     }

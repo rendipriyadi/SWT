@@ -2,16 +2,26 @@ document.addEventListener('DOMContentLoaded', function() {
     const departemenSelect = document.getElementById('departemen');
     const supervisorInput = document.getElementById('supervisor');
 
-    // Function to update supervisor
+    /**
+     * Update supervisor field based on selected department
+     * @param {string} departemenId - The department ID
+     */
     function updateSupervisor(departemenId) {
         if (!departemenId) {
             supervisorInput.value = '';
             return;
         }
 
-        // Menggunakan basic route
-        fetch(`/supervisor/${departemenId}`)
-            .then(response => response.json())
+        // Use global route configuration
+        const url = window.routes.supervisor.replace(':id', departemenId);
+
+        fetch(url)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch supervisor data');
+                }
+                return response.json();
+            })
             .then(data => {
                 // Set supervisor value from response
                 if (data.is_group && Array.isArray(data.group_members) && data.group_members.length > 0) {

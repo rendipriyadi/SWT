@@ -374,72 +374,10 @@
 <script>
 // DataTables initialization for #sejarahTable handled globally in public/js/datatables-init.js
 
-// Handle completion view button clicks
-$(document).on('click', '.lihat-penyelesaian-btn', function() {
-    const reportId = $(this).data('id');
-    
-    $.ajax({
-        url: `/laporan/${reportId}/penyelesaian`,
-        type: 'GET',
-        success: function(response) {
-            if (response.success) {
-                let modalBody = $('#modalPenyelesaianBody');
-                modalBody.empty();
-                
-                // Add completion date
-                modalBody.append(`
-                    <div class="mb-3">
-                        <strong>Completion Date:</strong><br>
-                        <span class="text-muted">${response.Tanggal}</span>
-                    </div>
-                `);
-                
-                // Add completion photos if any
-                if (response.Foto && response.Foto.length > 0) {
-                    modalBody.append('<div class="mb-3"><strong>Completion Photos:</strong><br><div class="d-flex flex-wrap gap-2">');
-                    response.Foto.forEach((photoUrl, index) => {
-                        modalBody.append(`
-                            <img src="${photoUrl}" alt="Completion Photo ${index + 1}" 
-                                 class="img-thumbnail" 
-                                 style="width: 100px !important; height: 100px !important; object-fit: cover; cursor: pointer;"
-                                 data-bs-toggle="modal" data-bs-target="#modalFotoFull" 
-                                 data-photos='${JSON.stringify(response.Foto)}'>
-                        `);
-                    });
-                    modalBody.append('</div></div>');
-                }
-                
-                // Add completion description
-                modalBody.append(`
-                    <div class="mb-3">
-                        <strong>Completion Description:</strong><br>
-                        <div class="text-muted" style="white-space: pre-wrap;">${response.deskripsi_penyelesaian}</div>
-                    </div>
-                `);
-                
-                $('#modalPenyelesaian').modal('show');
-            } else {
-                alert(response.message || 'No completion details found for this report.');
-            }
-        },
-        error: function(xhr, status, error) {
-            console.error('Error loading completion details:', error);
-            console.error('Response:', xhr.responseText);
-            const errorMsg = xhr.responseJSON?.message || 'Error loading completion details.';
-            alert(errorMsg);
-        }
-    });
-});
+// Note: Completion view button handler is now centralized in modal-handlers.js
+// No need for duplicate handler here - it will use window.routes.penyelesaian
 
-// Handle photo preview in completion modal
-$(document).on('click', '#modalPenyelesaian img[data-photos]', function() {
-    const photos = JSON.parse($(this).attr('data-photos') || '[]');
-    const inner = $('#photoCarousel .carousel-inner');
-    inner.empty();
-    photos.forEach((url, idx) => {
-        inner.append('<div class="carousel-item '+(idx===0?'active':'')+'"><img src="'+url+'" class="d-block w-100" style="max-height:70vh; object-fit:contain;"></div>');
-            });
-        });
+// Photo preview handler is also centralized in modal-handlers.js
 
 // Row click functionality for history table
 $(document).ready(function() {

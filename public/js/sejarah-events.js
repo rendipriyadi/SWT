@@ -1,6 +1,4 @@
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('sejarah-events.js loaded');
-    
     // DIHAPUS: Semua event handler untuk .view-description dihapus dari sini
     // karena sudah ditangani di modal-handlers.js
     
@@ -8,6 +6,5 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // DIHAPUS: Event delegation untuk modal penyelesaian - sudah ada di modal-handlers.js
     
-    // Hanya tambahkan logger untuk menunjukkan script ini dimuat
-    console.log('Sejarah page specific events initialized');
+    // All event handlers are now centralized in modal-handlers.js
 });

@@ -323,9 +323,6 @@ const areaPerBulanChart = new Chart(areaPerBulanCtx, {
     }
 });
 
-// Chart initialization is complete
-console.log('Dashboard charts initialized successfully');
-
 // Dashboard charts are ready
 </script>
 @endpush

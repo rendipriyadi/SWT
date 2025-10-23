@@ -35,12 +35,9 @@ class Penyelesaian extends Model
      */
     public function getValidPhotosAttribute()
     {
-        // Cek apakah Foto adalah array dan tidak kosong
+        // Return all photos without file existence check
         if (!empty($this->Foto) && is_array($this->Foto)) {
-            // Filter foto yang valid (berkas ada)
-            return collect($this->Foto)->filter(function($foto) {
-                return file_exists(public_path('images/' . $foto));
-            })->toArray();
+            return $this->Foto;
         }
         
         return [];

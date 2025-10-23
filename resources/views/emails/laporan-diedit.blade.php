@@ -5,7 +5,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Perubahan Laporan Safety Walk and Talk | Siemens</title>
-    <link rel="icon" type="image/png" href="{{ asset('images/static/favicon.png') }}?v={{ time() }}">
+    <link rel="icon" type="image/x-icon" href="{{ asset('images/static/favicon.ico') }}?v={{ time() }}">
 </head>
 
 <body style="margin: 0; padding: 0; background-color: #ffffff; font-family: Arial, sans-serif; line-height: 1.6;">

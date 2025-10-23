@@ -20,7 +20,7 @@
     <!-- Form -->
     <div class="card shadow">
         <div class="card-body">
-            <form action="{{ route('master-data.area.update', $area->id) }}" method="POST" id="areaForm">
+            <form action="{{ route('master-data.area.update', $area) }}" method="POST" id="areaForm">
                 @csrf
                 @method('PUT')
                 

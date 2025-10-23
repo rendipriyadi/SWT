@@ -33,9 +33,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const returnUrl = $(this).data('return-url');
         const id = $(this).data('id');
         
-        console.log('Delete requested for ID:', id);
-        console.log('Delete URL:', deleteUrl);
-        
         // Show confirmation dialog using SweetAlert2
         const theme = getSwalTheme();
         Swal.fire({
@@ -69,7 +66,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         ref: returnUrl.includes('sejarah') ? 'sejarah' : 'dashboard'
                     },
                     success: function(response) {
-                        console.log('Delete response:', response);
                         if (response.success) {
                             // Show success message
                             Swal.fire({

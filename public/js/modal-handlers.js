@@ -1,26 +1,33 @@
+/**
+ * Modal Handlers
+ * Centralized modal management for description, photos, and completion details
+ * Prevents duplicate handlers and manages modal backdrop cleanup
+ */
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('modal-handlers.js loaded');
     
-    // Debugging helper untuk melihat apakah modal telah dimuat
-    const descModal = document.getElementById('descriptionModal');
-    console.log('Description modal found:', descModal ? 'yes' : 'no');
-    
-    // Centralized modal management to prevent duplicate handlers
+    /**
+     * Centralized modal management to prevent duplicate handlers
+     * Tracks active modals and handles cleanup
+     */
     const modalHandlers = {
         activeModals: [],
         
-        // Track opened modals
+        /**
+         * Register a modal as active
+         * @param {string} modalId - The ID of the modal to register
+         */
         register: function(modalId) {
             if (!this.activeModals.includes(modalId)) {
                 this.activeModals.push(modalId);
-                console.log(`Modal registered: ${modalId}`, this.activeModals);
             }
         },
         
-        // Remove modal from tracking when closed
+        /**
+         * Unregister a modal and cleanup if it's the last one
+         * @param {string} modalId - The ID of the modal to unregister
+         */
         unregister: function(modalId) {
             this.activeModals = this.activeModals.filter(id => id !== modalId);
-            console.log(`Modal unregistered: ${modalId}`, this.activeModals);
             
             // Clean up backdrop if this was the last modal
             if (this.activeModals.length === 0) {
@@ -31,15 +38,17 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
-    // Perbaikan untuk modal backdrop yang tidak hilang
+    /**
+     * Fix modal backdrop issues
+     * Monitors body class changes and cleans up orphaned backdrops
+     */
     function fixBackdropIssue() {
-        // Observer untuk memantau perubahan class pada body
+        // Observer to monitor body class changes
         const bodyObserver = new MutationObserver(function(mutations) {
             mutations.forEach(function(mutation) {
                 if (mutation.attributeName === 'class') {
                     // Cek jika body memiliki class modal-open tapi tidak ada modal yang terlihat
                     if (document.body.classList.contains('modal-open') && document.querySelectorAll('.modal.show').length === 0) {
-                        console.log('Detected modal-open but no visible modal, cleaning up...');
                         document.body.classList.remove('modal-open');
                         document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
                         document.body.style.paddingRight = '';
@@ -86,10 +95,32 @@ document.addEventListener('DOMContentLoaded', function() {
         }, true);
     }
 
-    // Event listener untuk semua modal yang dibuka
+    /**
+     * Ensure modal has proper z-index
+     * @param {HTMLElement} modalEl - The modal element
+     */
+    function ensureModalZIndex(modalEl) {
+        if (!modalEl) return;
+        
+        const allModals = document.querySelectorAll('.modal.show');
+        const baseZIndex = 1050;
+        
+        allModals.forEach((modal, index) => {
+            modal.style.zIndex = baseZIndex + (index * 10);
+            const backdrop = document.querySelector(`.modal-backdrop:nth-of-type(${index + 1})`);
+            if (backdrop) {
+                backdrop.style.zIndex = baseZIndex + (index * 10) - 1;
+            }
+        });
+    }
+
+    /**
+     * Event listener for all opened modals
+     * Moves modal to body and ensures proper z-index
+     */
     document.addEventListener('show.bs.modal', function(e) {
         const modalEl = e.target;
-        // Pindahkan modal ke <body> untuk menghindari stacking context dari wrapper
+        // Move modal to <body> to avoid stacking context issues
         if (modalEl && modalEl.parentElement !== document.body) {
             document.body.appendChild(modalEl);
         }
@@ -98,18 +129,19 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 10);
     }, true);
     
-    // Panggil fungsi perbaikan
+    // Call backdrop fix function
     fixBackdropIssue();
 
-    // Description modal handler
+    /**
+     * Description modal handler
+     * Displays full description text in a modal
+     */
     $(document).on('click', '.view-description', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        console.log('View description clicked');
         
         // Get description from data attribute
         const description = $(this).data('description');
-        console.log('Description data:', description);
         
         // Find modal element
         const modal = document.getElementById('descriptionModal');
@@ -156,10 +188,12 @@ document.addEventListener('DOMContentLoaded', function() {
         modalHandlers.register('descriptionModal');
     });
 
-    // Photo modal handler
+    /**
+     * Photo modal handler
+     * Displays photos in a carousel modal
+     */
     $(document).on('click', 'img[data-bs-toggle="modal"][data-bs-target="#modalFotoFull"]', function() {
         const photosData = $(this).data('photos');
-        console.log('Photos data:', photosData);
         
         const carouselInner = $('#photoCarousel .carousel-inner');
         carouselInner.empty(); // Clear old photos
@@ -178,9 +212,10 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         } else {
             // Fallback if no photos
+            const noPhotoUrl = window.location.origin + '/images/static/nophoto.jpg';
             carouselInner.append(`
                 <div class="carousel-item active">
-                    <img src="/images/static/nophoto.jpg" class="d-block w-100 img-fluid rounded" alt="Foto tidak tersedia">
+                    <img src="${noPhotoUrl}" class="d-block w-100 img-fluid rounded" alt="No photo available">
                 </div>
             `);
         }
@@ -189,16 +224,22 @@ document.addEventListener('DOMContentLoaded', function() {
         $('#photoCarousel .carousel-control-prev, #photoCarousel .carousel-control-next').toggle(photosData && photosData.length > 1);
     });
 
-    // Solution details modal handler
+    /**
+     * Solution details modal handler
+     * Displays completion details with photo carousel
+     */
     $(document).on('click', '.lihat-penyelesaian-btn', function() {
-        var id = $(this).data('id');
-        var modalBody = $('#modalPenyelesaianBody');
+        const encryptedId = $(this).data('encrypted-id');
+        const modalBody = $('#modalPenyelesaianBody');
         
-        modalBody.html('<div class="text-center my-4"><div class="spinner-border text-primary" role="status"></div><p class="mt-2">Memuat data...</p></div>');
+        // Show loading spinner
+        modalBody.html('<div class="text-center my-4"><div class="spinner-border text-primary" role="status"></div><p class="mt-2">Loading data...</p></div>');
         modalHandlers.register('modalPenyelesaian');
         
-        // Menggunakan URL langsung
-        $.get('/laporan/' + id + '/penyelesaian', function(res) {
+        // Use global route configuration
+        const url = window.routes.penyelesaian.replace(':encryptedId', encryptedId);
+        
+        $.get(url, function(res) {
             if (res.success) {
                 var html = '';
                 
@@ -304,10 +345,12 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // General modal cleanup on close
+    /**
+     * General modal cleanup on close
+     * Unregisters modal from tracking when hidden
+     */
     $(document).on('hidden.bs.modal', '.modal', function(e) {
         const modalId = this.id;
-        console.log(`Modal hidden: ${modalId}`);
         
         // Unregister this modal
         modalHandlers.unregister(modalId);

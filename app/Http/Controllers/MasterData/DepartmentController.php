@@ -48,27 +48,23 @@ class DepartmentController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show($id)
+    public function show(Department $department)
     {
-        $department = Department::findOrFail($id);
         return view('master-data.department.show', compact('department'));
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit($id)
+    public function edit(Department $department)
     {
-        $department = Department::findOrFail($id);
-        
-        \SharedManager::saveLog('log_swt', "Accessed the [Edit Department/Supervisor] page for ID: {$id} swt.");
+        \SharedManager::saveLog('log_swt', "Accessed the [Edit Department/Supervisor] page for ID: {$department->id} swt.");
         
         return view('master-data.department.edit', compact('department'));
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, Department $department)
     {
-        $department = Department::findOrFail($id);
         $department->update([
             'departemen' => $request->name,
             'supervisor' => $request->supervisor ?? $request->name,
@@ -85,12 +81,11 @@ class DepartmentController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy($id)
+    public function destroy(Department $department)
     {
-        $department = Department::findOrFail($id);
         $department->delete();
 
-        \SharedManager::saveLog('log_swt', "Deleted department/supervisor ID: {$id} swt.");
+        \SharedManager::saveLog('log_swt', "Deleted department/supervisor ID: {$department->id} swt.");
         
         return redirect()->route('master-data.department.index')
             ->with('success', 'Supervisor deleted successfully.');
@@ -104,9 +99,8 @@ class DepartmentController extends Controller
     /**
      * Permanently delete the specified resource from storage.
      */
-    public function forceDelete($id)
+    public function forceDelete(Department $department)
     {
-        $department = Department::withTrashed()->findOrFail($id);
         $department->forceDelete();
 
         return redirect()->route('master-data.department.index')

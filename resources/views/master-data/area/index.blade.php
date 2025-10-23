@@ -41,7 +41,7 @@
         @forelse($areas as $index => $area)
             <div class="col-lg-6 col-xl-4 mb-4">
                 <div class="card h-100 area-card position-relative">
-                    <a href="{{ route('master-data.area.show', $area->id) }}" class="text-reset text-decoration-none d-block">
+                    <a href="{{ route('master-data.area.show', $area) }}" class="text-reset text-decoration-none d-block">
                         <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                             <h6 class="mb-0 fw-bold">
                                 <i class="fas fa-map-marker-alt me-2"></i>{{ $area->name }}
@@ -73,16 +73,16 @@
                     </a>
                     <div class="card-footer bg-transparent border-0 pt-0 position-relative">
                         <div class="d-flex gap-2">
-                            <a href="{{ route('master-data.area.show', $area->id) }}" 
+                            <a href="{{ route('master-data.area.show', $area) }}" 
                                class="btn btn-outline-info btn-sm flex-fill">
                                 <i class="fas fa-eye me-1"></i>View Details
                             </a>
-                            <a href="{{ route('master-data.area.edit', $area->id) }}" 
+                            <a href="{{ route('master-data.area.edit', $area) }}" 
                                class="btn btn-outline-warning btn-sm flex-fill">
                                 <i class="fas fa-edit me-1"></i>Edit
                             </a>
                             <button class="btn btn-outline-danger btn-sm flex-fill delete-btn" 
-                                    data-id="{{ $area->id }}" 
+                                    data-slug="{{ $area->slug }}" 
                                     data-name="{{ $area->name }}">
                                 <i class="fas fa-trash me-1"></i>Delete
                             </button>
@@ -118,9 +118,9 @@ document.addEventListener('DOMContentLoaded', function() {
         e.preventDefault();
         e.stopPropagation();
 
-        const areaId = $(this).data('id');
+        const areaSlug = $(this).data('slug');
         const areaName = $(this).data('name');
-        const actionUrl = '{{ route("master-data.area.destroy", ":id") }}'.replace(':id', areaId);
+        const actionUrl = '{{ route("master-data.area.destroy", ":slug") }}'.replace(':slug', areaSlug);
 
         const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
         const theme = isDark ? {

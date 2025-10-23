@@ -214,7 +214,7 @@
                                         <a href="{{ route('master-data.problem-category.edit', $category) }}" class="btn btn-sm btn-warning" title="Edit" onclick="event.stopPropagation();">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <button type="button" class="btn btn-sm btn-danger delete-problem-category-btn" data-id="{{ $category->id }}" data-name="{{ $category->name }}" title="Delete">
+                                        <button type="button" class="btn btn-sm btn-danger delete-problem-category-btn" data-slug="{{ $category->slug }}" data-name="{{ $category->name }}" title="Delete">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </div>
@@ -270,7 +270,7 @@
                                                 <a href="{{ route('master-data.problem-category.edit', $category) }}" class="btn btn-sm btn-warning mobile-action-btn">
                                                     <i class="fas fa-edit"></i> Edit
                                                 </a>
-                                                <button type="button" class="btn btn-sm btn-danger mobile-action-btn delete-problem-category-btn" data-id="{{ $category->id }}" data-name="{{ $category->name }}">
+                                                <button type="button" class="btn btn-sm btn-danger mobile-action-btn delete-problem-category-btn" data-slug="{{ $category->slug }}" data-name="{{ $category->name }}">
                                                     <i class="fas fa-trash"></i> Delete
                                                 </button>
                                             </div>
@@ -373,13 +373,13 @@ $('.mobile-table-row').on('click', function(e) {
 document.addEventListener('click', function(e){
     const btn = e.target.closest('.delete-problem-category-btn');
     if (!btn) return;
-    const id = btn.getAttribute('data-id');
+    const slug = btn.getAttribute('data-slug');
     const name = btn.getAttribute('data-name');
 
     if (typeof Swal === 'undefined') {
         if (confirm(`Are you sure you want to delete category "${name}"?`)) {
             const form = document.getElementById('deleteProblemCategoryForm');
-            form.setAttribute('action', `/master-data/problem-category/${id}`);
+            form.setAttribute('action', `/master-data/problem-category/${slug}`);
             form.submit();
         }
         return;
@@ -410,7 +410,7 @@ document.addEventListener('click', function(e){
     }).then((result) => {
         if (result.isConfirmed) {
             const form = document.getElementById('deleteProblemCategoryForm');
-            form.setAttribute('action', `/master-data/problem-category/${id}`);
+            form.setAttribute('action', `/master-data/problem-category/${slug}`);
             form.submit();
         }
     });

@@ -315,6 +315,12 @@ $(document).ready(function() {
             const $start = $('#report_created_start');
             const $end = $('#report_created_end');
             if (!$start.length || !$end.length) return;
+            
+            // Guard: If already initialized, skip to prevent infinite loop
+            if ($start[0]._flatpickr && $end[0]._flatpickr) {
+                return;
+            }
+            
             // Destroy any other pickers and previous instances
             try { if ($start[0]._flatpickr) $start[0]._flatpickr.destroy(); } catch(_) {}
             try { if ($end[0]._flatpickr) $end[0]._flatpickr.destroy(); } catch(_) {}
@@ -346,17 +352,32 @@ $(document).ready(function() {
             syncMin();
         }
 
+        let isEnforcing = false; // Flag to prevent recursive calls
         function enforceStartFirst(){
-            const $start = $('#report_created_start');
-            const $end = $('#report_created_end');
-            if (!$start.length || !$end.length) return;
-            const sd = ($start.val() || '').trim();
-            if (sd){
-                $end.prop('disabled', false).attr('min', sd);
-                try { if ($end[0] && $end[0]._flatpickr){ $end[0]._flatpickr.set('minDate', sd); } } catch(_) {}
-            } else {
-                $end.prop('disabled', true).removeAttr('min').val('');
-                try { if ($end[0] && $end[0]._flatpickr){ $end[0]._flatpickr.set('minDate', null); $end[0]._flatpickr.clear(); } } catch(_) {}
+            if (isEnforcing) return; // Prevent re-entry
+            isEnforcing = true;
+            
+            try {
+                const $start = $('#report_created_start');
+                const $end = $('#report_created_end');
+                if (!$start.length || !$end.length) return;
+                const sd = ($start.val() || '').trim();
+                if (sd){
+                    $end.prop('disabled', false).attr('min', sd);
+                    try { if ($end[0] && $end[0]._flatpickr){ $end[0]._flatpickr.set('minDate', sd); } } catch(_) {}
+                } else {
+                    $end.prop('disabled', true).removeAttr('min');
+                    // Clear value without triggering events
+                    if ($end[0] && $end[0]._flatpickr) {
+                        try { 
+                            $end[0]._flatpickr.set('minDate', null);
+                            $end[0]._flatpickr.setDate(null, false); // false = don't trigger onChange
+                        } catch(_) {}
+                    }
+                    $end.val('');
+                }
+            } finally {
+                isEnforcing = false;
             }
         }
         // Initialize on dropdown open, input focus, and eagerly after ready
@@ -849,6 +870,11 @@ $(document).ready(function() {
             const $start = $('#history_created_start');
             const $end = $('#history_created_end');
             if (!$start.length || !$end.length) return;
+            
+            // Guard: If already initialized, skip to prevent infinite loop
+            if ($start[0]._flatpickr && $end[0]._flatpickr) {
+                return;
+            }
 
             // 1) Destroy any previously attached non-flatpickr pickers to prevent duplicates
             try { // bootstrap-datepicker
@@ -911,26 +937,40 @@ $(document).ready(function() {
         }
 
         // Enforce Start-first for History: End min follows Start and End disabled until Start set
+        let isEnforcingHistory = false; // Flag to prevent recursive calls
         function enforceHistoryStartFirst() {
-            const $start = $('#history_created_start');
-            const $end = $('#history_created_end');
-            if (!$start.length || !$end.length) return;
-            const sd = ($start.val() || '').trim();
-            if (sd) {
-                $end.prop('disabled', false).attr('min', sd);
-                const ed = ($end.val() || '').trim();
-                if (ed && ed < sd) { $end.val(''); }
-                // Flatpickr-only sync
-                try {
+            if (isEnforcingHistory) return; // Prevent re-entry
+            isEnforcingHistory = true;
+            
+            try {
+                const $start = $('#history_created_start');
+                const $end = $('#history_created_end');
+                if (!$start.length || !$end.length) return;
+                const sd = ($start.val() || '').trim();
+                if (sd) {
+                    $end.prop('disabled', false).attr('min', sd);
+                    const ed = ($end.val() || '').trim();
+                    if (ed && ed < sd) { $end.val(''); }
+                    // Flatpickr-only sync
+                    try {
+                        if ($end[0] && $end[0]._flatpickr) {
+                            $end[0]._flatpickr.set('minDate', sd);
+                            try { $end[0]._flatpickr.jumpToDate(sd); } catch(_) {}
+                        }
+                    } catch(_) {}
+                } else {
+                    $end.prop('disabled', true).removeAttr('min');
+                    // Clear flatpickr constraint without triggering events
                     if ($end[0] && $end[0]._flatpickr) {
-                        $end[0]._flatpickr.set('minDate', sd);
-                        try { $end[0]._flatpickr.jumpToDate(sd); } catch(_) {}
+                        try { 
+                            $end[0]._flatpickr.set('minDate', null);
+                            $end[0]._flatpickr.setDate(null, false); // false = don't trigger onChange
+                        } catch(_) {}
                     }
-                } catch(_) {}
-            } else {
-                $end.prop('disabled', true).removeAttr('min').val('');
-                // Clear flatpickr constraint
-                try { if ($end[0] && $end[0]._flatpickr) { $end[0]._flatpickr.set('minDate', null); $end[0]._flatpickr.clear(); } } catch(_) {}
+                    $end.val('');
+                }
+            } finally {
+                isEnforcingHistory = false;
             }
         }
 

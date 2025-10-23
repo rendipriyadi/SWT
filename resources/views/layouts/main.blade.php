@@ -9,6 +9,13 @@
     <meta name="csrf-token" content="{{ csrf_token() }}" />
     <title>@yield('title', 'Safety Walk and Talk')</title>
     
+    <!-- Favicon - Must be early in head -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico?v={{ time() }}">
+    <link rel="shortcut icon" href="/favicon.ico?v={{ time() }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.ico?v={{ time() }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon.ico?v={{ time() }}">
+    <meta name="msapplication-TileImage" content="/favicon.ico?v={{ time() }}">
+    
     <!-- Preload Critical Assets -->
     <link rel="preload" href="{{ asset('css/styles.css') }}" as="style">
 
@@ -32,15 +39,11 @@
     <!-- Elegant Datepicker CSS -->
     <link href="{{ asset('css/elegant-datepicker.css') }}?v={{ time() }}" rel="stylesheet">
     
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/static/favicon.png') }}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('images/static/favicon.png') }}">
-    <link rel="shortcut icon" type="image/png" href="{{ asset('images/static/favicon.png') }}">
-    <link rel="apple-touch-icon" href="{{ asset('images/static/favicon.png') }}">
     <link rel="manifest" href="{{ asset('manifest.json') }}">
 
-    <!-- CSRF Token -->
-    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <!-- CSRF Token injected above -->
+    
+    @stack('head')
 
     <script>
     // Initialize theme and sidebar state immediately to prevent layout shift
@@ -973,7 +976,6 @@
     }
     </style>
 </head>
-{{-- <body class="sb-nav-fixed"> --}}
 <body class="sb-nav-fixed">
     <!-- Navbar -->
     <nav class="sb-topnav navbar navbar-expand navbar-light">
@@ -1019,10 +1021,7 @@
         <div id="layoutSidenav_nav">
             <nav class="sb-sidenav accordion sb-sidenav-dark" id="sidenavAccordion">
                 <div class="px-3 py-3 border-bottom d-flex align-items-center gap-2">
-                    @php
-                        $logoPath = file_exists(public_path('images/static/logo-s.png')) ? 'images/static/logo-s.png' : (file_exists(public_path('images/static/logo.png')) ? 'images/static/logo.png' : 'images/static/favicon.png');
-                    @endphp
-                    <img src="{{ asset($logoPath) }}" alt="S" style="width:28px;height:28px;border-radius:6px;object-fit:contain;">
+                    <img src="{{ asset('images/static/favicon.ico') }}" alt="S" style="width:28px;height:28px;border-radius:6px;object-fit:contain;">
                     <div class="fw-semibold brand-text" style="line-height:1.1;">Safety Walk and Talk</div>
                 </div>
                 <div class="sb-sidenav-menu">
@@ -1030,7 +1029,7 @@
                         <!-- HOME Section -->
                         <div class="nav-header text-muted small fw-bold px-3 py-2">HOME</div>
                         <a class="nav-link py-2 {{ Request::is('dashboard') ? 'active' : '' }}" href="{{ url('dashboard') }}">
-                            <div class="sb-nav-link-icon"><i class="fa-solid fa-gauge-high"></i></div>
+                            <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
                             <span class="nav-text">Dashboard</span>
                         </a>
                         
@@ -1038,15 +1037,15 @@
                         <div class="nav-divider my-2"></div>
                         <div class="nav-header text-muted small fw-bold px-3 py-2">MASTER DATA</div>
                         <a class="nav-link py-2 {{ Request::is('master-data/department*') ? 'active' : '' }}" href="{{ route('master-data.department.index') }}">
-                            <div class="sb-nav-link-icon"><i class="fa-solid fa-building"></i></div>
+                            <div class="sb-nav-link-icon"><i class="fas fa-building"></i></div>
                             <span class="nav-text">Department</span>
                         </a>
                         <a class="nav-link py-2 {{ Request::is('master-data/area*') ? 'active' : '' }}" href="{{ route('master-data.area.index') }}">
-                            <div class="sb-nav-link-icon"><i class="fa-solid fa-map-marker-alt"></i></div>
+                            <div class="sb-nav-link-icon"><i class="fas fa-map-marker-alt"></i></div>
                             <span class="nav-text">Area</span>
                         </a>
                         <a class="nav-link py-2 {{ Request::is('master-data/problem-category*') ? 'active' : '' }}" href="{{ route('master-data.problem-category.index') }}">
-                            <div class="sb-nav-link-icon"><i class="fa-solid fa-tags"></i></div>
+                            <div class="sb-nav-link-icon"><i class="fas fa-tags"></i></div>
                             <span class="nav-text">Problem Category</span>
                         </a>
                         
@@ -1054,11 +1053,11 @@
                         <div class="nav-divider my-2"></div>
                         <div class="nav-header text-muted small fw-bold px-3 py-2">TRANSACTION</div>
                         <a class="nav-link py-2 {{ Request::is('laporan') ? 'active' : '' }}" href="{{ url('laporan') }}">
-                            <div class="sb-nav-link-icon"><i class="fa-regular fa-file-lines"></i></div>
+                            <div class="sb-nav-link-icon"><i class="far fa-file-alt"></i></div>
                             <span class="nav-text">Report</span>
                         </a>
                         <a class="nav-link py-2 {{ Request::is('sejarah') ? 'active' : '' }}" href="{{ url('sejarah') }}">
-                            <div class="sb-nav-link-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                            <div class="sb-nav-link-icon"><i class="fas fa-history"></i></div>
                             <span class="nav-text">History</span>
                         </a>
                     </div>
@@ -1127,6 +1126,15 @@
     <script src="{{ asset('js/delete-handler.js') }}"></script>
     <script src="{{ asset('js/modal-handlers.js') }}?v={{ time() }}_{{ rand(1000, 9999) }}"></script>
     <script src="{{ asset('js/status-badge.js') }}?v={{ time() }}"></script>
+    
+    <!-- Global Route Configuration for JavaScript -->
+    <script>
+        window.routes = {
+            penanggungJawab: "{{ route('penanggung.jawab', ['areaId' => ':areaId']) }}",
+            supervisor: "{{ route('supervisor', ['id' => ':id']) }}",
+            penyelesaian: "{{ route('laporan.penyelesaian', ['laporan' => ':encryptedId']) }}"
+        };
+    </script>
     
     <script>
     document.addEventListener('DOMContentLoaded', function() {

@@ -160,7 +160,7 @@
                     <i class="fas fa-list me-2"></i>Station Details
                 </h5>
                 <div>
-                    <a href="{{ route('master-data.area.edit', $area->id) }}" class="btn btn-warning btn-sm">
+                    <a href="{{ route('master-data.area.edit', $area) }}" class="btn btn-warning btn-sm">
                         <i class="fas fa-edit me-1"></i>Edit Area
                     </a>
                 </div>
@@ -260,7 +260,7 @@
                 <i class="fas fa-exclamation-circle text-muted fa-3x mb-3"></i>
                 <h5 class="text-muted">No Stations Found</h5>
                 <p class="text-muted">This area doesn't have any stations yet.</p>
-                <a href="{{ route('master-data.area.edit', $area->id) }}" class="btn btn-primary">
+                <a href="{{ route('master-data.area.edit', $area) }}" class="btn btn-primary">
                     <i class="fas fa-plus me-2"></i>Add Stations
                 </a>
             </div>

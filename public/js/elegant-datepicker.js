@@ -36,9 +36,14 @@ class ElegantDatePicker {
             this.initializeDatePickers();
         }
         
-        // Re-initialize on AJAX content updates
+        // Re-initialize on AJAX content updates (with debounce to prevent infinite loop)
+        let drawTimeout;
         $(document).on('draw.dt', () => {
-            setTimeout(() => this.initializeDatePickers(), 100);
+            clearTimeout(drawTimeout);
+            drawTimeout = setTimeout(() => {
+                // Only convert new date inputs that haven't been converted yet
+                this.convertBasicDateInputs();
+            }, 150);
         });
     }
     
@@ -107,6 +112,12 @@ class ElegantDatePicker {
     }
     
     initializeSingleDatePicker(input, options = {}) {
+        // Prevent re-initialization
+        if (input.dataset.datepickerInitialized === 'true') {
+            return;
+        }
+        input.dataset.datepickerInitialized = 'true';
+        
         const config = { ...this.defaultOptions };
         
         // Apply constraints
@@ -358,12 +369,13 @@ document.addEventListener('DOMContentLoaded', function() {
     window.ElegantDatePicker = ElegantDatePicker;
 });
 
-// Re-initialize on dynamic content load
+// Re-initialize on dynamic content load (only convert new inputs)
 if (typeof $ !== 'undefined') {
     $(document).on('shown.bs.modal', function() {
         setTimeout(() => {
             if (window.elegantDatePicker) {
-                window.elegantDatePicker.initializeDatePickers();
+                // Only convert new date inputs, not re-initialize everything
+                window.elegantDatePicker.convertBasicDateInputs();
             }
         }, 100);
     });

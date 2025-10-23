@@ -62,6 +62,15 @@ class ReportController extends Controller
         ]);
     }
 
+    /**
+     * Display the reports list page
+     */
+    public function index()
+    {
+        $areas = Area::all();
+        return view('walkandtalk.reports', compact('areas'));
+    }
+
     public function create()
     {
         $areas = Area::with('penanggungJawabs')->get();
@@ -89,7 +98,7 @@ class ReportController extends Controller
             $laporan = $this->reportService->createReport($validated, $photos);
 
             // $this->sendSupervisorNotifications($laporan); // Disabled email notifications
-            // \SharedManager::saveLog('log_swt', "Created new report swt.");
+            \SharedManager::saveLog('log_swt', "Created new report swt.");
             
             // Redirect to report list page instead of dashboard
             return redirect()->route('laporan.index')->with('success', 'Report created successfully.');
@@ -127,26 +136,21 @@ class ReportController extends Controller
         ]);
     }
 
-    public function edit($id)
+    public function edit(Laporan $laporan)
     {
-        $laporan = Laporan::with(['area', 'penanggungJawab', 'problemCategory'])->findOrFail($id);
+        $laporan->load(['area', 'penanggungJawab', 'problemCategory']);
         $areas = Area::with('penanggungJawabs')->get();
         $problemCategories = \App\Models\ProblemCategory::active()->ordered()->get();
         
-        \SharedManager::saveLog('log_swt', "Accessed the [Edit Report] page for ID: {$id} swt.");
+        \SharedManager::saveLog('log_swt', "Accessed the [Edit Report] page for ID: {$laporan->id} swt.");
         
         return view('walkandtalk.edit', compact('laporan', 'areas', 'problemCategories'));
     }
 
-    public function update(UpdateReportRequest $request, $id)
+    public function update(UpdateReportRequest $request, Laporan $laporan)
     {
         try {
-            $laporan = $this->reportRepository->findById($id);
-            
-            if (!$laporan) {
-                return redirect()->route('laporan.index')
-                    ->with('error', 'Report not found.');
-            }
+            // Laporan already loaded via route model binding
 
             $validated = $request->validated();
 
@@ -197,7 +201,7 @@ class ReportController extends Controller
                 $returnUrl = route('laporan.index');
             }
             
-            \SharedManager::saveLog('log_swt', "Updated report ID: {$id} swt.");
+            \SharedManager::saveLog('log_swt', "Updated report ID: {$laporan->id} swt.");
             
             return redirect($returnUrl)->with('success', 'Report updated successfully.');
             
@@ -211,26 +215,21 @@ class ReportController extends Controller
         }
     }
 
-    public function tindakan($id)
+    public function tindakan(Laporan $laporan)
     {
-        $laporan = Laporan::with(['area', 'area.penanggungJawabs', 'penanggungJawab', 'problemCategory', 'penyelesaian'])->findOrFail($id);
+        $laporan->load(['area', 'area.penanggungJawabs', 'penanggungJawab', 'problemCategory', 'penyelesaian']);
         
-        \SharedManager::saveLog('log_swt', "Accessed the [Completion Action] page for ID: {$id} swt.");
+        \SharedManager::saveLog('log_swt', "Accessed the [Completion Action] page for ID: {$laporan->id} swt.");
         
         return view('walkandtalk.tindakan', compact('laporan'));
     }
 
-    public function storeTindakan(StoreCompletionRequest $request, $id)
+    public function storeTindakan(StoreCompletionRequest $request, Laporan $laporan)
     {
         try {
             $validated = $request->validated();
             
-            $laporan = $this->reportRepository->findById($id);
-            
-            if (!$laporan) {
-                return redirect()->route('dashboard')
-                    ->with('error', 'Report not found.');
-            }
+            // Laporan already loaded via route model binding
 
             if ($validated['status'] === 'Selesai') {
                 // Upload completion photos if provided
@@ -245,7 +244,7 @@ class ReportController extends Controller
                     'deskripsi_penyelesaian' => $validated['deskripsi_penyelesaian'],
                 ], $photos);
 
-                \SharedManager::saveLog('log_swt', "Completed report ID: {$id} swt.");
+                \SharedManager::saveLog('log_swt', "Completed report ID: {$laporan->id} swt.");
                 
                 return redirect()->route('sejarah.index')
                     ->with('success', 'Report completed successfully and moved to history.');
@@ -254,7 +253,7 @@ class ReportController extends Controller
             // Just update status if not completed
             $this->reportService->updateStatus($laporan, $validated['status']);
 
-            \SharedManager::saveLog('log_swt', "Updated report status ID: {$id} swt.");
+            \SharedManager::saveLog('log_swt', "Updated report status ID: {$laporan->id} swt.");
             
             return redirect()->route('dashboard')
                 ->with('success', 'Report created successfully.');
@@ -303,18 +302,9 @@ class ReportController extends Controller
             $query->orderBy('created_at', 'desc');
         }
 
-        // Helper to resolve report photo URL with fallback to legacy folder
+        // Helper to resolve report photo URL
         $resolveReportUrl = function(string $filename) {
-            $candidates = [
-                public_path('images/reports/' . $filename),
-                public_path('images/' . $filename),
-            ];
-            foreach ($candidates as $idx => $path) {
-                if (file_exists($path)) {
-                    return $idx === 0 ? asset('images/reports/' . $filename) : asset('images/' . $filename);
-                }
-            }
-            return asset('images/' . $filename);
+            return asset('images/reports/' . $filename);
         };
 
         return DataTables::of($query)
@@ -387,34 +377,30 @@ class ReportController extends Controller
             })
             ->addColumn('penyelesaian', function ($laporan) {
                 return $laporan->penyelesaian
-                    ? '<button class="btn btn-sm btn-info lihat-penyelesaian-btn" data-bs-toggle="modal" data-bs-target="#modalPenyelesaian" data-id="' . $laporan->id . '"><i class="fas fa-eye"></i> View</button>'
-                    : '<a href="' . route('laporan.tindakan', $laporan->id) . '" class="btn btn-sm btn-primary"><i class="fas fa-tasks"></i> Action</a>';
+                    ? '<button class="btn btn-sm btn-info lihat-penyelesaian-btn" data-bs-toggle="modal" data-bs-target="#modalPenyelesaian" data-encrypted-id="' . encrypt($laporan->id) . '"><i class="fas fa-eye"></i> View</button>'
+                    : '<a href="' . route('laporan.tindakan', $laporan) . '" class="btn btn-sm btn-primary"><i class="fas fa-tasks"></i> Action</a>';
             })
             ->addColumn('aksi', function ($laporan) {
                 // Use laporan.index route instead of datatables endpoint
                 $returnUrl = route('laporan.index');
-                $editUrl = route('laporan.edit', ['id' => $laporan->id, 'return_url' => $returnUrl]);
-                $deleteUrl = route('laporan.destroy', $laporan->id);
-                return '<div class="d-flex gap-1"><a href="' . $editUrl . '" class="btn btn-sm btn-warning" title="Edit"><i class="fas fa-edit"></i></a><button class="btn btn-sm btn-danger delete-btn" data-id="' . $laporan->id . '" data-delete-url="' . $deleteUrl . '" data-return-url="' . $returnUrl . '" title="Delete"><i class="fas fa-trash"></i></button></div>';
+                $editUrl = route('laporan.edit', ['laporan' => $laporan, 'return_url' => $returnUrl]);
+                $deleteUrl = route('laporan.destroy', $laporan);
+                return '<div class="d-flex gap-1"><a href="' . $editUrl . '" class="btn btn-sm btn-warning" title="Edit"><i class="fas fa-edit"></i></a><button class="btn btn-sm btn-danger delete-btn" data-encrypted-id="' . encrypt($laporan->id) . '" data-delete-url="' . $deleteUrl . '" data-return-url="' . $returnUrl . '" title="Delete"><i class="fas fa-trash"></i></button></div>';
             })
             ->rawColumns(['foto', 'departemen', 'problem_category', 'deskripsi_masalah', 'status', 'penyelesaian', 'aksi'])
             ->make(true);
     }
 
-    public function destroy($id)
+    public function destroy(Laporan $laporan)
     {
         try {
-            $laporan = $this->reportRepository->findById($id);
-            
-            if (!$laporan) {
-                return response()->json(['success' => true, 'message' => 'Report already removed.']);
-            }
+            // Laporan already loaded via route model binding
 
             // Delete report using service (handles photos and completion data)
             $deleted = $this->reportService->deleteReport($laporan);
 
             if ($deleted) {
-                \SharedManager::saveLog('log_swt', "Deleted report ID: {$id} swt.");
+                \SharedManager::saveLog('log_swt', "Deleted report ID: {$laporan->id} swt.");
             
                 return response()->json(['success' => true, 'message' => 'Report deleted successfully.']);
             }
@@ -442,30 +428,21 @@ class ReportController extends Controller
         }
     }
 
-    public function getPenyelesaian($id)
+    public function getPenyelesaian(Laporan $laporan)
     {
         try {
-            $laporan = Laporan::with('penyelesaian')->find($id);
+            $laporan->load('penyelesaian');
             
-            if (!$laporan || !$laporan->penyelesaian) {
+            if (!$laporan->penyelesaian) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Completion data not found.'
                 ]);
             }
             
-            // Helper to resolve completion photo URL with fallback to legacy folder
+            // Helper to resolve completion photo URL
             $resolveCompletionUrl = function(string $filename) {
-                $candidates = [
-                    public_path('images/completions/' . $filename),
-                    public_path('images/' . $filename),
-                ];
-                foreach ($candidates as $idx => $path) {
-                    if (file_exists($path)) {
-                        return $idx === 0 ? asset('images/completions/' . $filename) : asset('images/' . $filename);
-                    }
-                }
-                return asset('images/' . $filename);
+                return asset('images/completions/' . $filename);
             };
             
             $fotoUrls = [];

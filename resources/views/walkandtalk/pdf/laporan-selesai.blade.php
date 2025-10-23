@@ -109,7 +109,7 @@
             margin-top: 5px;
         }
     </style>
-    <link rel="icon" type="image/png" href="{{ asset('images/static/favicon.png') }}">
+    <link rel="icon" type="image/x-icon" href="{{ asset('images/static/favicon.ico') }}">
 </head>
 <body>
     <div class="header">
@@ -162,7 +162,7 @@
                     @if(!empty($item->validPhotos))
                         <div class="foto-grid">
                             @foreach($item->validPhotos as $foto)
-                                <img src="{{ public_path('images/' . $foto) }}" class="foto-masalah">
+                                <img src="{{ asset('images/reports/' . $foto) }}" class="foto-masalah">
                             @endforeach
                         </div>
                     @else
@@ -175,7 +175,7 @@
                         @if($item->penyelesaian && !empty($item->penyelesaian->validPhotos))
                             <div class="foto-grid">
                                 @foreach($item->penyelesaian->validPhotos as $foto)
-                                    <img src="{{ public_path('images/' . $foto) }}" class="foto-masalah">
+                                    <img src="{{ asset('images/completions/' . $foto) }}" class="foto-masalah">
                                 @endforeach
                             </div>
                         @else

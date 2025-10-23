@@ -90,21 +90,8 @@
                     <div class="d-flex flex-wrap gap-2 mt-2">
                         @foreach($laporan->Foto as $foto)
                             @php
-                                // Helper to resolve photo URL with fallback
-                                $photoPath = public_path('images/reports/' . $foto);
-                                if (!file_exists($photoPath)) {
-                                    $photoPath = public_path('images/' . $foto);
-                                }
-                                $photoUrl = file_exists(public_path('images/reports/' . $foto)) 
-                                    ? asset('images/reports/' . $foto) 
-                                    : asset('images/' . $foto);
-                                
-                                // Build array of all photo URLs for carousel
-                                $allPhotoUrls = array_map(function($f) {
-                                    return file_exists(public_path('images/reports/' . $f)) 
-                                        ? asset('images/reports/' . $f) 
-                                        : asset('images/' . $f);
-                                }, $laporan->Foto);
+                                $photoUrl = asset('images/reports/' . $foto);
+                                $allPhotoUrls = array_map(fn($f) => asset('images/reports/' . $f), $laporan->Foto);
                             @endphp
                             <div class="position-relative">
                                 <img 
@@ -126,7 +113,7 @@
     </div>
     
     <div class="card p-4">
-        <form action="{{ route('laporan.storeTindakan', $laporan->id) }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route('laporan.storeTindakan', $laporan) }}" method="POST" enctype="multipart/form-data">
             @csrf
             <div class="mb-3">
                 <label for="Tanggal" class="form-label fw-semibold">Completion Date <span class="text-danger">*</span></label>

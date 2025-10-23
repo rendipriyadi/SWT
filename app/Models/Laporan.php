@@ -3,6 +3,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Facades\Crypt;
 
 class Laporan extends Model
 {
@@ -27,6 +28,35 @@ class Laporan extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    /**
+     * Get the route key for the model.
+     */
+    public function getRouteKeyName()
+    {
+        return 'id';
+    }
+
+    /**
+     * Get the route key for the model (encrypted).
+     */
+    public function getRouteKey()
+    {
+        return Crypt::encrypt($this->getKey());
+    }
+
+    /**
+     * Resolve the route key from encrypted value.
+     */
+    public function resolveRouteBinding($value, $field = null)
+    {
+        try {
+            $id = Crypt::decrypt($value);
+            return $this->where($field ?: $this->getRouteKeyName(), $id)->first();
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
 
     // Relasi dengan area
     public function area()

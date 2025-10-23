@@ -7,7 +7,7 @@
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
         <h1 class="h3 mb-0 text-gray-800">Detail Supervisor</h1>
         <div>
-            <a href="{{ route('master-data.department.edit', $department->id) }}" class="btn btn-warning">
+            <a href="{{ route('master-data.department.edit', $department) }}" class="btn btn-warning">
                 <i class="fas fa-edit"></i> Edit
             </a>
             <a href="{{ route('master-data.department.index') }}" class="btn btn-secondary">

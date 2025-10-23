@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('filter-area-station.js loaded');
 
     // Only run on pages that contain the filter form
     const filterForm = document.getElementById('filterForm');
@@ -64,10 +63,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 stationSelect.appendChild(option);
             });
         }
-        
-        console.log(`Stations updated for area ID: ${areaId}`);
     }
-
+    
     // Event listeners
     areaSelect.addEventListener('change', function() {
         const areaId = this.value;
