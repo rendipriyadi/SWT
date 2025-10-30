@@ -87,6 +87,7 @@ npm install
 
 3. Jalankan migration (jika ada)
 ```bash
+php artisan migrate:fresh
 php artisan migrate
 ```
 
