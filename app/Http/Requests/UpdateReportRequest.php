@@ -25,7 +25,7 @@ class UpdateReportRequest extends FormRequest
             'problem_category_id' => 'required|exists:problem_categories,id',
             'deskripsi_masalah' => 'required|string',
             'tenggat_waktu' => 'required|date',
-            'status' => 'nullable|in:In Progress,Selesai',
+            'status' => 'nullable|in:Assigned,Completed',
             'Foto' => 'nullable|array',
             'Foto.*' => 'image|mimes:jpg,png,jpeg,gif,svg|max:2048',
         ];
@@ -44,7 +44,7 @@ class UpdateReportRequest extends FormRequest
             'deskripsi_masalah.required' => 'Deskripsi masalah harus diisi.',
             'tenggat_waktu.required' => 'Tenggat waktu harus diisi.',
             'tenggat_waktu.date' => 'Format tenggat waktu tidak valid.',
-            'status.in' => 'Status harus In Progress atau Selesai.',
+            'status.in' => 'Status must be Assigned or Completed.',
             'Foto.*.image' => 'File harus berupa gambar.',
             'Foto.*.mimes' => 'Format gambar harus jpg, png, jpeg, gif, atau svg.',
             'Foto.*.max' => 'Ukuran gambar maksimal 2MB.',

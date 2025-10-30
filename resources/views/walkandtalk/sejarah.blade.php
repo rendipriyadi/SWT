@@ -2,6 +2,11 @@
 
 @section('title', 'Report History')
 
+@php
+    use App\Models\Area;
+    use App\Models\ProblemCategory;
+@endphp
+
 @section('content')
 <div class="container-fluid px-4">
     <div class="page-header mb-3 d-flex align-items-center justify-content-between">
@@ -83,9 +88,29 @@
                 </div>
             </div>
         </div>
+    </div>
+</div>
+
+<!-- Modal Preview Foto Full -->
+<div class="modal fade" id="modalFotoFull" tabindex="-1" aria-labelledby="modalFotoFullLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content bg-transparent border-0">
+      <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3" data-bs-dismiss="modal" aria-label="Close" style="z-index: 1060; opacity: 1;"></button>
+      <div class="modal-body text-center p-0">
+        <div id="photoCarousel" class="carousel slide">
+          <div class="carousel-inner"></div>
+          <button class="carousel-control-prev" type="button" data-bs-target="#photoCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Previous</span>
+          </button>
+          <button class="carousel-control-next" type="button" data-bs-target="#photoCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Next</span>
+          </button>
         </div>
+      </div>
     </div>
-    </div>
+  </div>
 </div>
 
 <!-- Modal Row Detail -->
@@ -386,7 +411,7 @@ $(document).ready(function() {
         $(this).find('tbody tr').addClass('clickable-row');
     });
     
-    // Handle row click to open detail modal (ignore clicks on buttons/links/photo modal triggers)
+    // Handle row click to redirect to detail page (ignore clicks on buttons/links/photo modal triggers)
     $('#sejarahTable tbody').on('click', 'tr', function(e) {
         if (
             $(e.target).closest('a,button,.btn,input,label,select').length ||
@@ -399,9 +424,16 @@ $(document).ready(function() {
         
         const dt = $('#sejarahTable').DataTable();
         const data = dt.row(this).data();
-        if (!data) return;
         
-        // Populate modal with row data
+        if (!data || !data.encrypted_id) {
+            return;
+        }
+        
+        // Redirect to detail page
+        window.location.href = '/laporan/' + data.encrypted_id;
+        return;
+        
+        // OLD: Populate modal with row data (disabled)
         $('#rd_date').text($(this).find('td:eq(1)').text() || '');
         $('#rd_area').html(data.departemen || '');
         $('#rd_person_in_charge').text(data.person_in_charge || 'Not assigned');
@@ -452,8 +484,8 @@ $(document).on('click', '#sejarahTableMobile .mobile-table-row', function(e) {
 });
 
 // Data for filter dropdowns
-window.areasData = @json(\App\Models\Area::all(['id', 'name']));
-window.categoriesData = @json(\App\Models\ProblemCategory::active()->ordered()->get(['id', 'name']));
+window.areasData = @json(Area::all(['id', 'name']));
+window.categoriesData = @json(ProblemCategory::active()->ordered()->get(['id', 'name']));
 </script>
 @endpush
 

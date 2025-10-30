@@ -1,3 +1,6 @@
+@php
+    use App\Models\ProblemCategory;
+@endphp
 <div class="filter-panel card mb-2 position-relative collapsed">
     <button type="button" class="btn-close position-absolute end-0 top-0 m-1" aria-label="Close" id="closeFilterPanelBtn" style="z-index:10; display:none;"></button>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -26,7 +29,7 @@
                     <label class="form-label small mb-1">Problem Category</label>
                     <select class="form-select form-select-sm filter-control" id="kategori" name="kategori">
                         <option value="">All Category</option>
-                        @foreach(\App\Models\ProblemCategory::active()->ordered()->get() as $category)
+                        @foreach(ProblemCategory::active()->ordered()->get() as $category)
                             <option value="{{ $category->id }}">{{ $category->name }}</option>
                         @endforeach
                     </select>

@@ -2,13 +2,7 @@
 
 namespace App\Http\Controllers\Concerns;
 
-use App\Models\Area;
-use App\Models\PenanggungJawab;
-use App\Models\Laporan;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
-// Mailables may be absent in this build; we will guard usages at runtime
 use Carbon\Carbon;
 
 trait HandlesLaporan
@@ -45,108 +39,71 @@ trait HandlesLaporan
         return $query;
     }
 
-    private function sendSupervisorNotifications($laporan)
-    {
-        try {
-            $laporan = Laporan::with(['area', 'penanggungJawab'])->find($laporan->id);
-            $recipients = [];
-
-            if ($laporan->penanggungJawab && $laporan->penanggungJawab->email) {
-                // prioritize station PIC email
-                $recipients[] = $laporan->penanggungJawab->email;
-            } elseif ($laporan->area) {
-                foreach ($laporan->area->penanggungJawabs as $pj) {
-                    if ($pj->email) {
-                        $recipients[] = $pj->email;
-                    }
-                }
-            }
-
-            $recipients = array_unique($recipients);
-            foreach ($recipients as $email) {
-                if (class_exists(\App\Mail\LaporanDitugaskanSupervisor::class)) {
-                    Mail::to($email)->send(new \App\Mail\LaporanDitugaskanSupervisor($laporan));
-                } else {
-                    Log::warning('LaporanDitugaskanSupervisor mailable not found; skipping email to ' . $email);
-                }
-            }
-        } catch (\Exception $e) {
-            Log::error("Error sending notification email: " . $e->getMessage());
-        }
-    }
-
-    private function detectChanges(array $oldData, array $newData, string $oldArea, string $oldPenanggungJawab): array
+    /**
+     * Detect changes between old and new report data
+     * 
+     * @param array $oldData
+     * @param array $newData
+     * @param string $oldArea
+     * @param string $oldPenanggungJawab
+     * @return array
+     */
+    private function detectChanges($oldData, $newData, $oldArea, $oldPenanggungJawab)
     {
         $perubahan = [];
 
-        $fieldNames = [
-            'problem_category_id' => 'Problem Category',
-            'deskripsi_masalah' => 'Deskripsi Masalah',
-            'tenggat_waktu' => 'Tenggat Waktu',
-        ];
-
+        // Check area change
         if ($oldData['area_id'] != $newData['area_id']) {
-            $newArea = Area::find($newData['area_id'])->name ?? '-';
-            $perubahan['Area'] = [
+            $newArea = \App\Models\Area::find($newData['area_id']);
+            $perubahan[] = [
+                'field' => 'Area',
                 'old' => $oldArea,
-                'new' => $newArea
+                'new' => $newArea ? $newArea->name : '-'
             ];
         }
 
-        if ($oldData['penanggung_jawab_id'] != $newData['penanggung_jawab_id']) {
-            $newPJ = PenanggungJawab::find($newData['penanggung_jawab_id'])->name ?? '-';
-            $perubahan['Penanggung Jawab'] = [
+        // Check PIC change
+        if ($oldData['penanggung_jawab_id'] != ($newData['penanggung_jawab_id'] ?? null)) {
+            $newPenanggungJawab = $newData['penanggung_jawab_id'] 
+                ? \App\Models\PenanggungJawab::find($newData['penanggung_jawab_id']) 
+                : null;
+            $perubahan[] = [
+                'field' => 'Person in Charge',
                 'old' => $oldPenanggungJawab,
-                'new' => $newPJ
+                'new' => $newPenanggungJawab ? $newPenanggungJawab->name : '-'
             ];
         }
 
-        foreach (['problem_category_id', 'deskripsi_masalah'] as $field) {
-            if ($oldData[$field] != $newData[$field]) {
-                $perubahan[$fieldNames[$field]] = [
-                    'old' => $oldData[$field],
-                    'new' => $newData[$field]
-                ];
-            }
+        // Check problem category change
+        if ($oldData['problem_category_id'] != $newData['problem_category_id']) {
+            $oldCategory = \App\Models\ProblemCategory::find($oldData['problem_category_id']);
+            $newCategory = \App\Models\ProblemCategory::find($newData['problem_category_id']);
+            $perubahan[] = [
+                'field' => 'Problem Category',
+                'old' => $oldCategory ? $oldCategory->name : '-',
+                'new' => $newCategory ? $newCategory->name : '-'
+            ];
         }
 
+        // Check description change
+        if ($oldData['deskripsi_masalah'] != $newData['deskripsi_masalah']) {
+            $perubahan[] = [
+                'field' => 'Description',
+                'old' => $oldData['deskripsi_masalah'],
+                'new' => $newData['deskripsi_masalah']
+            ];
+        }
+
+        // Check deadline change
         if ($oldData['tenggat_waktu'] != $newData['tenggat_waktu']) {
-            $perubahan[$fieldNames['tenggat_waktu']] = [
-                'old' => Carbon::parse($oldData['tenggat_waktu'])->format('d/m/Y'),
-                'new' => Carbon::parse($newData['tenggat_waktu'])->format('d/m/Y')
+            $perubahan[] = [
+                'field' => 'Deadline',
+                'old' => \Carbon\Carbon::parse($oldData['tenggat_waktu'])->format('d/m/Y'),
+                'new' => \Carbon\Carbon::parse($newData['tenggat_waktu'])->format('d/m/Y')
             ];
         }
 
         return $perubahan;
     }
 
-    private function sendEditNotifications($laporan, array $perubahan)
-    {
-        try {
-            $recipients = [];
-
-            if ($laporan->penanggungJawab && $laporan->penanggungJawab->email) {
-                $recipients[] = $laporan->penanggungJawab->email;
-            } elseif ($laporan->area) {
-                foreach ($laporan->area->penanggungJawabs as $pj) {
-                    if ($pj->email) {
-                        $recipients[] = $pj->email;
-                    }
-                }
-            }
-
-            $recipients = array_unique($recipients);
-            foreach ($recipients as $email) {
-                if (class_exists(\App\Mail\LaporanDieditSupervisor::class)) {
-                    Mail::to($email)->send(new \App\Mail\LaporanDieditSupervisor($laporan, $perubahan));
-                } else {
-                    Log::warning('LaporanDieditSupervisor mailable not found; skipping email to ' . $email);
-                }
-            }
-        } catch (\Exception $e) {
-            Log::error("Error sending edit notification email: " . $e->getMessage());
-        }
-    }
 }
-
-

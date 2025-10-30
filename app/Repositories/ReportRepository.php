@@ -42,7 +42,7 @@ class ReportRepository
     public function getInProgress(): Collection
     {
         return Laporan::with(['area', 'penanggungJawab', 'penyelesaian', 'problemCategory'])
-            ->where('status', '!=', 'Selesai')
+            ->where('status', '!=', 'Completed')
             ->orderBy('Tanggal', 'desc')
             ->get();
     }
@@ -55,7 +55,7 @@ class ReportRepository
     public function getCompleted(): Collection
     {
         return Laporan::with(['area', 'penanggungJawab', 'penyelesaian', 'problemCategory'])
-            ->where('status', 'Selesai')
+            ->where('status', 'Completed')
             ->orderBy('Tanggal', 'desc')
             ->get();
     }

@@ -57,14 +57,14 @@
                             <td data-workgroup="{{ $department->workgroup ?: '-' }}">{{ $department->workgroup ?: '-' }}</td>
                             <td data-email="{{ $department->email ?: '-' }}">{{ $department->email ?: '-' }}</td>
                             <td class="text-center">
-                                <a href="{{ route('master-data.department.show', $department) }}" class="btn btn-sm btn-info no-row-nav">
+                                <a href="{{ route('master-data.department.show', ['department' => $department]) }}" class="btn btn-sm btn-info no-row-nav">
                                     <i class="fas fa-eye"></i>
                                 </a>
-                                <a href="{{ route('master-data.department.edit', $department) }}" class="btn btn-sm btn-warning no-row-nav">
+                                <a href="{{ route('master-data.department.edit', ['department' => $department]) }}" class="btn btn-sm btn-warning no-row-nav">
                                     <i class="fas fa-edit"></i>
                                 </a>
                                 <button type="button" class="btn btn-sm btn-danger no-row-nav delete-dept-btn"
-                                        data-action="{{ route('master-data.department.destroy', $department) }}"
+                                        data-action="{{ route('master-data.department.destroy', ['department' => $department]) }}"
                                         data-name="{{ $department->departemen ?? $department->name }}">
                                     <i class="fas fa-trash"></i>
                                 </button>
@@ -112,14 +112,14 @@
                                             </div>
                                         </div>
                                         <div class="mobile-action-buttons p-3 pt-0">
-                                            <a href="{{ route('master-data.department.show', $department) }}" class="btn btn-sm btn-info mobile-action-btn">
+                                            <a href="{{ route('master-data.department.show', ['department' => $department]) }}" class="btn btn-sm btn-info mobile-action-btn">
                                                 <i class="fas fa-eye"></i> View
                                             </a>
-                                            <a href="{{ route('master-data.department.edit', $department) }}" class="btn btn-sm btn-warning mobile-action-btn">
+                                            <a href="{{ route('master-data.department.edit', ['department' => $department]) }}" class="btn btn-sm btn-warning mobile-action-btn">
                                                 <i class="fas fa-edit"></i> Edit
                                             </a>
                                             <button type="button" class="btn btn-sm btn-danger mobile-action-btn delete-dept-btn"
-                                                    data-action="{{ route('master-data.department.destroy', $department) }}"
+                                                    data-action="{{ route('master-data.department.destroy', ['department' => $department]) }}"
                                                     data-name="{{ $department->departemen ?? $department->name }}">
                                                 <i class="fas fa-trash"></i> Delete
                                             </button>

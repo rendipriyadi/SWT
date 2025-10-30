@@ -159,10 +159,21 @@
                 <td>{{ $item->problemCategory->name ?? '-' }}</td>
                 <td class="deskripsi-cell">
                     <span class="deskripsi-text">{{ $item->deskripsi_masalah }}</span>
-                    @if(!empty($item->validPhotos))
+                    @if(!empty($item->Foto) && is_array($item->Foto))
                         <div class="foto-grid">
-                            @foreach($item->validPhotos as $foto)
-                                <img src="{{ asset('images/reports/' . $foto) }}" class="foto-masalah">
+                            @foreach($item->Foto as $foto)
+                                @php
+                                    $imagePath = public_path('images/reports/' . $foto);
+                                    if (file_exists($imagePath)) {
+                                        $imageData = base64_encode(file_get_contents($imagePath));
+                                        $imageSrc = 'data:image/' . pathinfo($foto, PATHINFO_EXTENSION) . ';base64,' . $imageData;
+                                    } else {
+                                        $imageSrc = '';
+                                    }
+                                @endphp
+                                @if($imageSrc)
+                                    <img src="{{ $imageSrc }}" class="foto-masalah">
+                                @endif
                             @endforeach
                         </div>
                     @else
@@ -172,10 +183,21 @@
                 <td class="deskripsi-cell">
                     @if($item->penyelesaian)
                         <span class="deskripsi-text">{{ $item->penyelesaian->deskripsi_penyelesaian }}</span>
-                        @if($item->penyelesaian && !empty($item->penyelesaian->validPhotos))
+                        @if($item->penyelesaian && !empty($item->penyelesaian->Foto) && is_array($item->penyelesaian->Foto))
                             <div class="foto-grid">
-                                @foreach($item->penyelesaian->validPhotos as $foto)
-                                    <img src="{{ asset('images/completions/' . $foto) }}" class="foto-masalah">
+                                @foreach($item->penyelesaian->Foto as $foto)
+                                    @php
+                                        $imagePath = public_path('images/completions/' . $foto);
+                                        if (file_exists($imagePath)) {
+                                            $imageData = base64_encode(file_get_contents($imagePath));
+                                            $imageSrc = 'data:image/' . pathinfo($foto, PATHINFO_EXTENSION) . ';base64,' . $imageData;
+                                        } else {
+                                            $imageSrc = '';
+                                        }
+                                    @endphp
+                                    @if($imageSrc)
+                                        <img src="{{ $imageSrc }}" class="foto-masalah">
+                                    @endif
                                 @endforeach
                             </div>
                         @else
@@ -191,7 +213,7 @@
     </table>
 
     <div class="footer">
-        Dicetak pada: {{ now()->format('d/m/Y H:i:s') }}
+        Dicetak pada: {{ now()->timezone('Asia/Jakarta')->format('d/m/Y H:i:s') }}
     </div>
 </body>
 </html>

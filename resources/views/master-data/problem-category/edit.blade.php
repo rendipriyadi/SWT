@@ -28,7 +28,7 @@
                 </div>
             @endif
 
-            <form action="{{ route('master-data.problem-category.update', $problemCategory) }}" method="POST">
+            <form action="{{ route('master-data.problem-category.update', ['problem_category' => $problemCategory]) }}" method="POST">
                 @csrf
                 @method('PUT')
                 

@@ -24,7 +24,7 @@ class ReportService
     public function createReport(array $data, array $photos = []): Laporan
     {
         $data['Foto'] = $photos;
-        $data['status'] = 'In Progress';
+        $data['status'] = 'Assigned';
         
         return Laporan::create($data);
     }
@@ -79,7 +79,7 @@ class ReportService
         );
 
         // Update report status to completed
-        $this->updateStatus($laporan, 'Selesai');
+        $this->updateStatus($laporan, 'Completed');
 
         return $penyelesaian;
     }
@@ -152,8 +152,8 @@ class ReportService
     {
         return [
             'total' => Laporan::count(),
-            'in_progress' => Laporan::where('status', 'In Progress')->count(),
-            'completed' => Laporan::where('status', 'Selesai')->count(),
+            'in_progress' => Laporan::where('status', 'Assigned')->count(),
+            'completed' => Laporan::where('status', 'Completed')->count(),
         ];
     }
 

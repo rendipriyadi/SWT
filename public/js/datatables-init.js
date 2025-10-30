@@ -40,6 +40,10 @@ $(document).ready(function() {
                 window.initStatusBadges();
             }
             // No column adjustments needed in single-table mode
+        },
+        initComplete: function() {
+            // Set placeholder for search input
+            $('.dataTables_filter input').attr('placeholder', 'Search (area, station, problem)');
         }
     });
 
@@ -68,7 +72,7 @@ $(document).ready(function() {
                     if (cat) d.kategori = cat;
                 },
                 error: function(xhr, status, error) {
-                    console.error('laporanTable AJAX error:', status, error, 'status:', xhr.status, 'response:', xhr.responseText);
+                    // Silent error handling
                 }
             },
             // Remove inline date filter button and its handlers
@@ -471,7 +475,7 @@ $(document).ready(function() {
 
         // Remove any interception of datepicker Clear; allow normal behavior without auto-reset
 
-        // Row click -> open detail modal
+        // Row click -> redirect to detail page
         $('#laporanTable tbody').on('click', 'tr', function(e) {
             // Ignore clicks on interactive controls inside the row and photo modal triggers
             if (
@@ -484,9 +488,16 @@ $(document).ready(function() {
             if (td.length && td.index() === 2) return;
 
             const rowData = laporanTable.row(this).data();
-            if (!rowData) return;
+            
+            if (!rowData || !rowData.encrypted_id) {
+                return;
+            }
 
-            // Fill modal fields
+            // Redirect to detail page
+            window.location.href = '/laporan/' + rowData.encrypted_id;
+            return;
+
+            // OLD: Fill modal fields (disabled)
             const m = document.getElementById('rowDetailModal');
             if (!m) return;
             const setHTML = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html || ''; };

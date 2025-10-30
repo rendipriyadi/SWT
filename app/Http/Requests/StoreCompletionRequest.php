@@ -20,11 +20,11 @@ class StoreCompletionRequest extends FormRequest
     public function rules(): array
     {
         $rules = [
-            'status' => 'required|string|in:In Progress,Selesai',
+            'status' => 'required|string|in:Assigned,Completed',
         ];
 
-        // Additional validation if status is Selesai
-        if ($this->status === 'Selesai') {
+        // Additional validation if status is Completed
+        if ($this->status === 'Completed') {
             $rules['Tanggal'] = 'required|date';
             $rules['deskripsi_penyelesaian'] = 'required|string';
             $rules['Foto'] = 'nullable|array';
@@ -41,7 +41,7 @@ class StoreCompletionRequest extends FormRequest
     {
         return [
             'status.required' => 'Status harus dipilih.',
-            'status.in' => 'Status harus salah satu dari: In Progress, Selesai.',
+            'status.in' => 'Status must be Assigned or Completed.',
             'Tanggal.required' => 'Tanggal penyelesaian harus diisi.',
             'Tanggal.date' => 'Format tanggal tidak valid.',
             'deskripsi_penyelesaian.required' => 'Deskripsi penyelesaian harus diisi.',

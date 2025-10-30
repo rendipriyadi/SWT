@@ -2,6 +2,10 @@
 
 @section('title', 'Buat Laporan Baru')
 
+@php
+    use App\Models\ProblemCategory;
+@endphp
+
 @section('content')
 <div class="container-fluid px-4">
     <div class="page-header mb-4 position-relative">
@@ -97,7 +101,7 @@
                     <label for="problem_category_id" class="form-label fw-semibold">Problem Category <span class="text-danger">*</span></label>
                     <select class="form-select @error('problem_category_id') is-invalid @enderror" id="problem_category_id" name="problem_category_id" required>
                         <option value="">Select Category</option>
-                        @foreach(\App\Models\ProblemCategory::active()->ordered()->get() as $category)
+                        @foreach(ProblemCategory::active()->ordered()->get() as $category)
                             <option value="{{ $category->id }}" {{ old('problem_category_id') == $category->id ? 'selected' : '' }}>
                                 {{ $category->name }}
                             </option>

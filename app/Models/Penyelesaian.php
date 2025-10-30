@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 // SoftDeletes dihapus karena kolom deleted_at telah di-drop
+use App\Models\Laporan;
 
 class Penyelesaian extends Model
 {
@@ -45,6 +46,6 @@ class Penyelesaian extends Model
 
     public function laporan()
     {
-        return $this->belongsTo(\App\Models\laporan::class, 'laporan_id');
+        return $this->belongsTo(Laporan::class, 'laporan_id');
     }
 }

@@ -245,7 +245,7 @@
 
 /* Status badges with icons */
 .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; font-size: 0.85rem; font-weight: 600; border-radius: 999px; line-height: 1.1; white-space: nowrap; min-width: fit-content; }
-.status-in-progress { background:#cfe2ff; color:#084298; border:1px solid #9ec5fe; }
+.status-assigned { background:#cfe2ff; color:#084298; border:1px solid #9ec5fe; }
 .status-completed { background:#d1f7ec; color:#0f5132; border:1px solid #a7e9d6; }
 
 /* Ensure status badges stay in one line */

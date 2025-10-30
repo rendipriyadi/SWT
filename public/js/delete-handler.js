@@ -90,7 +90,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     },
                     error: function(xhr) {
-                        console.error('Delete error:', xhr);
                         // Show error message with details if available
                         let errorMsg = 'An error occurred while deleting the report.';
                         if (xhr.responseJSON && xhr.responseJSON.message) {

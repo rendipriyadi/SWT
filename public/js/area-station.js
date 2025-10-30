@@ -4,43 +4,91 @@ document.addEventListener('DOMContentLoaded', function() {
     const stationSelect = document.getElementById('penanggung_jawab_id');
     const supervisorInput = document.getElementById('supervisor');
 
-    // Fetch-based population from backend
+    // Cache for API responses
+    const stationCache = new Map();
     let fetchedStations = [];
-    async function fetchStations(areaId) {
-        try {
-            const url = window.routes.penanggungJawab.replace(
-                ":areaId",
-                areaId
-            );
+    let currentRequest = null; // Track ongoing request
 
-            const response = await fetch(url);
+    // Fetch-based population from backend using POST (secure + optimized)
+    async function fetchStations(areaId) {
+        // Check cache first
+        if (stationCache.has(areaId)) {
+            return stationCache.get(areaId);
+        }
+
+        // Cancel previous request if still pending
+        if (currentRequest) {
+            currentRequest.abort();
+        }
+
+        try {
+            // Create AbortController for timeout
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+            currentRequest = controller;
+
+            // Get CSRF token
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            
+            const response = await fetch('/api/stations', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ area_id: areaId }),
+                signal: controller.signal
+            });
+
+            clearTimeout(timeoutId);
+            currentRequest = null;
+
             if (!response.ok) throw new Error("Failed to fetch stations");
-            return await response.json();
+            
+            const data = await response.json();
+            
+            // Cache the response
+            stationCache.set(areaId, data);
+            
+            return data;
         } catch (e) {
-            console.error(e);
             return { stations: [], group_members: [] };
         }
     }
 
     // Update station dropdown berdasarkan area yang dipilih
     async function updateStations(areaId) {
-        // Reset station dropdown
-        stationSelect.innerHTML = '<option value="">Select Station</option>';
-        
         // Jika tidak ada area yang dipilih
         if (!areaId) {
+            stationSelect.innerHTML = '<option value="">Select Station</option>';
             supervisorInput.value = '';
+            stationSelect.disabled = false;
             return;
         }
+
+        // Show loading state
+        stationSelect.innerHTML = '<option value="">Loading stations...</option>';
+        stationSelect.disabled = true;
+        
         const data = await fetchStations(areaId);
+        
+        // Reset and populate
+        stationSelect.innerHTML = '<option value="">Select Station</option>';
+        stationSelect.disabled = false;
+        
         supervisorInput.value = (data.group_members || []).join(', ');
         fetchedStations = data.stations || [];
+        
+        // Use DocumentFragment for better performance
+        const fragment = document.createDocumentFragment();
         fetchedStations.forEach(station => {
             const option = document.createElement('option');
             option.value = station.id;
             option.textContent = station.station;
-            stationSelect.appendChild(option);
+            fragment.appendChild(option);
         });
+        stationSelect.appendChild(fragment);
         
         // Jika ini adalah form edit, coba pilih station yang tersimpan
         const selectedStation = stationSelect.getAttribute('data-selected');
@@ -84,15 +132,15 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // On submit, if station is not chosen, avoid sending an empty value
-    const form = document.getElementById('reportForm');
-    if (form && stationSelect) {
-        form.addEventListener('submit', function() {
-            if (!stationSelect.value) {
-                stationSelect.removeAttribute('name');
-            }
-        });
-    }
+    // Station field is nullable in validation, no need to remove name attribute
+    // const form = document.getElementById('reportForm');
+    // if (form && stationSelect) {
+    //     form.addEventListener('submit', function() {
+    //         if (!stationSelect.value) {
+    //             stationSelect.removeAttribute('name');
+    //         }
+    //     });
+    // }
     
     // Initialize form if values exist (important for edit form and validation errors)
     if (areaSelect && areaSelect.value) {

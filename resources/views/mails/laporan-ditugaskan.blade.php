@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Notifikasi Laporan Baru | Safety Walk and Talk</title>
+    <title>New Safety Walk and Talk Report</title>
 </head>
 
 <body style="margin: 0; padding: 0; background-color: #ffffff; font-family: Arial, sans-serif; line-height: 1.6;">
@@ -18,38 +18,40 @@
                             <p style="font-size: 8pt; color: white; margin: 28px 0;">Safety Walk and Talk</p>
                             <p
                                 style="font-size: 20pt; font-weight: bold; letter-spacing: 1pt; color: white; margin: 0;">
-                                Notifikasi Laporan Baru</p>
+                                New Report Assigned</p>
                         </td>
                     </tr>
                     <tr>
                         <td style="background-color: #ffffff; padding: 30px; font-size: 12px; color: black;">
                             <p style="font-weight: bold; margin: 0 0 10px;">
-                                Halo Tim Safety
+                                @if($laporan->penanggungJawab)
+                                    Hello, {{ $laporan->penanggungJawab->name }}
+                                @else
+                                    Hello, {{ $laporan->area ? implode(', ', $laporan->area->penanggungJawabs->pluck('name')->toArray()) : '' }}
+                                @endif
                             </p>
                             <p style="margin: 0 0 10px;">
-                                Terdapat laporan baru yang telah dibuat dalam sistem Safety Walk and Talk dengan detail sebagai berikut:
+                                You have been assigned to handle a new report with the following details:
                             </p>
                             <ul style="padding-left: 20px; margin-top: 10px; color: black;">
-                                <li><strong>Kategori:</strong> {{ $laporan->problemCategory->name ?? '-' }}</li>
-                                <li><strong>Deskripsi:</strong> {{ \Illuminate\Support\Str::limit($laporan->deskripsi_masalah, 150, '...') }}</li>
-                                <li><strong>Tenggat Waktu:</strong> {{ \Carbon\Carbon::parse($laporan->tenggat_waktu)->locale('en')->isoFormat('dddd, D MMMM YYYY') }}</li>
+                                <li><strong>Category:</strong> {{ $laporan->problemCategory->name ?? '-' }}</li>
+                                <li><strong>Description:</strong> {{ \Illuminate\Support\Str::limit($laporan->deskripsi_masalah, 150, '...') }}</li>
+                                <li><strong>Deadline:</strong> {{ \Carbon\Carbon::parse($laporan->tenggat_waktu)->locale('en')->isoFormat('dddd, D MMMM YYYY') }}</li>
                                 <li><strong>Area:</strong> {{ $laporan->area ? $laporan->area->name : '-' }}</li>
                                 @if($laporan->penanggungJawab)
                                     <li><strong>Station:</strong> {{ $laporan->penanggungJawab->station }}</li>
-                                    <li><strong>Penanggung Jawab:</strong> {{ $laporan->penanggungJawab->name }}</li>
                                 @endif
-                                <li><strong>Status:</strong> {{ $laporan->status }}</li>
                             </ul>
                             <p style="margin: 0 0 10px;">
-                                Silakan kunjungi sistem Safety Walk and Talk untuk melihat lebih detail:
+                                Please visit the Safety Walk and Talk system to view more details and complete this report:
                             </p>
                             <p style="margin: 0 0 10px;">                                
-                                <a href="{{ url('/dashboard') }}" style="color: navy; text-decoration: underline;">Buka Aplikasi Safety Walk and Talk</a> 
+                                <a href="{{ route('laporan.show', $encryptedId) }}" style="color: navy; text-decoration: underline;">Open Safety Walk and Talk Application</a> 
                             </p>
                             <p style="margin: 0 0 10px;">
-                                Terima kasih atas perhatian dan kerjasamanya.<br />JANGAN MEMBALAS email ini karena tidak dikelola.
+                                Thank you for your attention and cooperation.<br />DO NOT REPLY to this email as it is not monitored.
                             </p>
-                            <p style="margin: 0;">Salam,<br /><br /><br />PT Siemens Indonesia</p>
+                            <p style="margin: 0;">Best regards,<br /><br /><br />PT Siemens Indonesia</p>
                         </td>
                     </tr>
                     <tr>

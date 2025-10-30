@@ -3,43 +3,45 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Crypt;
+use App\Models\Laporan;
 
 class DepartemenSupervisor extends Model
 {
     protected $table = 'departemen_supervisors';
-    protected $fillable = ['departemen', 'supervisor', 'workgroup', 'email', 'slug'];
+    protected $fillable = ['departemen', 'supervisor', 'workgroup', 'email'];
 
     /**
      * Get the route key for the model.
      */
     public function getRouteKeyName()
     {
-        return 'slug';
+        return 'id';
     }
 
     /**
-     * Boot the model.
+     * Get the route key for the model (encrypted).
      */
-    protected static function boot()
+    public function getRouteKey()
     {
-        parent::boot();
+        return Crypt::encrypt($this->getKey());
+    }
 
-        static::creating(function ($department) {
-            if (empty($department->slug)) {
-                $department->slug = Str::slug($department->supervisor . '-' . $department->departemen);
-            }
-        });
-
-        static::updating(function ($department) {
-            if (empty($department->slug)) {
-                $department->slug = Str::slug($department->supervisor . '-' . $department->departemen);
-            }
-        });
+    /**
+     * Resolve the route key from encrypted value.
+     */
+    public function resolveRouteBinding($value, $field = null)
+    {
+        try {
+            $id = Crypt::decrypt($value);
+            return $this->where($field ?: $this->getRouteKeyName(), $id)->first();
+        } catch (\Exception $e) {
+            return null;
+        }
     }
 
     public function laporan()
     {
-        return $this->hasMany(laporan::class, 'departemen_supervisor_id', 'id');
+        return $this->hasMany(Laporan::class, 'departemen_supervisor_id', 'id');
     }
 }

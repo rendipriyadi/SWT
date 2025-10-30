@@ -25,5 +25,10 @@ class AppServiceProvider extends ServiceProvider
         
         // Pastikan format untuk bulan dan hari tersedia dalam bahasa Indonesia
         setlocale(LC_TIME, 'id_ID.utf8', 'id_ID', 'id');
+        
+        // Force HTTPS in production for correct email URLs
+        if (config('app.env') === 'production') {
+            \URL::forceScheme('https');
+        }
     }
 }

@@ -2,6 +2,11 @@
 
 @section('title', 'Report')
 
+@php
+    use App\Models\Area;
+    use App\Models\ProblemCategory;
+@endphp
+
 @section('content')
 <div class="container-fluid px-4">
     <div class="page-header mb-3 d-flex align-items-center justify-content-between">
@@ -90,6 +95,7 @@
         <div class="modal fade" id="modalFotoFull" tabindex="-1" aria-labelledby="modalFotoFullLabel" aria-hidden="true">
           <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content bg-transparent border-0">
+              <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3" data-bs-dismiss="modal" aria-label="Close" style="z-index: 1060; opacity: 1;"></button>
               <div class="modal-body text-center p-0">
                 <div id="photoCarousel" class="carousel slide">
                   <div class="carousel-inner"></div>
@@ -403,8 +409,8 @@
 
 <script>
 // Data for filter dropdowns
-window.areasData = @json(\App\Models\Area::all(['id', 'name']));
-window.categoriesData = @json(\App\Models\ProblemCategory::active()->ordered()->get(['id', 'name']));
+window.areasData = @json(Area::all(['id', 'name']));
+window.categoriesData = @json(ProblemCategory::active()->ordered()->get(['id', 'name']));
 
 // Mobile collapse handler for Reports - Manual toggle with auto-close
 $(document).on('click', '#laporanTableMobile .mobile-table-row', function(e) {

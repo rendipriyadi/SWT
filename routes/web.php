@@ -2,8 +2,8 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\HistoryController;
-use App\Http\Controllers\MasterData\DepartmentController;
 use App\Http\Controllers\MasterData\AreaController;
+use App\Http\Controllers\MasterData\DepartmentController;
 use App\Http\Controllers\MasterData\ProblemCategoryController;
 
 /*
@@ -28,21 +28,24 @@ Route::prefix('laporan')->name('laporan.')->group(function () {
     Route::get('/', [ReportController::class, 'index'])->name('index');
     Route::get('/create', [ReportController::class, 'create'])->name('create');
     Route::post('/', [ReportController::class, 'store'])->name('store');
-    
-    // Edit & Update
-    Route::get('/{laporan}/edit', [ReportController::class, 'edit'])->name('edit');
-    Route::put('/{laporan}', [ReportController::class, 'update'])->name('update');
-    Route::patch('/{laporan}/update-status', [ReportController::class, 'updateStatus'])->name('update-status');
-    
-    // Delete
-    Route::delete('/{laporan}', [ReportController::class, 'destroy'])->name('destroy');
-    
-    // Completion (Tindakan)
-    Route::get('/{laporan}/tindakan', [ReportController::class, 'tindakan'])->name('tindakan');
-    Route::post('/{laporan}/tindakan', [ReportController::class, 'storeTindakan'])->name('storeTindakan');
-    
-    // AJAX Endpoints
-    Route::get('/{laporan}/penyelesaian', [ReportController::class, 'getPenyelesaian'])->name('penyelesaian');
+
+    // Edit & Update (use {id} for encrypted ID, no model binding)
+    Route::get('/{id}/edit', [ReportController::class, 'edit'])->name('edit');
+    Route::put('/{id}', [ReportController::class, 'update'])->name('update');
+    Route::patch('/{id}/update-status', [ReportController::class, 'updateStatus'])->name('update-status');
+
+    // Completion (Tindakan) - use {id} for encrypted ID
+    Route::get('/{id}/tindakan', [ReportController::class, 'tindakan'])->name('tindakan');
+    Route::post('/{id}/tindakan', [ReportController::class, 'storeTindakan'])->name('storeTindakan');
+
+    // AJAX Endpoints - use {id} for encrypted ID
+    Route::get('/{id}/penyelesaian', [ReportController::class, 'getPenyelesaian'])->name('penyelesaian');
+
+    // Delete - use {id} for encrypted ID
+    Route::delete('/{id}', [ReportController::class, 'destroy'])->name('destroy');
+
+    // Show Detail LAST (catch-all for single parameter)
+    Route::get('/{id}', [ReportController::class, 'show'])->name('show');
 });
 
 // ============================================================================
@@ -58,20 +61,20 @@ Route::prefix('sejarah')->name('sejarah.')->group(function () {
 // AJAX HELPERS
 // ============================================================================
 Route::get('/supervisor/{id}', [ReportController::class, 'getSupervisor'])->name('supervisor');
-Route::get('/penanggung-jawab/{areaId}', [ReportController::class, 'getPenanggungJawab'])->name('penanggung.jawab');
+Route::post('/api/stations', [ReportController::class, 'getPenanggungJawab'])->name('penanggung.jawab');
 
 // ============================================================================
 // MASTER DATA (Department, Area, Problem Category)
 // ============================================================================
-Route::prefix('master-data')->name('master-data.')->group(function () {
-    // Department Management
-    Route::resource('department', DepartmentController::class)->parameters(['department' => 'department:slug']);
-    Route::post('department/{department:slug}/restore', [DepartmentController::class, 'restore'])->name('department.restore');
-    Route::delete('department/{department:slug}/force-delete', [DepartmentController::class, 'forceDelete'])->name('department.force-delete');
-    
-    // Area Management
-    Route::resource('area', AreaController::class)->parameters(['area' => 'area:slug']);
-    
-    // Problem Category Management
-    Route::resource('problem-category', ProblemCategoryController::class)->parameters(['problem-category' => 'problem-category:slug']);
-});
+    Route::prefix('master-data')->name('master-data.')->group(function () {
+        // Department Management
+        Route::resource('department', DepartmentController::class);
+        Route::post('department/{department}/restore', [DepartmentController::class, 'restore'])->name('department.restore');
+        Route::delete('department/{department}/force-delete', [DepartmentController::class, 'forceDelete'])->name('department.force-delete');
+
+        // Area Management
+        Route::resource('area', AreaController::class);
+
+        // Problem Category Management
+        Route::resource('problem-category', ProblemCategoryController::class);
+    });

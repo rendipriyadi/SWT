@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!openCameraBtn || !cameraContainer || !video || !canvas || !captureBtn || !closeCameraBtn || !fotoInput) return;
 
     function showError(msg) {
-        try { alert(msg); } catch (_) { console.error(msg); }
+        try { alert(msg); } catch (_) { }
     }
 
     async function startCamera() {

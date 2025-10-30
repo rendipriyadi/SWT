@@ -146,7 +146,6 @@ document.addEventListener('DOMContentLoaded', function() {
         // Find modal element
         const modal = document.getElementById('descriptionModal');
         if (!modal) {
-            console.error('Modal element not found!');
             alert('Description detail modal not found!');
             return;
         }
@@ -154,7 +153,6 @@ document.addEventListener('DOMContentLoaded', function() {
         // Find modal body
         const modalBody = document.getElementById('descriptionModalBody');
         if (!modalBody) {
-            console.error('Modal body element not found!');
             alert('Modal body element not found!');
             return;
         }
@@ -340,7 +338,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 modalBody.html('<div class="alert alert-danger mb-0">Completion data not found.</div>');
             }
         }).fail(function(xhr, status, error) {
-            console.error('Error:', error);
             modalBody.html('<div class="alert alert-danger mb-0">Failed to retrieve completion data. Please try again.</div>');
         });
     });

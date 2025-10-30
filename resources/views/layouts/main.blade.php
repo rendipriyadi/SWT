@@ -1130,9 +1130,8 @@
     <!-- Global Route Configuration for JavaScript -->
     <script>
         window.routes = {
-            penanggungJawab: "{{ route('penanggung.jawab', ['areaId' => ':areaId']) }}",
             supervisor: "{{ route('supervisor', ['id' => ':id']) }}",
-            penyelesaian: "{{ route('laporan.penyelesaian', ['laporan' => ':encryptedId']) }}"
+            penyelesaian: "{{ route('laporan.penyelesaian', ['id' => ':encryptedId']) }}"
         };
     </script>
     

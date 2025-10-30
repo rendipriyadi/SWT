@@ -45,14 +45,7 @@
             <div class="row">
                 <div class="col-md-4">
                     <h6 class="fw-bold">Status:</h6>
-                    @php
-                        $statusMap = [
-                            'Ditugaskan' => 'Assigned',
-                            'Selesai' => 'Completed',
-                        ];
-                        $statusEn = $statusMap[$laporan->status] ?? $laporan->status;
-                    @endphp
-                    <p>{{ $statusEn }}</p>
+                    <p>{{ $laporan->status }}</p>
                 </div>
                 <div class="col-md-4">
                     <h6 class="fw-bold">Problem Category:</h6>
@@ -117,9 +110,12 @@
             @csrf
             <div class="mb-3">
                 <label for="Tanggal" class="form-label fw-semibold">Completion Date <span class="text-danger">*</span></label>
-                <input type="date" class="form-control @error('Tanggal') is-invalid @enderror" id="Tanggal" name="Tanggal" value="{{ old('Tanggal') }}" required>
+                <div class="input-group">
+                    <input type="text" class="form-control elegant-datepicker completion-date @error('Tanggal') is-invalid @enderror" id="Tanggal" name="Tanggal" value="{{ old('Tanggal') }}" placeholder="Select date..." required readonly>
+                    <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                </div>
                 @error('Tanggal')
-                    <div class="invalid-feedback">{{ $message }}</div>
+                    <div class="invalid-feedback d-block">{{ $message }}</div>
                 @enderror
             </div>
             <!-- Jika menampilkan tanggal yang sudah ada: -->
@@ -148,22 +144,18 @@
             </div>
             <div class="mb-3">
                 <label for="deskripsi_penyelesaian" class="form-label">Completion Description:</label>
-                <textarea class="form-control @error('deskripsi_penyelesaian') is-invalid @enderror" id="deskripsi_penyelesaian" name="deskripsi_penyelesaian" rows="3">{{ old('deskripsi_penyelesaian') }}</textarea>
+                <textarea class="form-control @error('deskripsi_penyelesaian') is-invalid @enderror" id="deskripsi_penyelesaian" name="deskripsi_penyelesaian" rows="3" required>{{ old('deskripsi_penyelesaian') }}</textarea>
                 @error('deskripsi_penyelesaian')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
             </div>
-            <div class="mb-3">
-                <label for="status" class="form-label">Status:</label>
-                <select class="form-control @error('status') is-invalid @enderror" id="status" name="status" required>
-                    <option value="Ditugaskan" {{ old('status', $laporan->status) == 'Ditugaskan' ? 'selected' : '' }}>Assigned</option>
-                    <option value="Selesai" {{ old('status', $laporan->status) == 'Selesai' ? 'selected' : '' }}>Completed</option>
-                </select>
-                @error('status')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
-            </div>
-            <button type="submit" class="btn btn-primary mt-4">Save</button>
+            
+            <!-- Hidden status field - always set to Completed -->
+            <input type="hidden" name="status" value="Completed">
+            
+            <button type="submit" class="btn btn-success mt-4">
+                <i class="fas fa-check-circle me-2"></i>Mark as Completed
+            </button>
         </form>
     </div>
 </div>
@@ -256,46 +248,21 @@ document.addEventListener('DOMContentLoaded', function() {
 <style>
 /* Keep only minimal tweaks for the tindakan datepicker; let global elegant styles handle positioning */
 .input-group-text { cursor: pointer; }
+/* Completion date input should show pointer cursor (click) not text cursor */
+.completion-date { cursor: pointer !important; }
 </style>
 @endpush
 
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const statusSelect = document.getElementById('status');
     const tanggalInput = document.getElementById('Tanggal');
     const deskripsiInput = document.getElementById('deskripsi_penyelesaian');
     const fotoInput = document.getElementById('Foto');
 
-    function updateRequiredFields() {
-        if (statusSelect.value === 'Selesai') {
-            tanggalInput.required = true;
-            deskripsiInput.required = true;
-        } else {
-            tanggalInput.required = false;
-            deskripsiInput.required = false;
-        }
-    }
-
-    statusSelect.addEventListener('change', updateRequiredFields);
-    updateRequiredFields(); // initial
-
-    // --- Simple date validation for Completion Date ---
-    if (tanggalInput) {
-        tanggalInput.addEventListener('change', function() {
-            const selectedDate = new Date(this.value);
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            
-            if (selectedDate < today) {
-                this.setCustomValidity('Completion date cannot be in the past');
-                this.classList.add('is-invalid');
-            } else {
-                this.setCustomValidity('');
-                this.classList.remove('is-invalid');
-            }
-        });
-    }
+    // All fields are required since status is always "Completed"
+    // Elegant datepicker will auto-initialize via elegant-datepicker.js
+    // The .completion-date class triggers minDate = today automatically
     
     // Foto preview dan kamera
     const previewContainer = document.getElementById('foto-preview-container');

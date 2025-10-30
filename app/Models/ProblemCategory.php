@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Crypt;
 
 class ProblemCategory extends Model
 {
@@ -15,8 +15,7 @@ class ProblemCategory extends Model
         'description',
         'color',
         'is_active',
-        'sort_order',
-        'slug'
+        'sort_order'
     ];
 
     protected $casts = [
@@ -29,27 +28,28 @@ class ProblemCategory extends Model
      */
     public function getRouteKeyName()
     {
-        return 'slug';
+        return 'id';
     }
 
     /**
-     * Boot the model.
+     * Get the route key for the model (encrypted).
      */
-    protected static function boot()
+    public function getRouteKey()
     {
-        parent::boot();
+        return Crypt::encrypt($this->getKey());
+    }
 
-        static::creating(function ($category) {
-            if (empty($category->slug)) {
-                $category->slug = Str::slug($category->name);
-            }
-        });
-
-        static::updating(function ($category) {
-            if (empty($category->slug)) {
-                $category->slug = Str::slug($category->name);
-            }
-        });
+    /**
+     * Resolve the route key from encrypted value.
+     */
+    public function resolveRouteBinding($value, $field = null)
+    {
+        try {
+            $id = Crypt::decrypt($value);
+            return $this->where($field ?: $this->getRouteKeyName(), $id)->first();
+        } catch (\Exception $e) {
+            return null;
+        }
     }
 
     /**

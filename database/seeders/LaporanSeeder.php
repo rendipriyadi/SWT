@@ -31,7 +31,7 @@ class LaporanSeeder extends Seeder
 
         $this->command->info("Generating sample laporan with " . count($problemCategoryIds) . " problem categories...");
 
-        // Generate 60 laporan In Progress
+        // Generate 60 laporan Assigned (in progress)
         for ($i = 0; $i < 60; $i++) {
             $areaId = $faker->randomElement($areaIds);
             $penanggungJawabId = $this->getRandomPenanggungJawabForArea($areaId);
@@ -44,13 +44,13 @@ class LaporanSeeder extends Seeder
                 'problem_category_id' => $faker->randomElement($problemCategoryIds),
                 'deskripsi_masalah' => $faker->paragraph(2),
                 'tenggat_waktu' => $faker->dateTimeBetween('now', '+1 month'),
-                'status' => 'In Progress',
+                'status' => 'Assigned',
                 'created_at' => $faker->dateTimeBetween('-2 months', 'now'),
                 'updated_at' => now()
             ]);
         }
 
-        // Generate 40 laporan Selesai dengan Penyelesaian
+        // Generate 40 laporan Completed dengan Penyelesaian
         for ($i = 0; $i < 40; $i++) {
             $areaId = $faker->randomElement($areaIds);
             $penanggungJawabId = $this->getRandomPenanggungJawabForArea($areaId);
@@ -64,7 +64,7 @@ class LaporanSeeder extends Seeder
                 'problem_category_id' => $faker->randomElement($problemCategoryIds),
                 'deskripsi_masalah' => $faker->paragraph(2),
                 'tenggat_waktu' => $faker->dateTimeBetween($createdAt, '+1 month'),
-                'status' => 'Selesai',
+                'status' => 'Completed',
                 'created_at' => $createdAt,
                 'updated_at' => now()
             ]);

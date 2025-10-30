@@ -7,23 +7,31 @@ document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('[data-status]').forEach(el => {
             const raw = (el.getAttribute('data-status') || '').toLowerCase();
             let variant = '';
-            if (raw === 'in progress') variant = 'status-in-progress';
-            else if (raw === 'selesai' || raw === 'completed') variant = 'status-completed';
-            else if (raw === 'pending') variant = 'status-pending';
-            else if (raw === 'danger' || raw === 'critical') variant = 'status-danger';
+            let label = '';
+            
+            if (raw === 'assigned') {
+                variant = 'status-assigned';
+                label = 'ASSIGNED';
+            } else if (raw === 'completed') {
+                variant = 'status-completed';
+                label = 'COMPLETED';
+            } else if (raw === 'pending') {
+                variant = 'status-pending';
+                label = 'PENDING';
+            } else if (raw === 'danger' || raw === 'critical') {
+                variant = 'status-danger';
+                label = 'DANGER';
+            }
 
             // Ensure base class
             el.classList.add('status-badge');
 
             // Remove old variants and apply new
             el.classList.remove('badge-ditugaskan','badge-selesai','badge-pending','badge-danger','badge','bg-warning','bg-success','bg-info');
-            ['status-assigned','status-completed','status-pending','status-danger'].forEach(c => el.classList.remove(c));
-            if (variant) el.classList.add(variant);
-
-            // Compress text label for in-progress to save space on small columns
-            const currentText = (el.textContent || '').trim();
-            if (variant === 'status-in-progress' && currentText.length > 0) {
-                el.textContent = 'PROCESS';
+            ['status-assigned','status-completed','status-pending','status-danger','status-in-progress'].forEach(c => el.classList.remove(c));
+            if (variant) {
+                el.classList.add(variant);
+                el.textContent = label;
             }
         });
     }
@@ -32,11 +40,20 @@ document.addEventListener('DOMContentLoaded', function() {
     window.createStatusBadge = function(status) {
         const text = String(status || '');
         const lc = text.toLowerCase();
-        let variant = 'status-in-progress'; // Default to in-progress for new reports
-        if (lc === 'in progress') variant = 'status-in-progress';
-        else if (lc === 'selesai' || lc === 'completed') variant = 'status-completed';
-        else if (lc === 'danger' || lc === 'critical') variant = 'status-danger';
-        const label = variant === 'status-in-progress' ? 'PROCESS' : text;
+        let variant = 'status-assigned'; // Default to assigned for new reports
+        let label = 'ASSIGNED';
+        
+        if (lc === 'assigned') {
+            variant = 'status-assigned';
+            label = 'ASSIGNED';
+        } else if (lc === 'completed') {
+            variant = 'status-completed';
+            label = 'COMPLETED';
+        } else if (lc === 'danger' || lc === 'critical') {
+            variant = 'status-danger';
+            label = 'DANGER';
+        }
+        
         return `<span class="status-badge ${variant}" data-status="${lc}">${label}</span>`;
     }
 

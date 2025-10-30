@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\HandlesLaporan;
+use App\Http\Library\SWTEmailNotifications;
 use App\Services\ReportService;
 use App\Services\FileUploadService;
 use App\Repositories\ReportRepository;
@@ -13,33 +14,47 @@ use Illuminate\Http\Request;
 use App\Models\Laporan;
 use App\Models\Area;
 use App\Models\PenanggungJawab;
+use App\Models\ProblemCategory;
 use Yajra\DataTables\Facades\DataTables;
 use Carbon\Carbon;
-
 class ReportController extends Controller
 {
-    use HandlesLaporan;
+    use HandlesLaporan, SWTEmailNotifications;
 
     protected $reportService;
-    protected $fileUploadService;
     protected $reportRepository;
+    protected $fileUploadService;
 
     public function __construct(
         ReportService $reportService,
-        FileUploadService $fileUploadService,
-        ReportRepository $reportRepository
+        ReportRepository $reportRepository,
+        FileUploadService $fileUploadService
     ) {
         $this->reportService = $reportService;
-        $this->fileUploadService = $fileUploadService;
         $this->reportRepository = $reportRepository;
+        $this->fileUploadService = $fileUploadService;
+    }
+
+    /**
+     * Helper method to decrypt encrypted ID and get Laporan model
+     */
+    private function getLaporanFromEncryptedId($encryptedId)
+    {
+        try {
+            // Use Laravel's decrypt() since we use encrypt() in DataTables
+            $id = decrypt($encryptedId);
+            return Laporan::findOrFail($id);
+        } catch (\Exception $e) {
+            \Log::error('Failed to decrypt report ID: ' . $e->getMessage());
+            abort(404, 'Report not found');
+        }
     }
 
     public function dashboard()
     {
-        if (!isset($_SERVER['HTTPS'])) {
-            $_SERVER['HTTPS'] = 'off';
-        }
-        \SharedManager::checkAuthToModule(17);
+        //     $_SERVER['HTTPS'] = 'off';
+        // }
+        // \SharedManager::checkAuthToModule(17);
         
         // Get statistics from service
         $stats = $this->reportService->getDashboardStats();
@@ -49,7 +64,7 @@ class ReportController extends Controller
         $areaPerBulan = $this->reportService->getReportsByAreaPerMonth();
         $categoryPerBulan = $this->reportService->getReportsByCategoryCurrentMonth();
 
-        \SharedManager::saveLog('log_swt', "Accessed the [Dashboard] page swt.");
+        // \SharedManager::saveLog('log_swt', "Accessed the [Dashboard] page swt.");
         
         return view('walkandtalk.dashboard', [
             'totalLaporan' => $stats['total'],
@@ -71,11 +86,31 @@ class ReportController extends Controller
         return view('walkandtalk.reports', compact('areas'));
     }
 
+    /**
+     * Display the specified report detail
+     * Redirects to dashboard
+     */
+    public function show($id)
+    {
+        try {
+            // Use helper method to decrypt and get laporan
+            $laporan = $this->getLaporanFromEncryptedId($id);
+            $laporan->load(['area', 'penanggungJawab', 'problemCategory', 'penyelesaian']);
+            
+            // Return detail view
+            return view('walkandtalk.show', compact('laporan'));
+            
+        } catch (\Exception $e) {
+            \Log::error('Error loading report detail: ' . $e->getMessage());
+            return redirect()->route('dashboard')->with('error', 'Report not found');
+        }
+    }
+
     public function create()
     {
         $areas = Area::with('penanggungJawabs')->get();
         
-        \SharedManager::saveLog('log_swt', "Accessed the [Create Report] page swt.");
+        // \SharedManager::saveLog('log_swt', "Accessed the [Create Report] page swt.");
         
         return view('walkandtalk.laporan', compact('areas'));
     }
@@ -97,11 +132,14 @@ class ReportController extends Controller
             // Create report using service
             $laporan = $this->reportService->createReport($validated, $photos);
 
-            // $this->sendSupervisorNotifications($laporan); // Disabled email notifications
-            \SharedManager::saveLog('log_swt', "Created new report swt.");
+            // Send email notification to PIC
+            $this->emailReportAssigned($laporan);
+            
+            // $this->sendSupervisorNotifications($laporan); // Old notification method
+            // \SharedManager::saveLog('log_swt', "Created new report swt.");
             
             // Redirect to report list page instead of dashboard
-            return redirect()->route('laporan.index')->with('success', 'Report created successfully.');
+            return redirect()->route('laporan.index')->with('success', 'Report created successfully and notification sent.');
             
         } catch (\Exception $e) {
             \Log::error('Error creating report: ' . $e->getMessage());
@@ -113,14 +151,28 @@ class ReportController extends Controller
         }
     }
 
-    public function getPenanggungJawab($areaId)
+    public function getPenanggungJawab(Request $request)
     {
-        $areaId = (int) $areaId;
-        $area = Area::with('penanggungJawabs')->find($areaId);
+        // Validate request
+        $request->validate([
+            'area_id' => 'required|integer|exists:areas,id'
+        ]);
+
+        $areaId = (int) $request->input('area_id');
+        
+        // Optimized query - only select needed columns
+        $area = Area::select('id', 'name')
+            ->with(['penanggungJawabs' => function($query) {
+                $query->select('id', 'area_id', 'station', 'name', 'email')
+                      ->orderBy('station');
+            }])
+            ->find($areaId);
+        
         if (!$area) {
             return response()->json(['error' => 'Area tidak ditemukan'], 404);
         }
 
+        // Optimized mapping
         $stations = $area->penanggungJawabs->map(function ($pj) {
             return [
                 'id' => $pj->id,
@@ -133,24 +185,26 @@ class ReportController extends Controller
         return response()->json([
             'stations' => $stations,
             'group_members' => $area->penanggungJawabs->pluck('name')->toArray(),
-        ]);
+        ], 200, [], JSON_UNESCAPED_UNICODE);
     }
 
-    public function edit(Laporan $laporan)
+    public function edit($id)
     {
+        $laporan = $this->getLaporanFromEncryptedId($id);
         $laporan->load(['area', 'penanggungJawab', 'problemCategory']);
         $areas = Area::with('penanggungJawabs')->get();
-        $problemCategories = \App\Models\ProblemCategory::active()->ordered()->get();
+        $problemCategories = ProblemCategory::active()->ordered()->get();
         
-        \SharedManager::saveLog('log_swt', "Accessed the [Edit Report] page for ID: {$laporan->id} swt.");
+        // \SharedManager::saveLog('log_swt', "Accessed the [Edit Report] page for ID: {$laporan->id} swt.");
         
         return view('walkandtalk.edit', compact('laporan', 'areas', 'problemCategories'));
     }
 
-    public function update(UpdateReportRequest $request, Laporan $laporan)
+    public function update(UpdateReportRequest $request, $id)
     {
         try {
-            // Laporan already loaded via route model binding
+            // Decrypt ID and load laporan
+            $laporan = $this->getLaporanFromEncryptedId($id);
 
             $validated = $request->validated();
 
@@ -191,7 +245,7 @@ class ReportController extends Controller
             $perubahan = $this->detectChanges($oldData, $validated, $oldArea, $oldPenanggungJawab);
             
             if (!empty($perubahan)) {
-                // $this->sendEditNotifications($laporan, $perubahan); // Disabled email notifications
+                $this->emailReportEdited($laporan, $perubahan);
             }
 
             $returnUrl = $request->input('return_url', route('laporan.index'));
@@ -201,7 +255,7 @@ class ReportController extends Controller
                 $returnUrl = route('laporan.index');
             }
             
-            \SharedManager::saveLog('log_swt', "Updated report ID: {$laporan->id} swt.");
+            // \SharedManager::saveLog('log_swt', "Updated report ID: {$laporan->id} swt.");
             
             return redirect($returnUrl)->with('success', 'Report updated successfully.');
             
@@ -215,23 +269,23 @@ class ReportController extends Controller
         }
     }
 
-    public function tindakan(Laporan $laporan)
+    public function tindakan($id)
     {
+        $laporan = $this->getLaporanFromEncryptedId($id);
         $laporan->load(['area', 'area.penanggungJawabs', 'penanggungJawab', 'problemCategory', 'penyelesaian']);
         
-        \SharedManager::saveLog('log_swt', "Accessed the [Completion Action] page for ID: {$laporan->id} swt.");
+        // \SharedManager::saveLog('log_swt', "Accessed the [Completion Action] page for ID: {$laporan->id} swt.");
         
         return view('walkandtalk.tindakan', compact('laporan'));
     }
 
-    public function storeTindakan(StoreCompletionRequest $request, Laporan $laporan)
+    public function storeTindakan(StoreCompletionRequest $request, $id)
     {
         try {
+            $laporan = $this->getLaporanFromEncryptedId($id);
             $validated = $request->validated();
-            
-            // Laporan already loaded via route model binding
 
-            if ($validated['status'] === 'Selesai') {
+            if ($validated['status'] === 'Completed') {
                 // Upload completion photos if provided
                 $photos = [];
                 if ($request->hasFile('Foto')) {
@@ -244,7 +298,10 @@ class ReportController extends Controller
                     'deskripsi_penyelesaian' => $validated['deskripsi_penyelesaian'],
                 ], $photos);
 
-                \SharedManager::saveLog('log_swt', "Completed report ID: {$laporan->id} swt.");
+                // Send completion email notification
+                $this->emailReportCompleted($laporan);
+
+                // \SharedManager::saveLog('log_swt', "Completed report ID: {$laporan->id} swt.");
                 
                 return redirect()->route('sejarah.index')
                     ->with('success', 'Report completed successfully and moved to history.');
@@ -253,10 +310,10 @@ class ReportController extends Controller
             // Just update status if not completed
             $this->reportService->updateStatus($laporan, $validated['status']);
 
-            \SharedManager::saveLog('log_swt', "Updated report status ID: {$laporan->id} swt.");
+            // \SharedManager::saveLog('log_swt', "Updated report status ID: {$laporan->id} swt.");
             
-            return redirect()->route('dashboard')
-                ->with('success', 'Report created successfully.');
+            return redirect()->route('laporan.index')
+                ->with('success', 'Report status updated successfully.');
         } catch (\Exception $e) {
             \Log::error('Error completing report: ' . $e->getMessage());
             \Log::error('Stack trace: ' . $e->getTraceAsString());
@@ -270,7 +327,7 @@ class ReportController extends Controller
     public function dashboardDatatables(Request $request)
     {
         $query = Laporan::with(['area', 'penanggungJawab', 'penyelesaian', 'problemCategory'])
-            ->where('status', '!=', 'Selesai');
+            ->where('status', '!=', 'Completed');
 
         // Apply filters
         if ($request->filled('start_date')) {
@@ -309,6 +366,9 @@ class ReportController extends Controller
 
         return DataTables::of($query)
             ->addIndexColumn()
+            ->addColumn('encrypted_id', function ($laporan) {
+                return encrypt($laporan->id);
+            })
             ->addColumn('Tanggal', function ($laporan) {
                 return Carbon::parse($laporan->created_at)->format('l, j-n-Y');
             })
@@ -371,36 +431,71 @@ class ReportController extends Controller
                 return Carbon::parse($laporan->tenggat_waktu)->format('l, j-n-Y');
             })
             ->addColumn('status', function ($laporan) {
-                return $laporan->status == 'In Progress'
-                    ? '<span class="status-badge status-in-progress"><i class="fas fa-cog fa-spin"></i> In Progress</span>'
-                    : '<span class="badge bg-secondary">' . $laporan->status . '</span>';
+                if ($laporan->status == 'Assigned') {
+                    return '<span class="status-badge status-assigned"><i class="fas fa-circle"></i> Assigned</span>';
+                } elseif ($laporan->status == 'Completed') {
+                    return '<span class="status-badge status-completed"><i class="fas fa-check-circle"></i> Completed</span>';
+                } else {
+                    return '<span class="badge bg-secondary">' . $laporan->status . '</span>';
+                }
             })
             ->addColumn('penyelesaian', function ($laporan) {
+                $encryptedId = encrypt($laporan->id);
                 return $laporan->penyelesaian
-                    ? '<button class="btn btn-sm btn-info lihat-penyelesaian-btn" data-bs-toggle="modal" data-bs-target="#modalPenyelesaian" data-encrypted-id="' . encrypt($laporan->id) . '"><i class="fas fa-eye"></i> View</button>'
-                    : '<a href="' . route('laporan.tindakan', $laporan) . '" class="btn btn-sm btn-primary"><i class="fas fa-tasks"></i> Action</a>';
+                    ? '<button class="btn btn-sm btn-info lihat-penyelesaian-btn" data-bs-toggle="modal" data-bs-target="#modalPenyelesaian" data-encrypted-id="' . $encryptedId . '"><i class="fas fa-eye"></i> View</button>'
+                    : '<a href="' . route('laporan.tindakan', ['id' => $encryptedId]) . '" class="btn btn-sm btn-primary"><i class="fas fa-tasks"></i> Action</a>';
             })
             ->addColumn('aksi', function ($laporan) {
-                // Use laporan.index route instead of datatables endpoint
+                // Use encrypted ID for all routes
+                $encryptedId = encrypt($laporan->id);
                 $returnUrl = route('laporan.index');
-                $editUrl = route('laporan.edit', ['laporan' => $laporan, 'return_url' => $returnUrl]);
-                $deleteUrl = route('laporan.destroy', $laporan);
-                return '<div class="d-flex gap-1"><a href="' . $editUrl . '" class="btn btn-sm btn-warning" title="Edit"><i class="fas fa-edit"></i></a><button class="btn btn-sm btn-danger delete-btn" data-encrypted-id="' . encrypt($laporan->id) . '" data-delete-url="' . $deleteUrl . '" data-return-url="' . $returnUrl . '" title="Delete"><i class="fas fa-trash"></i></button></div>';
+                $editUrl = route('laporan.edit', ['id' => $encryptedId, 'return_url' => $returnUrl]);
+                $deleteUrl = route('laporan.destroy', ['id' => $encryptedId]);
+                return '<div class="d-flex gap-1"><a href="' . $editUrl . '" class="btn btn-sm btn-warning" title="Edit"><i class="fas fa-edit"></i></a><button class="btn btn-sm btn-danger delete-btn" data-encrypted-id="' . $encryptedId . '" data-delete-url="' . $deleteUrl . '" data-return-url="' . $returnUrl . '" title="Delete"><i class="fas fa-trash"></i></button></div>';
+            })
+            ->filterColumn('area.name', function($query, $keyword) {
+                // Search in area name OR station name OR PIC name (case-insensitive)
+                $keyword = strtolower($keyword);
+                
+                $query->where(function($q) use ($keyword) {
+                    // Search in area name
+                    $q->whereHas('area', function($subQ) use ($keyword) {
+                        $subQ->whereRaw('LOWER(name) LIKE ?', ["%{$keyword}%"]);
+                    })
+                    // OR search in PIC station
+                    ->orWhereHas('penanggungJawab', function($subQ) use ($keyword) {
+                        $subQ->whereRaw('LOWER(station) LIKE ?', ["%{$keyword}%"]);
+                    })
+                    // OR search in PIC name
+                    ->orWhereHas('penanggungJawab', function($subQ) use ($keyword) {
+                        $subQ->whereRaw('LOWER(name) LIKE ?', ["%{$keyword}%"]);
+                    });
+                });
+            })
+            ->filterColumn('problemCategory.name', function($query, $keyword) {
+                // Search in problem category name
+                $query->whereHas('problemCategory', function($q) use ($keyword) {
+                    $q->where('name', 'like', "%{$keyword}%");
+                });
+            })
+            ->filterColumn('deskripsi_masalah', function($query, $keyword) {
+                // Search in full description text (not truncated)
+                $query->where('deskripsi_masalah', 'like', "%{$keyword}%");
             })
             ->rawColumns(['foto', 'departemen', 'problem_category', 'deskripsi_masalah', 'status', 'penyelesaian', 'aksi'])
             ->make(true);
     }
 
-    public function destroy(Laporan $laporan)
+    public function destroy($id)
     {
         try {
-            // Laporan already loaded via route model binding
+            $laporan = $this->getLaporanFromEncryptedId($id);
 
             // Delete report using service (handles photos and completion data)
             $deleted = $this->reportService->deleteReport($laporan);
 
             if ($deleted) {
-                \SharedManager::saveLog('log_swt', "Deleted report ID: {$laporan->id} swt.");
+                // \SharedManager::saveLog('log_swt', "Deleted report ID: {$laporan->id} swt.");
             
                 return response()->json(['success' => true, 'message' => 'Report deleted successfully.']);
             }
@@ -428,9 +523,10 @@ class ReportController extends Controller
         }
     }
 
-    public function getPenyelesaian(Laporan $laporan)
+    public function getPenyelesaian($id)
     {
         try {
+            $laporan = $this->getLaporanFromEncryptedId($id);
             $laporan->load('penyelesaian');
             
             if (!$laporan->penyelesaian) {

@@ -84,7 +84,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 modalBody.html('<div class="alert alert-danger mb-0">Completion data not found.</div>');
             }
         }).fail(function(xhr, status, error) {
-            console.error('Error:', error);
             modalBody.html('<div class="alert alert-danger mb-0">Failed to retrieve completion data. Please try again.</div>');
         });
     });

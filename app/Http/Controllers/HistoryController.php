@@ -19,7 +19,7 @@ class HistoryController extends Controller
     {
         $areas = Area::all();
         
-        \SharedManager::saveLog('log_swt', "Accessed the [Report History] page swt.");
+        // \SharedManager::saveLog('log_swt', "Accessed the [Report History] page swt.");
         
         return view('walkandtalk.sejarah', compact('areas'));
     }
@@ -27,7 +27,7 @@ class HistoryController extends Controller
     public function sejarahDatatables(Request $request)
     {
         $query = Laporan::with(['area', 'penanggungJawab', 'penyelesaian', 'problemCategory'])
-            ->where('status', 'Selesai');
+            ->where('status', 'Completed');
 
         // Apply date filters
         if ($request->filled('start_date')) {
@@ -72,6 +72,9 @@ class HistoryController extends Controller
 
         return DataTables::of($query)
             ->addIndexColumn()
+            ->addColumn('encrypted_id', function ($laporan) {
+                return encrypt($laporan->id);
+            })
             ->editColumn('DT_RowIndex', function ($laporan) { return '<div class="text-center fw-bold">' . $laporan->DT_RowIndex . '</div>'; })
             ->editColumn('Tanggal', function ($laporan) { return Carbon::parse($laporan->created_at)->format('l, j-n-Y'); })
             ->addColumn('foto', function ($laporan) use ($resolveReportUrl) {
@@ -110,9 +113,57 @@ class HistoryController extends Controller
                 return '';
             })
             ->addColumn('tenggat_waktu', function ($laporan) { return Carbon::parse($laporan->tenggat_waktu)->format('l, j-n-Y'); })
-            ->addColumn('status', function ($laporan) { return $laporan->status == 'Selesai' ? '<span class="status-badge status-completed"><i class="fas fa-check-circle"></i> Completed</span>' : '<span class="badge bg-secondary">' . $laporan->status . '</span>'; })
-            ->addColumn('penyelesaian', function ($laporan) { return $laporan->penyelesaian ? '<button class="btn btn-sm btn-info lihat-penyelesaian-btn" data-bs-toggle="modal" data-bs-target="#modalPenyelesaian" data-encrypted-id="' . encrypt($laporan->id) . '"><i class="fas fa-eye"></i> View</button>' : '<a href="' . route('laporan.tindakan', $laporan) . '" class="btn btn-sm btn-primary"><i class="fas fa-tasks"></i> Action</a>'; })
-            ->addColumn('aksi', function ($laporan) { $returnUrl = route('sejarah.index'); $editUrl = route('laporan.edit', ['laporan' => $laporan, 'return_url' => $returnUrl]); $deleteUrl = route('laporan.destroy', $laporan); return '<div class="d-flex gap-1"><a href="' . $editUrl . '" class="btn btn-sm btn-warning" title="Edit"><i class="fas fa-edit"></i></a><button class="btn btn-sm btn-danger delete-btn" data-encrypted-id="' . encrypt($laporan->id) . '" data-delete-url="' . $deleteUrl . '" data-return-url="' . $returnUrl . '" title="Delete"><i class="fas fa-trash"></i></button></div>'; })
+            ->addColumn('status', function ($laporan) { 
+                if ($laporan->status == 'Completed') {
+                    return '<span class="status-badge status-completed"><i class="fas fa-check-circle"></i> Completed</span>';
+                } elseif ($laporan->status == 'Assigned') {
+                    return '<span class="status-badge status-assigned"><i class="fas fa-circle"></i> Assigned</span>';
+                } else {
+                    return '<span class="badge bg-secondary">' . $laporan->status . '</span>';
+                }
+            })
+            ->addColumn('penyelesaian', function ($laporan) { 
+                $encryptedId = encrypt($laporan->id);
+                return $laporan->penyelesaian 
+                    ? '<button class="btn btn-sm btn-info lihat-penyelesaian-btn" data-bs-toggle="modal" data-bs-target="#modalPenyelesaian" data-encrypted-id="' . $encryptedId . '"><i class="fas fa-eye"></i> View</button>' 
+                    : '<a href="' . route('laporan.tindakan', ['id' => $encryptedId]) . '" class="btn btn-sm btn-primary"><i class="fas fa-tasks"></i> Action</a>'; 
+            })
+            ->addColumn('aksi', function ($laporan) { 
+                $encryptedId = encrypt($laporan->id);
+                $returnUrl = route('sejarah.index'); 
+                $editUrl = route('laporan.edit', ['id' => $encryptedId, 'return_url' => $returnUrl]); 
+                $deleteUrl = route('laporan.destroy', ['id' => $encryptedId]); 
+                return '<div class="d-flex gap-1"><a href="' . $editUrl . '" class="btn btn-sm btn-warning" title="Edit"><i class="fas fa-edit"></i></a><button class="btn btn-sm btn-danger delete-btn" data-encrypted-id="' . $encryptedId . '" data-delete-url="' . $deleteUrl . '" data-return-url="' . $returnUrl . '" title="Delete"><i class="fas fa-trash"></i></button></div>'; 
+            })
+            ->filterColumn('area.name', function($query, $keyword) {
+                // Search in area name OR station name OR PIC name (case-insensitive)
+                $keyword = strtolower($keyword);
+                
+                $query->where(function($q) use ($keyword) {
+                    // Search in area name
+                    $q->whereHas('area', function($subQ) use ($keyword) {
+                        $subQ->whereRaw('LOWER(name) LIKE ?', ["%{$keyword}%"]);
+                    })
+                    // OR search in PIC station
+                    ->orWhereHas('penanggungJawab', function($subQ) use ($keyword) {
+                        $subQ->whereRaw('LOWER(station) LIKE ?', ["%{$keyword}%"]);
+                    })
+                    // OR search in PIC name
+                    ->orWhereHas('penanggungJawab', function($subQ) use ($keyword) {
+                        $subQ->whereRaw('LOWER(name) LIKE ?', ["%{$keyword}%"]);
+                    });
+                });
+            })
+            ->filterColumn('problemCategory.name', function($query, $keyword) {
+                // Search in problem category name
+                $query->whereHas('problemCategory', function($q) use ($keyword) {
+                    $q->where('name', 'like', "%{$keyword}%");
+                });
+            })
+            ->filterColumn('deskripsi_masalah', function($query, $keyword) {
+                // Search in full description text (not truncated)
+                $query->where('deskripsi_masalah', 'like', "%{$keyword}%");
+            })
             ->rawColumns(['foto', 'departemen', 'problem_category', 'deskripsi_masalah', 'status', 'penyelesaian', 'aksi'])
             ->make(true);
     }
@@ -121,7 +172,7 @@ class HistoryController extends Controller
     {
         try {
             $query = Laporan::with(['area', 'penanggungJawab', 'penyelesaian', 'problemCategory'])
-                ->where('status', 'Selesai');
+                ->where('status', 'Completed');
             $query = $this->applyFilters($request, $query);
             // Order like the table: if a date filter is active, oldest -> newest; else newest-first
             if ($request->filled('start_date') || $request->filled('end_date')) {
@@ -141,7 +192,7 @@ class HistoryController extends Controller
             $pdf = Pdf::loadView('walkandtalk.pdf.laporan-selesai', compact('laporan', 'periode'));
             $pdf->setPaper('a4', 'landscape');
             
-            \SharedManager::saveLog('log_swt', "Downloaded [Report History] PDF for period: {$periode} swt.");
+            // \SharedManager::saveLog('log_swt', "Downloaded [Report History] PDF for period: {$periode} swt.");
             
             return $pdf->download('Laporan-Safety-Walk-and-Talk-' . date('Y-m-d') . '.pdf');
         } catch (\Exception $e) {
