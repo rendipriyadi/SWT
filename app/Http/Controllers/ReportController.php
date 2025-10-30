@@ -52,9 +52,7 @@ class ReportController extends Controller
 
     public function dashboard()
     {
-        //     $_SERVER['HTTPS'] = 'off';
-        // }
-        // \SharedManager::checkAuthToModule(17);
+        \SharedManager::checkAuthToModule(17);
         
         // Get statistics from service
         $stats = $this->reportService->getDashboardStats();
@@ -64,7 +62,7 @@ class ReportController extends Controller
         $areaPerBulan = $this->reportService->getReportsByAreaPerMonth();
         $categoryPerBulan = $this->reportService->getReportsByCategoryCurrentMonth();
 
-        // \SharedManager::saveLog('log_swt', "Accessed the [Dashboard] page swt.");
+        \SharedManager::saveLog('log_swt', "Accessed the [Dashboard] page swt.");
         
         return view('walkandtalk.dashboard', [
             'totalLaporan' => $stats['total'],
@@ -110,7 +108,7 @@ class ReportController extends Controller
     {
         $areas = Area::with('penanggungJawabs')->get();
         
-        // \SharedManager::saveLog('log_swt', "Accessed the [Create Report] page swt.");
+        \SharedManager::saveLog('log_swt', "Accessed the [Create Report] page swt.");
         
         return view('walkandtalk.laporan', compact('areas'));
     }
@@ -136,7 +134,7 @@ class ReportController extends Controller
             $this->emailReportAssigned($laporan);
             
             // $this->sendSupervisorNotifications($laporan); // Old notification method
-            // \SharedManager::saveLog('log_swt', "Created new report swt.");
+            \SharedManager::saveLog('log_swt', "Created new report swt.");
             
             // Redirect to report list page instead of dashboard
             return redirect()->route('laporan.index')->with('success', 'Report created successfully and notification sent.');
@@ -195,7 +193,7 @@ class ReportController extends Controller
         $areas = Area::with('penanggungJawabs')->get();
         $problemCategories = ProblemCategory::active()->ordered()->get();
         
-        // \SharedManager::saveLog('log_swt', "Accessed the [Edit Report] page for ID: {$laporan->id} swt.");
+        \SharedManager::saveLog('log_swt', "Accessed the [Edit Report] page for ID: {$laporan->id} swt.");
         
         return view('walkandtalk.edit', compact('laporan', 'areas', 'problemCategories'));
     }
@@ -255,7 +253,7 @@ class ReportController extends Controller
                 $returnUrl = route('laporan.index');
             }
             
-            // \SharedManager::saveLog('log_swt', "Updated report ID: {$laporan->id} swt.");
+            \SharedManager::saveLog('log_swt', "Updated report ID: {$laporan->id} swt.");
             
             return redirect($returnUrl)->with('success', 'Report updated successfully.');
             
@@ -274,7 +272,7 @@ class ReportController extends Controller
         $laporan = $this->getLaporanFromEncryptedId($id);
         $laporan->load(['area', 'area.penanggungJawabs', 'penanggungJawab', 'problemCategory', 'penyelesaian']);
         
-        // \SharedManager::saveLog('log_swt', "Accessed the [Completion Action] page for ID: {$laporan->id} swt.");
+        \SharedManager::saveLog('log_swt', "Accessed the [Completion Action] page for ID: {$laporan->id} swt.");
         
         return view('walkandtalk.tindakan', compact('laporan'));
     }
@@ -301,7 +299,7 @@ class ReportController extends Controller
                 // Send completion email notification
                 $this->emailReportCompleted($laporan);
 
-                // \SharedManager::saveLog('log_swt', "Completed report ID: {$laporan->id} swt.");
+                \SharedManager::saveLog('log_swt', "Completed report ID: {$laporan->id} swt.");
                 
                 return redirect()->route('sejarah.index')
                     ->with('success', 'Report completed successfully and moved to history.');
@@ -310,7 +308,7 @@ class ReportController extends Controller
             // Just update status if not completed
             $this->reportService->updateStatus($laporan, $validated['status']);
 
-            // \SharedManager::saveLog('log_swt', "Updated report status ID: {$laporan->id} swt.");
+            \SharedManager::saveLog('log_swt', "Updated report status ID: {$laporan->id} swt.");
             
             return redirect()->route('laporan.index')
                 ->with('success', 'Report status updated successfully.');
@@ -495,7 +493,7 @@ class ReportController extends Controller
             $deleted = $this->reportService->deleteReport($laporan);
 
             if ($deleted) {
-                // \SharedManager::saveLog('log_swt', "Deleted report ID: {$laporan->id} swt.");
+                \SharedManager::saveLog('log_swt', "Deleted report ID: {$laporan->id} swt.");
             
                 return response()->json(['success' => true, 'message' => 'Report deleted successfully.']);
             }
