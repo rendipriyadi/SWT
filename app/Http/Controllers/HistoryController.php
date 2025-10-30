@@ -18,9 +18,9 @@ class HistoryController extends Controller
     public function index()
     {
         $areas = Area::all();
-        
-        // \SharedManager::saveLog('log_swt', "Accessed the [Report History] page swt.");
-        
+
+        \SharedManager::saveLog('log_swt', "Accessed the [Report History] page swt.");
+
         return view('walkandtalk.sejarah', compact('areas'));
     }
 
@@ -113,7 +113,7 @@ class HistoryController extends Controller
                 return '';
             })
             ->addColumn('tenggat_waktu', function ($laporan) { return Carbon::parse($laporan->tenggat_waktu)->format('l, j-n-Y'); })
-            ->addColumn('status', function ($laporan) { 
+            ->addColumn('status', function ($laporan) {
                 if ($laporan->status == 'Completed') {
                     return '<span class="status-badge status-completed"><i class="fas fa-check-circle"></i> Completed</span>';
                 } elseif ($laporan->status == 'Assigned') {
@@ -122,23 +122,23 @@ class HistoryController extends Controller
                     return '<span class="badge bg-secondary">' . $laporan->status . '</span>';
                 }
             })
-            ->addColumn('penyelesaian', function ($laporan) { 
+            ->addColumn('penyelesaian', function ($laporan) {
                 $encryptedId = encrypt($laporan->id);
-                return $laporan->penyelesaian 
-                    ? '<button class="btn btn-sm btn-info lihat-penyelesaian-btn" data-bs-toggle="modal" data-bs-target="#modalPenyelesaian" data-encrypted-id="' . $encryptedId . '"><i class="fas fa-eye"></i> View</button>' 
-                    : '<a href="' . route('laporan.tindakan', ['id' => $encryptedId]) . '" class="btn btn-sm btn-primary"><i class="fas fa-tasks"></i> Action</a>'; 
+                return $laporan->penyelesaian
+                    ? '<button class="btn btn-sm btn-info lihat-penyelesaian-btn" data-bs-toggle="modal" data-bs-target="#modalPenyelesaian" data-encrypted-id="' . $encryptedId . '"><i class="fas fa-eye"></i> View</button>'
+                    : '<a href="' . route('laporan.tindakan', ['id' => $encryptedId]) . '" class="btn btn-sm btn-primary"><i class="fas fa-tasks"></i> Action</a>';
             })
-            ->addColumn('aksi', function ($laporan) { 
+            ->addColumn('aksi', function ($laporan) {
                 $encryptedId = encrypt($laporan->id);
-                $returnUrl = route('sejarah.index'); 
-                $editUrl = route('laporan.edit', ['id' => $encryptedId, 'return_url' => $returnUrl]); 
-                $deleteUrl = route('laporan.destroy', ['id' => $encryptedId]); 
-                return '<div class="d-flex gap-1"><a href="' . $editUrl . '" class="btn btn-sm btn-warning" title="Edit"><i class="fas fa-edit"></i></a><button class="btn btn-sm btn-danger delete-btn" data-encrypted-id="' . $encryptedId . '" data-delete-url="' . $deleteUrl . '" data-return-url="' . $returnUrl . '" title="Delete"><i class="fas fa-trash"></i></button></div>'; 
+                $returnUrl = route('sejarah.index');
+                $editUrl = route('laporan.edit', ['id' => $encryptedId, 'return_url' => $returnUrl]);
+                $deleteUrl = route('laporan.destroy', ['id' => $encryptedId]);
+                return '<div class="d-flex gap-1"><a href="' . $editUrl . '" class="btn btn-sm btn-warning" title="Edit"><i class="fas fa-edit"></i></a><button class="btn btn-sm btn-danger delete-btn" data-encrypted-id="' . $encryptedId . '" data-delete-url="' . $deleteUrl . '" data-return-url="' . $returnUrl . '" title="Delete"><i class="fas fa-trash"></i></button></div>';
             })
             ->filterColumn('area.name', function($query, $keyword) {
                 // Search in area name OR station name OR PIC name (case-insensitive)
                 $keyword = strtolower($keyword);
-                
+
                 $query->where(function($q) use ($keyword) {
                     // Search in area name
                     $q->whereHas('area', function($subQ) use ($keyword) {
@@ -191,9 +191,9 @@ class HistoryController extends Controller
 
             $pdf = Pdf::loadView('walkandtalk.pdf.laporan-selesai', compact('laporan', 'periode'));
             $pdf->setPaper('a4', 'landscape');
-            
-            // \SharedManager::saveLog('log_swt', "Downloaded [Report History] PDF for period: {$periode} swt.");
-            
+
+            \SharedManager::saveLog('log_swt', "Downloaded [Report History] PDF for period: {$periode} swt.");
+
             return $pdf->download('Laporan-Safety-Walk-and-Talk-' . date('Y-m-d') . '.pdf');
         } catch (\Exception $e) {
             Log::error('PDF Generation Error: ' . $e->getMessage());
