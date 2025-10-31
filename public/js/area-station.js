@@ -30,7 +30,10 @@ document.addEventListener('DOMContentLoaded', function() {
             // Get CSRF token
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
             
-            const response = await fetch('/api/stations', {
+            // Use global route configuration
+            const url = window.routes?.stations || '/api/stations';
+            
+            const response = await fetch(url, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

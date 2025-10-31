@@ -94,8 +94,11 @@ trait HandlesLaporan
             ];
         }
 
-        // Check deadline change
-        if ($oldData['tenggat_waktu'] != $newData['tenggat_waktu']) {
+        // Check deadline change - compare dates only, not time
+        $oldDeadline = \Carbon\Carbon::parse($oldData['tenggat_waktu'])->format('Y-m-d');
+        $newDeadline = \Carbon\Carbon::parse($newData['tenggat_waktu'])->format('Y-m-d');
+        
+        if ($oldDeadline != $newDeadline) {
             $perubahan[] = [
                 'field' => 'Deadline',
                 'old' => \Carbon\Carbon::parse($oldData['tenggat_waktu'])->format('d/m/Y'),

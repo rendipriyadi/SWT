@@ -14,16 +14,16 @@ class AreaController extends Controller
     {
         // Ambil data area dengan penanggung jawab
         $areas = Area::with('penanggungJawabs')->get();
-        
+
         \SharedManager::saveLog('log_swt', "Accessed the [Area/Station] page swt.");
-        
+
         return view('master-data.area.index', compact('areas'));
     }
 
     public function create()
     {
         \SharedManager::saveLog('log_swt', "Accessed the [Create Area/Station] page swt.");
-        
+
         return view('master-data.area.create');
     }
 
@@ -67,7 +67,7 @@ class AreaController extends Controller
             DB::commit();
 
             \SharedManager::saveLog('log_swt', "Created new area/station: {$request->name} swt.");
-            
+
             return redirect()->route('master-data.area.index')
                 ->with('success', 'Area created successfully!');
 
@@ -88,9 +88,9 @@ class AreaController extends Controller
     public function edit(Area $area)
     {
         $area->load('penanggungJawabs');
-        
+
         \SharedManager::saveLog('log_swt', "Accessed the [Edit Area/Station] page for ID: {$area->id} swt.");
-        
+
         return view('master-data.area.edit', compact('area'));
     }
 
@@ -137,7 +137,7 @@ class AreaController extends Controller
             DB::commit();
 
             \SharedManager::saveLog('log_swt', "Updated area/station ID: {$area->id} swt.");
-            
+
             return redirect()->route('master-data.area.index')
                 ->with('success', 'Area updated successfully!');
 
@@ -154,7 +154,7 @@ class AreaController extends Controller
         try {
             // Cek apakah area digunakan di laporan
             $usedInReports = DB::table('laporan')->where('area_id', $area->id)->exists();
-            
+
             if ($usedInReports) {
                 return redirect()->back()
                     ->with('error', 'Area tidak dapat dihapus karena masih digunakan dalam laporan!');
@@ -162,12 +162,12 @@ class AreaController extends Controller
 
             // Hapus penanggung jawab terlebih dahulu
             $area->penanggungJawabs()->delete();
-            
+
             // Hapus area
             $area->delete();
 
             \SharedManager::saveLog('log_swt', "Deleted area/station ID: {$area->id} swt.");
-            
+
             return redirect()->route('master-data.area.index')
                 ->with('success', 'Area deleted successfully!');
 

@@ -15,9 +15,9 @@ class ProblemCategoryController extends Controller
     public function index()
     {
         $categories = ProblemCategory::ordered()->get();
-        
+
         \SharedManager::saveLog('log_swt', "Accessed the [Problem Category] page swt.");
-        
+
         return view('master-data.problem-category.index', compact('categories'));
     }
 
@@ -27,7 +27,7 @@ class ProblemCategoryController extends Controller
     public function create()
     {
         \SharedManager::saveLog('log_swt', "Accessed the [Create Problem Category] page swt.");
-        
+
         return view('master-data.problem-category.create');
     }
 
@@ -57,7 +57,7 @@ class ProblemCategoryController extends Controller
         ]);
 
         \SharedManager::saveLog('log_swt', "Created new problem category: {$request->name} swt.");
-        
+
         return redirect()->route('master-data.problem-category.index')
             ->with('success', 'Problem category created successfully.');
     }
@@ -76,7 +76,7 @@ class ProblemCategoryController extends Controller
     public function edit(ProblemCategory $problemCategory)
     {
         \SharedManager::saveLog('log_swt', "Accessed the [Edit Problem Category] page for ID: {$problemCategory->id} swt.");
-        
+
         return view('master-data.problem-category.edit', compact('problemCategory'));
     }
 
@@ -104,7 +104,7 @@ class ProblemCategoryController extends Controller
         ]);
 
         \SharedManager::saveLog('log_swt', "Updated problem category ID: {$problemCategory->id} swt.");
-        
+
         return redirect()->route('master-data.problem-category.index')
             ->with('success', 'Problem category updated successfully.');
     }
@@ -123,7 +123,7 @@ class ProblemCategoryController extends Controller
         $problemCategory->delete();
         \SharedManager::saveLog('log_swt', "Deleted problem category ID: {$problemCategory->id} swt.");
 
-        
+
         return redirect()->route('master-data.problem-category.index')
             ->with('success', 'Problem category deleted successfully.');
     }

@@ -52,11 +52,11 @@ class ReportController extends Controller
 
     public function dashboard()
     {
-       if (!isset($_SERVER['HTTPS'])) {
-        $_SERVER['HTTPS'] = 'off';
-    }
+        if (!isset($_SERVER['HTTPS'])) {
+            $_SERVER['HTTPS'] = 'off';
+        }
 
-    \SharedManager::checkAuthToModule(17);
+        \SharedManager::checkAuthToModule(17);
 
         // Get statistics from service
         $stats = $this->reportService->getDashboardStats();
@@ -137,7 +137,6 @@ class ReportController extends Controller
             // Send email notification to PIC
             $this->emailReportAssigned($laporan);
 
-            // $this->sendSupervisorNotifications($laporan); // Old notification method
             \SharedManager::saveLog('log_swt', "Created new report swt.");
 
             // Redirect to report list page instead of dashboard

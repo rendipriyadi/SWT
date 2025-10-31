@@ -280,8 +280,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     fotoInput.addEventListener('change', function(event) {
         const newFiles = Array.from(event.target.files);
-        const cameraFiles = fileStore.filter(f => f.name.startsWith('penyelesaian-'));
-        addFiles([...cameraFiles, ...newFiles], true);
+        addFiles(newFiles, false); // false = append, tidak replace
     });
 
     openCameraBtn.addEventListener('click', async function () {

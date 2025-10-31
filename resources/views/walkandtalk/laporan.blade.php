@@ -270,8 +270,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // File input change handler
         fotoInput.addEventListener('change', function(event) {
             const newFiles = Array.from(event.target.files);
-            const cameraFiles = fileStore.filter(f => f.name.startsWith('camera-'));
-            addFiles([...cameraFiles, ...newFiles], true);
+            addFiles(newFiles, false); // false = append, tidak replace
         });
 
         // Drag and drop functionality
@@ -293,8 +292,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 uploadArea.classList.remove('dragover');
                 const files = Array.from(e.dataTransfer.files).filter(file => file.type.startsWith('image/'));
                 if (files.length > 0) {
-                    const cameraFiles = fileStore.filter(f => f.name.startsWith('camera-'));
-                    addFiles([...cameraFiles, ...files], true);
+                    addFiles(files, false); // false = append, tidak replace
                 }
             });
         }

@@ -1131,7 +1131,8 @@
     <script>
         window.routes = {
             supervisor: "{{ route('supervisor', ['id' => ':id']) }}",
-            penyelesaian: "{{ route('laporan.penyelesaian', ['id' => ':encryptedId']) }}"
+            penyelesaian: "{{ route('laporan.penyelesaian', ['id' => ':encryptedId']) }}",
+            stations: "{{ route('penanggung.jawab') }}"
         };
     </script>
     
