@@ -15,7 +15,7 @@ class DepartmentController extends Controller
     {
         $departments = Department::orderBy('created_at', 'desc')->get();
 
-        \SharedManager::saveLog('log_swt', "Accessed the [Department/Supervisor] page swt.");
+        // \SharedManager::saveLog('log_swt', "Accessed the [Department/Supervisor] page swt.");
 
         return view('master-data.department.index', compact('departments'));
     }
@@ -25,7 +25,7 @@ class DepartmentController extends Controller
      */
     public function create()
     {
-        \SharedManager::saveLog('log_swt', "Accessed the [Create Department/Supervisor] page swt.");
+        // \SharedManager::saveLog('log_swt', "Accessed the [Create Department/Supervisor] page swt.");
 
         return view('master-data.department.create');
     }
@@ -38,7 +38,7 @@ class DepartmentController extends Controller
             'workgroup' => $request->workgroup,
         ]);
 
-        \SharedManager::saveLog('log_swt', "Created new department/supervisor: {$request->name} swt.");
+        // \SharedManager::saveLog('log_swt', "Created new department/supervisor: {$request->name} swt.");
 
         return redirect()->route('master-data.department.index')
             ->with('success', 'Supervisor created successfully.');
@@ -57,7 +57,7 @@ class DepartmentController extends Controller
      */
     public function edit(Department $department)
     {
-        \SharedManager::saveLog('log_swt', "Accessed the [Edit Department/Supervisor] page for ID: {$department->id} swt.");
+        // \SharedManager::saveLog('log_swt', "Accessed the [Edit Department/Supervisor] page for ID: {$department->id} swt.");
 
         return view('master-data.department.edit', compact('department'));
     }
@@ -70,7 +70,7 @@ class DepartmentController extends Controller
             'workgroup' => $request->workgroup,
         ]);
 
-        \SharedManager::saveLog('log_swt', "Updated department/supervisor ID: {$department->id} swt.");
+        // \SharedManager::saveLog('log_swt', "Updated department/supervisor ID: {$department->id} swt.");
 
         return redirect()->route('master-data.department.index')
             ->with('success', 'Supervisor updated successfully.');
@@ -83,7 +83,7 @@ class DepartmentController extends Controller
     {
         $department->delete();
 
-        \SharedManager::saveLog('log_swt', "Deleted department/supervisor ID: {$department->id} swt.");
+        // \SharedManager::saveLog('log_swt', "Deleted department/supervisor ID: {$department->id} swt.");
 
         return redirect()->route('master-data.department.index')
             ->with('success', 'Supervisor deleted successfully.');

@@ -19,7 +19,7 @@ class HistoryController extends Controller
     {
         $areas = Area::all();
 
-        \SharedManager::saveLog('log_swt', "Accessed the [Report History] page swt.");
+        // \SharedManager::saveLog('log_swt', "Accessed the [Report History] page swt.");
 
         return view('walkandtalk.sejarah', compact('areas'));
     }
@@ -95,8 +95,8 @@ class HistoryController extends Controller
                         if ($stationOrPic === '') { $stationOrPic = $laporan->penanggungJawab->name ?? ''; }
                         $html = $stationOrPic !== '' ? '<span class="fw-bold">' . $areaName . ' (' . e($stationOrPic) . ')</span>' : '<span class="fw-bold">' . $areaName . '</span>';
                     } else {
-                        $firstStation = optional($laporan->area->penanggungJawabs()->orderBy('id')->first())->station;
-                        $html = $firstStation ? '<span class="fw-bold">' . $areaName . ' (' . e($firstStation) . ')</span>' : '<span class="fw-bold">' . $areaName . '</span>';
+                        // Jika tidak ada PIC spesifik, tampilkan hanya area name
+                        $html = '<span class="fw-bold">' . $areaName . '</span>';
                     }
                 }
                 return $html;
@@ -192,7 +192,7 @@ class HistoryController extends Controller
             $pdf = Pdf::loadView('walkandtalk.pdf.laporan-selesai', compact('laporan', 'periode'));
             $pdf->setPaper('a4', 'landscape');
 
-            \SharedManager::saveLog('log_swt', "Downloaded [Report History] PDF for period: {$periode} swt.");
+            // \SharedManager::saveLog('log_swt', "Downloaded [Report History] PDF for period: {$periode} swt.");
 
             return $pdf->download('Laporan-Safety-Walk-and-Talk-' . date('Y-m-d') . '.pdf');
         } catch (\Exception $e) {

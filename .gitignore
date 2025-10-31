@@ -27,3 +27,8 @@ yarn-error.log
 # Keep static assets
 !/public/images/static
 !/public/images/static/**
+
+# Ignore digital certificates (security) - if using MailService with S/MIME
+*.pem
+*.p12
+*.pfx

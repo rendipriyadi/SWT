@@ -60,7 +60,15 @@
                 <div class="col-md-6">
                     <div class="detail-item">
                         <label class="fw-bold text-muted">Person in Charge:</label>
-                        <p class="mb-0">{{ $laporan->penanggungJawab->name ?? 'Not assigned' }}</p>
+                        <p class="mb-0">
+                            @if($laporan->penanggungJawab)
+                                {{ $laporan->penanggungJawab->name }}
+                            @elseif($laporan->area && $laporan->area->penanggungJawabs && $laporan->area->penanggungJawabs->count() > 0)
+                                {{ $laporan->area->penanggungJawabs->pluck('name')->join(', ') }}
+                            @else
+                                Not assigned
+                            @endif
+                        </p>
                     </div>
                 </div>
                 <div class="col-md-6">
