@@ -9,7 +9,7 @@ use App\Models\Laporan;
 class DepartemenSupervisor extends Model
 {
     protected $table = 'departemen_supervisors';
-    protected $fillable = ['departemen', 'supervisor', 'workgroup', 'email'];
+    protected $fillable = ['departemen', 'supervisor', 'workgroup'];
 
     /**
      * Get the route key for the model.

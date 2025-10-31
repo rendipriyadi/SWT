@@ -105,9 +105,15 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Update supervisor berdasarkan station yang dipilih
-    function updateSupervisor(stationId, areaId) {
+    async function updateSupervisor(stationId, areaId) {
         if (!stationId || stationId === '') {
-            supervisorInput.value = supervisorInput.value; // keep group list
+            // Ketika "Select Station" dipilih, tampilkan semua PIC dari area
+            if (areaId) {
+                const data = await fetchStations(areaId);
+                supervisorInput.value = (data.group_members || []).join(', ');
+            } else {
+                supervisorInput.value = '';
+            }
             return;
         }
         const match = fetchedStations.find(s => String(s.id) === String(stationId));

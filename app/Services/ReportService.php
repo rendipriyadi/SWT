@@ -164,9 +164,10 @@ class ReportService
      */
     public function getReportsPerMonth()
     {
-        return Laporan::selectRaw('MONTH(created_at) as bulan, COUNT(*) as total')
-            ->where('created_at', '>=', now()->subMonths(11))
-            ->groupBy('bulan')
+        return Laporan::selectRaw('YEAR(created_at) as tahun, MONTH(created_at) as bulan, COUNT(*) as total')
+            ->where('created_at', '>=', now()->subMonths(11)->startOfMonth())
+            ->groupBy('tahun', 'bulan')
+            ->orderBy('tahun')
             ->orderBy('bulan')
             ->get();
     }
@@ -179,9 +180,10 @@ class ReportService
     public function getReportsByAreaPerMonth()
     {
         return Laporan::join('areas', 'laporan.area_id', '=', 'areas.id')
-            ->selectRaw('areas.name as area_name, MONTH(laporan.created_at) as bulan, COUNT(*) as total')
-            ->where('laporan.created_at', '>=', now()->subMonths(11))
-            ->groupBy('areas.name', 'bulan')
+            ->selectRaw('areas.name as area_name, YEAR(laporan.created_at) as tahun, MONTH(laporan.created_at) as bulan, COUNT(*) as total')
+            ->where('laporan.created_at', '>=', now()->subMonths(11)->startOfMonth())
+            ->groupBy('areas.name', 'tahun', 'bulan')
+            ->orderBy('tahun')
             ->orderBy('bulan')
             ->get();
     }

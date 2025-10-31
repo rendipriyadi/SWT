@@ -52,18 +52,22 @@ class ReportController extends Controller
 
     public function dashboard()
     {
-        \SharedManager::checkAuthToModule(17);
-        
+       if (!isset($_SERVER['HTTPS'])) {
+        $_SERVER['HTTPS'] = 'off';
+    }
+
+    \SharedManager::checkAuthToModule(17);
+
         // Get statistics from service
         $stats = $this->reportService->getDashboardStats();
-        
+
         $areas = Area::all();
         $laporanPerBulan = $this->reportService->getReportsPerMonth();
         $areaPerBulan = $this->reportService->getReportsByAreaPerMonth();
         $categoryPerBulan = $this->reportService->getReportsByCategoryCurrentMonth();
 
         \SharedManager::saveLog('log_swt', "Accessed the [Dashboard] page swt.");
-        
+
         return view('walkandtalk.dashboard', [
             'totalLaporan' => $stats['total'],
             'laporanInProgress' => $stats['in_progress'],
@@ -94,10 +98,10 @@ class ReportController extends Controller
             // Use helper method to decrypt and get laporan
             $laporan = $this->getLaporanFromEncryptedId($id);
             $laporan->load(['area', 'penanggungJawab', 'problemCategory', 'penyelesaian']);
-            
+
             // Return detail view
             return view('walkandtalk.show', compact('laporan'));
-            
+
         } catch (\Exception $e) {
             \Log::error('Error loading report detail: ' . $e->getMessage());
             return redirect()->route('dashboard')->with('error', 'Report not found');
@@ -107,9 +111,9 @@ class ReportController extends Controller
     public function create()
     {
         $areas = Area::with('penanggungJawabs')->get();
-        
+
         \SharedManager::saveLog('log_swt', "Accessed the [Create Report] page swt.");
-        
+
         return view('walkandtalk.laporan', compact('areas'));
     }
 
@@ -132,17 +136,17 @@ class ReportController extends Controller
 
             // Send email notification to PIC
             $this->emailReportAssigned($laporan);
-            
+
             // $this->sendSupervisorNotifications($laporan); // Old notification method
             \SharedManager::saveLog('log_swt', "Created new report swt.");
-            
+
             // Redirect to report list page instead of dashboard
             return redirect()->route('laporan.index')->with('success', 'Report created successfully and notification sent.');
-            
+
         } catch (\Exception $e) {
             \Log::error('Error creating report: ' . $e->getMessage());
             \Log::error('Stack trace: ' . $e->getTraceAsString());
-            
+
             return redirect()->back()
                 ->withInput()
                 ->with('error', 'Failed to create report. Please try again.');
@@ -157,7 +161,7 @@ class ReportController extends Controller
         ]);
 
         $areaId = (int) $request->input('area_id');
-        
+
         // Optimized query - only select needed columns
         $area = Area::select('id', 'name')
             ->with(['penanggungJawabs' => function($query) {
@@ -165,7 +169,7 @@ class ReportController extends Controller
                       ->orderBy('station');
             }])
             ->find($areaId);
-        
+
         if (!$area) {
             return response()->json(['error' => 'Area tidak ditemukan'], 404);
         }
@@ -192,9 +196,9 @@ class ReportController extends Controller
         $laporan->load(['area', 'penanggungJawab', 'problemCategory']);
         $areas = Area::with('penanggungJawabs')->get();
         $problemCategories = ProblemCategory::active()->ordered()->get();
-        
+
         \SharedManager::saveLog('log_swt', "Accessed the [Edit Report] page for ID: {$laporan->id} swt.");
-        
+
         return view('walkandtalk.edit', compact('laporan', 'areas', 'problemCategories'));
     }
 
@@ -221,7 +225,7 @@ class ReportController extends Controller
             // Handle photo management
             $existingPhotos = $request->input('existing_photos', []);
             $newPhotos = [];
-            
+
             if ($request->hasFile('Foto')) {
                 $newPhotos = $this->fileUploadService->uploadReportPhotos($request->file('Foto'));
             }
@@ -241,26 +245,26 @@ class ReportController extends Controller
 
             // Detect changes for notifications
             $perubahan = $this->detectChanges($oldData, $validated, $oldArea, $oldPenanggungJawab);
-            
+
             if (!empty($perubahan)) {
                 $this->emailReportEdited($laporan, $perubahan);
             }
 
             $returnUrl = $request->input('return_url', route('laporan.index'));
-            
+
             // Prevent redirect to datatables AJAX endpoints
             if (str_contains($returnUrl, '/datatables')) {
                 $returnUrl = route('laporan.index');
             }
-            
+
             \SharedManager::saveLog('log_swt', "Updated report ID: {$laporan->id} swt.");
-            
+
             return redirect($returnUrl)->with('success', 'Report updated successfully.');
-            
+
         } catch (\Exception $e) {
             \Log::error('Error updating report: ' . $e->getMessage());
             \Log::error('Stack trace: ' . $e->getTraceAsString());
-            
+
             $returnUrl = $request->input('return_url', route('laporan.index'));
             return redirect($returnUrl)
                 ->with('success', 'Report updated successfully.');
@@ -271,9 +275,9 @@ class ReportController extends Controller
     {
         $laporan = $this->getLaporanFromEncryptedId($id);
         $laporan->load(['area', 'area.penanggungJawabs', 'penanggungJawab', 'problemCategory', 'penyelesaian']);
-        
+
         \SharedManager::saveLog('log_swt', "Accessed the [Completion Action] page for ID: {$laporan->id} swt.");
-        
+
         return view('walkandtalk.tindakan', compact('laporan'));
     }
 
@@ -300,7 +304,7 @@ class ReportController extends Controller
                 $this->emailReportCompleted($laporan);
 
                 \SharedManager::saveLog('log_swt', "Completed report ID: {$laporan->id} swt.");
-                
+
                 return redirect()->route('sejarah.index')
                     ->with('success', 'Report completed successfully and moved to history.');
             }
@@ -309,13 +313,13 @@ class ReportController extends Controller
             $this->reportService->updateStatus($laporan, $validated['status']);
 
             \SharedManager::saveLog('log_swt', "Updated report status ID: {$laporan->id} swt.");
-            
+
             return redirect()->route('laporan.index')
                 ->with('success', 'Report status updated successfully.');
         } catch (\Exception $e) {
             \Log::error('Error completing report: ' . $e->getMessage());
             \Log::error('Stack trace: ' . $e->getTraceAsString());
-            
+
             return redirect()->back()
                 ->withInput()
                 ->with('error', 'Failed to complete report: ' . $e->getMessage());
@@ -454,7 +458,7 @@ class ReportController extends Controller
             ->filterColumn('area.name', function($query, $keyword) {
                 // Search in area name OR station name OR PIC name (case-insensitive)
                 $keyword = strtolower($keyword);
-                
+
                 $query->where(function($q) use ($keyword) {
                     // Search in area name
                     $q->whereHas('area', function($subQ) use ($keyword) {
@@ -494,12 +498,12 @@ class ReportController extends Controller
 
             if ($deleted) {
                 \SharedManager::saveLog('log_swt', "Deleted report ID: {$laporan->id} swt.");
-            
+
                 return response()->json(['success' => true, 'message' => 'Report deleted successfully.']);
             }
 
             return response()->json(['success' => false, 'message' => 'Failed to delete report.'], 500);
-            
+
         } catch (\Exception $e) {
             \Log::error('Error deleting report: ' . $e->getMessage());
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
@@ -526,26 +530,26 @@ class ReportController extends Controller
         try {
             $laporan = $this->getLaporanFromEncryptedId($id);
             $laporan->load('penyelesaian');
-            
+
             if (!$laporan->penyelesaian) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Completion data not found.'
                 ]);
             }
-            
+
             // Helper to resolve completion photo URL
             $resolveCompletionUrl = function(string $filename) {
                 return asset('images/completions/' . $filename);
             };
-            
+
             $fotoUrls = [];
             if (!empty($laporan->penyelesaian->Foto) && is_array($laporan->penyelesaian->Foto)) {
                 foreach ($laporan->penyelesaian->Foto as $foto) {
                     $fotoUrls[] = $resolveCompletionUrl($foto);
                 }
             }
-            
+
             return response()->json([
                 'success' => true,
                 'Tanggal' => Carbon::parse($laporan->penyelesaian->Tanggal)->locale('en')->isoFormat('dddd, D MMMM YYYY'),

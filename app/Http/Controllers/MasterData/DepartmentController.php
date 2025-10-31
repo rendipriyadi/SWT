@@ -36,7 +36,6 @@ class DepartmentController extends Controller
             'departemen' => $request->name,
             'supervisor' => $request->supervisor ?? $request->name,
             'workgroup' => $request->workgroup,
-            'email' => $request->email,
         ]);
 
         \SharedManager::saveLog('log_swt', "Created new department/supervisor: {$request->name} swt.");
@@ -69,7 +68,6 @@ class DepartmentController extends Controller
             'departemen' => $request->name,
             'supervisor' => $request->supervisor ?? $request->name,
             'workgroup' => $request->workgroup,
-            'email' => $request->email,
         ]);
 
         \SharedManager::saveLog('log_swt', "Updated department/supervisor ID: {$department->id} swt.");

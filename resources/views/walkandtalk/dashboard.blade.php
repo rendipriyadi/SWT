@@ -120,8 +120,6 @@ const laporanPerBulanData = @json($laporanPerBulan);
 const areaPerBulanData = @json($areaPerBulan);
 const categoryPerBulanData = @json($categoryPerBulan);
 
-// Debug logging removed in production
-
 // Helper function to get month names
 function getMonthName(monthNumber) {
     const months = [
@@ -134,14 +132,25 @@ function getMonthName(monthNumber) {
 // Helper function to get last 12 months
 function getLast12Months() {
     const months = [];
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth(); // 0-11
+    
     for (let i = 11; i >= 0; i--) {
-        const date = new Date();
-        date.setMonth(date.getMonth() - i);
-        // getMonth() returns 0-11, but we need 1-12 for database comparison
-        const monthNumber = date.getMonth() + 1;
+        // Calculate target month and year
+        let targetMonth = currentMonth - i;
+        let targetYear = currentYear;
+        
+        // Handle year rollover
+        while (targetMonth < 0) {
+            targetMonth += 12;
+            targetYear -= 1;
+        }
+        
         months.push({
-            name: getMonthName(monthNumber),
-            number: monthNumber
+            name: getMonthName(targetMonth + 1), // Convert 0-11 to 1-12
+            number: targetMonth + 1, // Convert 0-11 to 1-12
+            year: targetYear
         });
     }
     return months;
@@ -159,8 +168,7 @@ const laporanPerBulanChart = new Chart(laporanPerBulanCtx, {
             data: (() => {
                 const data = new Array(12).fill(0);
                 laporanPerBulanData.forEach(item => {
-                    // Find the correct month index in our months array
-                    const monthIndex = monthsData.findIndex(m => m.number === item.bulan);
+                    const monthIndex = monthsData.findIndex(m => m.number === item.bulan && m.year === item.tahun);
                     if (monthIndex >= 0 && monthIndex < 12) {
                         data[monthIndex] = item.total;
                     }
@@ -286,7 +294,7 @@ const areaPerBulanChart = new Chart(areaPerBulanCtx, {
                 label: areaName,
                 data: monthsData.map((monthData, monthIndex) => {
                     const item = areaPerBulanData.find(d =>
-                        d.area_name === areaName && d.bulan === monthData.number
+                        d.area_name === areaName && d.bulan === monthData.number && d.tahun === monthData.year
                     );
                     return item ? item.total : 0;
                 }),
