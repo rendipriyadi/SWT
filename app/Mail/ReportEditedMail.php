@@ -41,7 +41,6 @@ class ReportEditedMail extends Mailable
 
         $envelope = new Envelope(
             subject: "Safety Walk and Talk Report Updated - {$categoryName}",
-            from: 'noreply@siemens.com',
         );
 
         // Add CC if provided
