@@ -388,7 +388,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Form submission handling
+    // Form submission handling with proper loading state
     const form = document.getElementById('reportForm');
     const submitBtn = document.getElementById('submitBtn');
     
@@ -401,15 +401,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 formToken.value = csrfToken;
             }
             
-            // Disable submit button to prevent double submission
+            // Show loading state
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Submitting...';
             
-            // Re-enable after 5 seconds as fallback
+            // Keep loading state active until page unloads (redirect happens)
+            // This ensures button stays disabled during server processing and redirect
+            window.addEventListener('beforeunload', function() {
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Redirecting...';
+            });
+            
+            // Fallback: Re-enable after 30 seconds if something goes wrong
             setTimeout(() => {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Submit Report';
-            }, 5000);
+                if (document.body.contains(submitBtn)) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Submit Report';
+                }
+            }, 30000);
         });
     }
 });

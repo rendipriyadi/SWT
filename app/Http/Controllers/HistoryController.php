@@ -19,7 +19,7 @@ class HistoryController extends Controller
     {
         $areas = Area::all();
 
-        \SharedManager::saveLog('log_swt', "Accessed the [Report History] page swt.");
+        // \SharedManager::saveLog('log_swt', "Accessed the [Report History] page swt.");
 
         return view('walkandtalk.sejarah', compact('areas'));
     }
@@ -192,7 +192,7 @@ class HistoryController extends Controller
             $pdf = Pdf::loadView('walkandtalk.pdf.laporan-selesai', compact('laporan', 'periode'));
             $pdf->setPaper('a4', 'landscape');
 
-            \SharedManager::saveLog('log_swt', "Downloaded [Report History] PDF for period: {$periode} swt.");
+            // \SharedManager::saveLog('log_swt', "Downloaded [Report History] PDF for period: {$periode} swt.");
 
             return $pdf->download('Laporan-Safety-Walk-and-Talk-' . date('Y-m-d') . '.pdf');
         } catch (\Exception $e) {

@@ -153,7 +153,7 @@
             <!-- Hidden status field - always set to Completed -->
             <input type="hidden" name="status" value="Completed">
             
-            <button type="submit" class="btn btn-success mt-4">
+            <button type="submit" class="btn btn-success mt-4" id="completeBtn">
                 <i class="fas fa-check-circle me-2"></i>Mark as Completed
             </button>
         </form>
@@ -393,6 +393,31 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     });
+    
+    // Form completion submission handling with proper loading state
+    const completionForm = document.querySelector('form[action*="tindakan"]');
+    const completeBtn = document.getElementById('completeBtn');
+    
+    if (completionForm && completeBtn) {
+        completionForm.addEventListener('submit', function(e) {
+            // Show loading state
+            completeBtn.disabled = true;
+            completeBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Completing...';
+            
+            // Keep loading state active until page unloads (redirect happens)
+            window.addEventListener('beforeunload', function() {
+                completeBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Redirecting...';
+            });
+            
+            // Fallback: Re-enable after 30 seconds if something goes wrong
+            setTimeout(() => {
+                if (document.body.contains(completeBtn)) {
+                    completeBtn.disabled = false;
+                    completeBtn.innerHTML = '<i class="fas fa-check-circle me-2"></i>Mark as Completed';
+                }
+            }, 30000);
+        });
+    }
 });
 </script>
 @endpush

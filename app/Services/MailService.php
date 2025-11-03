@@ -13,7 +13,7 @@ class MailService
 
     /**
      * Set email recipient(s)
-     * 
+     *
      * @param string|array $to_email
      * @return self
      */
@@ -25,7 +25,7 @@ class MailService
     }
 
     /**
-     * Send email using Laravel Mailable with optional digital signature
+     * Send email using Laravel Mailable
      *
      * Usage: MailService::to($emails)->send(new ReportAssignedMail(...));
      *
@@ -34,15 +34,12 @@ class MailService
      */
     public function send(Mailable $mailable)
     {
-        // ============================================================================
-        // DIGITAL SIGNATURE (S/MIME) - Currently disabled
-        // Uncomment code below to enable email signing with digital certificate
-        // Path to your PKCS#12 certificate (Ensure it contains BOTH private key & certificate)
-        // ============================================================================
         /*
-        // Add callback to sign email before sending
         $mailable->withSymfonyMessage(function ($message) {
-            // Path to PKCS#12 certificate
+            // Get Symfony Email object
+            $symfonyEmail = $message;
+
+            // Path to your PKCS#12 certificate (Ensure it contains BOTH private key & certificate)
             // $pkcs12Path = "C:/SoftKeyOneX2025.pem";
             $pkcs12Path = "D:/Apache24/SoftKeyOneX2025.pem";
             $pkcs12Password = getenv("ONEX_CERTIFICATE_CREDENTIAL");
@@ -52,20 +49,17 @@ class MailService
                 $signer = new SMimeSigner($pkcs12Path, $pkcs12Path, $pkcs12Password);
 
                 // Sign the Symfony email
-                $signedEmail = $signer->sign($message);
+                $signedEmail = $signer->sign($symfonyEmail);
 
                 // Replace the original message with the signed message
                 $message->setBody($signedEmail->getBody());
-                $message->setHeaders($signedEmail->getHeaders());
-
-                Log::info("Email signed successfully with digital signature");
+                $symfonyEmail->setHeaders($signedEmail->getHeaders());
             } catch (\Exception $e) {
                 Log::error("Email signing failed: " . $e->getMessage());
             }
         });
         */
 
-        // Send email using standard Laravel Mail
         Mail::to($this->to_email)->send($mailable);
     }
 }
