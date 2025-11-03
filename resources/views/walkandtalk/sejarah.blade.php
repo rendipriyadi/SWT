@@ -249,7 +249,13 @@
 
 /* Specific column alignments */
 #sejarahTable td:nth-child(1) { text-align: center !important; } /* No - center */
-#sejarahTable td:nth-child(6) { text-align: left !important; padding-left: 1rem !important; } /* Description - left align */
+#sejarahTable td:nth-child(6),
+#sejarahTable tbody td:nth-child(6),
+table#sejarahTable tbody td:nth-child(6) { 
+    text-align: center !important; 
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+} /* Description - center align */
 
 /* Mobile table styles */
 .mobile-table-row {

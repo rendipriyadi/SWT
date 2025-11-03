@@ -138,7 +138,9 @@
             </div>
 
 
-            <button type="submit" class="btn btn-primary mt-4">Update</button>
+            <button type="submit" class="btn btn-primary mt-4" id="updateBtn">
+                <i class="fas fa-save me-2"></i>Update Report
+            </button>
         </form>
     </div>
 </div>
@@ -267,6 +269,31 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+
+    // Form update submission handling with proper loading state
+    const updateForm = document.querySelector('form[action*="laporan"]');
+    const updateBtn = document.getElementById('updateBtn');
+    
+    if (updateForm && updateBtn) {
+        updateForm.addEventListener('submit', function(e) {
+            // Show loading state
+            updateBtn.disabled = true;
+            updateBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Updating...';
+            
+            // Keep loading state active until page unloads (redirect happens)
+            window.addEventListener('beforeunload', function() {
+                updateBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Loading...';
+            });
+            
+            // Fallback: Re-enable after 30 seconds if something goes wrong
+            setTimeout(() => {
+                if (document.body.contains(updateBtn)) {
+                    updateBtn.disabled = false;
+                    updateBtn.innerHTML = '<i class="fas fa-save me-2"></i>Update Report';
+                }
+            }, 30000);
+        });
+    }
 });
 </script>
 @endpush

@@ -406,7 +406,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Keep loading state active until page unloads (redirect happens)
             window.addEventListener('beforeunload', function() {
-                completeBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Redirecting...';
+                completeBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Loading...';
             });
             
             // Fallback: Re-enable after 30 seconds if something goes wrong
