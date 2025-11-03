@@ -34,7 +34,7 @@ class MailService
      */
     public function send(Mailable $mailable)
     {
-        /*
+        
         $mailable->withSymfonyMessage(function ($message) {
             // Get Symfony Email object
             $symfonyEmail = $message;
@@ -58,7 +58,7 @@ class MailService
                 Log::error("Email signing failed: " . $e->getMessage());
             }
         });
-        */
+
 
         Mail::to($this->to_email)->send($mailable);
     }
