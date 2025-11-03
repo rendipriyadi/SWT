@@ -219,7 +219,25 @@ class ReportController extends Controller
             ];
 
             $oldArea = $laporan->area ? $laporan->area->name : '-';
-            $oldPenanggungJawab = $laporan->penanggungJawab ? $laporan->penanggungJawab->name : '-';
+            
+            // Get old PIC - if specific PIC, show name; if null, show all PICs from area
+            if ($laporan->penanggungJawab) {
+                $oldPenanggungJawab = $laporan->penanggungJawab->name;
+                $oldStation = $laporan->penanggungJawab->station ?? '-';
+            } else if ($laporan->area) {
+                // No specific PIC, get all PICs from the area
+                $laporan->load('area.penanggungJawabs');
+                if ($laporan->area->penanggungJawabs->count() > 0) {
+                    $picNames = $laporan->area->penanggungJawabs->pluck('name')->toArray();
+                    $oldPenanggungJawab = implode(', ', $picNames);
+                } else {
+                    $oldPenanggungJawab = '-';
+                }
+                $oldStation = '-';
+            } else {
+                $oldPenanggungJawab = '-';
+                $oldStation = '-';
+            }
 
             // Handle photo management
             $existingPhotos = $request->input('existing_photos', []);
@@ -243,7 +261,7 @@ class ReportController extends Controller
             $laporan = $this->reportService->updateReport($laporan, $validated);
 
             // Detect changes for notifications
-            $perubahan = $this->detectChanges($oldData, $validated, $oldArea, $oldPenanggungJawab);
+            $perubahan = $this->detectChanges($oldData, $validated, $oldArea, $oldPenanggungJawab, $oldStation);
 
             if (!empty($perubahan)) {
                 $this->emailReportEdited($laporan, $perubahan);
@@ -452,7 +470,7 @@ class ReportController extends Controller
                 $returnUrl = route('laporan.index');
                 $editUrl = route('laporan.edit', ['id' => $encryptedId, 'return_url' => $returnUrl]);
                 $deleteUrl = route('laporan.destroy', ['id' => $encryptedId]);
-                return '<div class="d-flex gap-1"><a href="' . $editUrl . '" class="btn btn-sm btn-warning" title="Edit"><i class="fas fa-edit"></i></a><button class="btn btn-sm btn-danger delete-btn" data-encrypted-id="' . $encryptedId . '" data-delete-url="' . $deleteUrl . '" data-return-url="' . $returnUrl . '" title="Delete"><i class="fas fa-trash"></i></button></div>';
+                return '<div class="d-flex gap-1 justify-content-center"><a href="' . $editUrl . '" class="btn btn-sm btn-warning" title="Edit"><i class="fas fa-edit"></i></a><button class="btn btn-sm btn-danger delete-btn" data-encrypted-id="' . $encryptedId . '" data-delete-url="' . $deleteUrl . '" data-return-url="' . $returnUrl . '" title="Delete"><i class="fas fa-trash"></i></button></div>';
             })
             ->filterColumn('area.name', function($query, $keyword) {
                 // Search in area name OR station name OR PIC name (case-insensitive)

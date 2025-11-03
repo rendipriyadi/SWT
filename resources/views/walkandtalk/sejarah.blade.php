@@ -429,8 +429,11 @@ $(document).ready(function() {
             return;
         }
         
-        // Redirect to detail page
-        window.location.href = '/laporan/' + data.encrypted_id;
+        // Redirect to detail page using route
+        const detailUrl = window.routes && window.routes.laporanShow 
+            ? window.routes.laporanShow.replace(':id', data.encrypted_id)
+            : '/laporan/' + data.encrypted_id;
+        window.location.href = detailUrl;
         return;
         
         // OLD: Populate modal with row data (disabled)

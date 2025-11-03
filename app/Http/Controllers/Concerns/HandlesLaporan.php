@@ -49,9 +49,10 @@ trait HandlesLaporan
      * @param array $newData
      * @param string $oldArea
      * @param string $oldPenanggungJawab
+     * @param string $oldStation
      * @return array
      */
-    private function detectChanges($oldData, $newData, $oldArea, $oldPenanggungJawab)
+    private function detectChanges($oldData, $newData, $oldArea, $oldPenanggungJawab, $oldStation = '-')
     {
         $perubahan = [];
 
@@ -68,11 +69,24 @@ trait HandlesLaporan
         // Check PIC change - handle both single PIC and multiple PICs
         if ($oldData['penanggung_jawab_id'] != ($newData['penanggung_jawab_id'] ?? null)) {
             $newPenanggungJawab = null;
+            
+            // Determine old PIC display value
+            $oldPICDisplay = $oldPenanggungJawab;
+            
+            // If old PIC was null, show all PICs from old area
+            if (empty($oldData['penanggung_jawab_id']) && !empty($oldData['area_id'])) {
+                $oldAreaObj = Area::with('penanggungJawabs')->find($oldData['area_id']);
+                if ($oldAreaObj && $oldAreaObj->penanggungJawabs->count() > 0) {
+                    $oldPICNames = $oldAreaObj->penanggungJawabs->pluck('name')->toArray();
+                    $oldPICDisplay = implode(', ', $oldPICNames);
+                }
+            }
 
             // If new data has specific PIC
             if (!empty($newData['penanggung_jawab_id'])) {
                 $newPenanggungJawab = PenanggungJawab::find($newData['penanggung_jawab_id']);
                 $newPICName = $newPenanggungJawab ? $newPenanggungJawab->name : '-';
+                $newStation = $newPenanggungJawab && $newPenanggungJawab->station ? $newPenanggungJawab->station : '-';
             }
             // If no specific PIC, get all PICs from the area
             else if (!empty($newData['area_id'])) {
@@ -80,18 +94,30 @@ trait HandlesLaporan
                 if ($newArea && $newArea->penanggungJawabs->count() > 0) {
                     $picNames = $newArea->penanggungJawabs->pluck('name')->toArray();
                     $newPICName = implode(', ', $picNames);
+                    $newStation = '-';
                 } else {
                     $newPICName = '-';
+                    $newStation = '-';
                 }
             } else {
                 $newPICName = '-';
+                $newStation = '-';
             }
 
             $perubahan[] = [
                 'field' => 'Person in Charge',
-                'old' => $oldPenanggungJawab,
+                'old' => $oldPICDisplay,
                 'new' => $newPICName
             ];
+
+            // Add station change if different (use parameter $oldStation)
+            if ($oldStation !== $newStation) {
+                $perubahan[] = [
+                    'field' => 'Station',
+                    'old' => $oldStation,
+                    'new' => $newStation
+                ];
+            }
         }
         // Also check if area changed but PIC stayed null - this means multiple PICs might have changed
         else if ($oldData['penanggung_jawab_id'] === null &&

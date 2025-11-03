@@ -133,7 +133,7 @@ class HistoryController extends Controller
                 $returnUrl = route('sejarah.index');
                 $editUrl = route('laporan.edit', ['id' => $encryptedId, 'return_url' => $returnUrl]);
                 $deleteUrl = route('laporan.destroy', ['id' => $encryptedId]);
-                return '<div class="d-flex gap-1"><a href="' . $editUrl . '" class="btn btn-sm btn-warning" title="Edit"><i class="fas fa-edit"></i></a><button class="btn btn-sm btn-danger delete-btn" data-encrypted-id="' . $encryptedId . '" data-delete-url="' . $deleteUrl . '" data-return-url="' . $returnUrl . '" title="Delete"><i class="fas fa-trash"></i></button></div>';
+                return '<div class="d-flex gap-1 justify-content-center"><a href="' . $editUrl . '" class="btn btn-sm btn-warning" title="Edit"><i class="fas fa-edit"></i></a><button class="btn btn-sm btn-danger delete-btn" data-encrypted-id="' . $encryptedId . '" data-delete-url="' . $deleteUrl . '" data-return-url="' . $returnUrl . '" title="Delete"><i class="fas fa-trash"></i></button></div>';
             })
             ->filterColumn('area.name', function($query, $keyword) {
                 // Search in area name OR station name OR PIC name (case-insensitive)

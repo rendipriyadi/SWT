@@ -1016,7 +1016,7 @@
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                     <li>
-                        <a class="dropdown-item" href="/">
+                        <a class="dropdown-item" href="{{ route('dashboard') }}">
                             <i class="fas fa-sign-out-alt me-2"></i>Logout
                         </a>
                     </li>
@@ -1041,7 +1041,7 @@
                     <div class="nav flex-column">
                         <!-- HOME Section -->
                         <div class="nav-header text-muted small fw-bold px-3 py-2">HOME</div>
-                        <a class="nav-link py-2 {{ Request::is('dashboard') ? 'active' : '' }}" href="{{ url('dashboard') }}">
+                        <a class="nav-link py-2 {{ Request::is('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
                             <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
                             <span class="nav-text">Dashboard</span>
                         </a>
@@ -1065,11 +1065,11 @@
                         <!-- TRANSACTION Section -->
                         <div class="nav-divider my-2"></div>
                         <div class="nav-header text-muted small fw-bold px-3 py-2">TRANSACTION</div>
-                        <a class="nav-link py-2 {{ Request::is('laporan') ? 'active' : '' }}" href="{{ url('laporan') }}">
+                        <a class="nav-link py-2 {{ Request::is('laporan') ? 'active' : '' }}" href="{{ route('laporan.index') }}">
                             <div class="sb-nav-link-icon"><i class="far fa-file-alt"></i></div>
                             <span class="nav-text">Report</span>
                         </a>
-                        <a class="nav-link py-2 {{ Request::is('sejarah') ? 'active' : '' }}" href="{{ url('sejarah') }}">
+                        <a class="nav-link py-2 {{ Request::is('sejarah') ? 'active' : '' }}" href="{{ route('sejarah.index') }}">
                             <div class="sb-nav-link-icon"><i class="fas fa-history"></i></div>
                             <span class="nav-text">History</span>
                         </a>
@@ -1145,7 +1145,9 @@
         window.routes = {
             supervisor: "{{ route('supervisor', ['id' => ':id']) }}",
             penyelesaian: "{{ route('laporan.penyelesaian', ['id' => ':encryptedId']) }}",
-            stations: "{{ route('penanggung.jawab') }}"
+            stations: "{{ route('penanggung.jawab') }}",
+            laporanShow: "{{ route('laporan.show', ['id' => ':id']) }}",
+            sejarahDownload: "{{ route('sejarah.download') }}"
         };
     </script>
     

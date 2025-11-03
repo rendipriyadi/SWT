@@ -493,8 +493,11 @@ $(document).ready(function() {
                 return;
             }
 
-            // Redirect to detail page
-            window.location.href = '/laporan/' + rowData.encrypted_id;
+            // Redirect to detail page using route
+            const detailUrl = window.routes && window.routes.laporanShow 
+                ? window.routes.laporanShow.replace(':id', rowData.encrypted_id)
+                : '/laporan/' + rowData.encrypted_id;
+            window.location.href = detailUrl;
             return;
 
             // OLD: Fill modal fields (disabled)
@@ -820,7 +823,9 @@ $(document).ready(function() {
 
         // Build Export PDF URL with current filters
         function buildHistoryExportUrl() {
-            const base = (document.getElementById('historyExportPdf') || {}).getAttribute('href') || '/sejarah/download';
+            const base = window.routes && window.routes.sejarahDownload 
+                ? window.routes.sejarahDownload 
+                : ((document.getElementById('historyExportPdf') || {}).getAttribute('href') || '/sejarah/download');
             const params = new URLSearchParams();
             // Use in-memory state first, fallback to inputs
             const sd = (window.sejarahDateFilter && window.sejarahDateFilter.start) || ($('#history_created_start').val() || '').trim();
