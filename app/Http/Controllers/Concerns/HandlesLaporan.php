@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers\Concerns;
 
-use Illuminate\Http\Request;
 use Carbon\Carbon;
+use App\Models\Area;
+use Illuminate\Http\Request;
+use App\Models\PenanggungJawab;
+use App\Models\ProblemCategory;
 
 trait HandlesLaporan
 {
@@ -41,7 +44,7 @@ trait HandlesLaporan
 
     /**
      * Detect changes between old and new report data
-     * 
+     *
      * @param array $oldData
      * @param array $newData
      * @param string $oldArea
@@ -54,7 +57,7 @@ trait HandlesLaporan
 
         // Check area change
         if ($oldData['area_id'] != $newData['area_id']) {
-            $newArea = \App\Models\Area::find($newData['area_id']);
+            $newArea = Area::find($newData['area_id']);
             $perubahan[] = [
                 'field' => 'Area',
                 'old' => $oldArea,
@@ -62,22 +65,67 @@ trait HandlesLaporan
             ];
         }
 
-        // Check PIC change
+        // Check PIC change - handle both single PIC and multiple PICs
         if ($oldData['penanggung_jawab_id'] != ($newData['penanggung_jawab_id'] ?? null)) {
-            $newPenanggungJawab = $newData['penanggung_jawab_id'] 
-                ? \App\Models\PenanggungJawab::find($newData['penanggung_jawab_id']) 
-                : null;
+            $newPenanggungJawab = null;
+
+            // If new data has specific PIC
+            if (!empty($newData['penanggung_jawab_id'])) {
+                $newPenanggungJawab = PenanggungJawab::find($newData['penanggung_jawab_id']);
+                $newPICName = $newPenanggungJawab ? $newPenanggungJawab->name : '-';
+            }
+            // If no specific PIC, get all PICs from the area
+            else if (!empty($newData['area_id'])) {
+                $newArea = Area::with('penanggungJawabs')->find($newData['area_id']);
+                if ($newArea && $newArea->penanggungJawabs->count() > 0) {
+                    $picNames = $newArea->penanggungJawabs->pluck('name')->toArray();
+                    $newPICName = implode(', ', $picNames);
+                } else {
+                    $newPICName = '-';
+                }
+            } else {
+                $newPICName = '-';
+            }
+
             $perubahan[] = [
                 'field' => 'Person in Charge',
                 'old' => $oldPenanggungJawab,
-                'new' => $newPenanggungJawab ? $newPenanggungJawab->name : '-'
+                'new' => $newPICName
             ];
+        }
+        // Also check if area changed but PIC stayed null - this means multiple PICs might have changed
+        else if ($oldData['penanggung_jawab_id'] === null &&
+                 ($newData['penanggung_jawab_id'] ?? null) === null &&
+                 $oldData['area_id'] != $newData['area_id']) {
+
+            // Get old PICs
+            $oldArea = Area::with('penanggungJawabs')->find($oldData['area_id']);
+            $oldPICNames = '-';
+            if ($oldArea && $oldArea->penanggungJawabs->count() > 0) {
+                $oldPICNames = implode(', ', $oldArea->penanggungJawabs->pluck('name')->toArray());
+            }
+
+            // Get new PICs
+            $newArea = Area::with('penanggungJawabs')->find($newData['area_id']);
+            $newPICNames = '-';
+            if ($newArea && $newArea->penanggungJawabs->count() > 0) {
+                $newPICNames = implode(', ', $newArea->penanggungJawabs->pluck('name')->toArray());
+            }
+
+            // Only add if PICs actually changed
+            if ($oldPICNames !== $newPICNames) {
+                $perubahan[] = [
+                    'field' => 'Person in Charge',
+                    'old' => $oldPICNames,
+                    'new' => $newPICNames
+                ];
+            }
         }
 
         // Check problem category change
         if ($oldData['problem_category_id'] != $newData['problem_category_id']) {
-            $oldCategory = \App\Models\ProblemCategory::find($oldData['problem_category_id']);
-            $newCategory = \App\Models\ProblemCategory::find($newData['problem_category_id']);
+            $oldCategory = ProblemCategory::find($oldData['problem_category_id']);
+            $newCategory = ProblemCategory::find($newData['problem_category_id']);
             $perubahan[] = [
                 'field' => 'Problem Category',
                 'old' => $oldCategory ? $oldCategory->name : '-',
@@ -95,14 +143,14 @@ trait HandlesLaporan
         }
 
         // Check deadline change - compare dates only, not time
-        $oldDeadline = \Carbon\Carbon::parse($oldData['tenggat_waktu'])->format('Y-m-d');
-        $newDeadline = \Carbon\Carbon::parse($newData['tenggat_waktu'])->format('Y-m-d');
-        
+        $oldDeadline = Carbon::parse($oldData['tenggat_waktu'])->format('Y-m-d');
+        $newDeadline = Carbon::parse($newData['tenggat_waktu'])->format('Y-m-d');
+
         if ($oldDeadline != $newDeadline) {
             $perubahan[] = [
                 'field' => 'Deadline',
-                'old' => \Carbon\Carbon::parse($oldData['tenggat_waktu'])->format('d/m/Y'),
-                'new' => \Carbon\Carbon::parse($newData['tenggat_waktu'])->format('d/m/Y')
+                'old' => Carbon::parse($oldData['tenggat_waktu'])->format('d/m/Y'),
+                'new' => Carbon::parse($newData['tenggat_waktu'])->format('d/m/Y')
             ];
         }
 

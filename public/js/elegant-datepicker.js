@@ -128,10 +128,8 @@ class ElegantDatePicker {
             config.endDate = new Date(options.maxDate);
         }
         
-        // Special handling for completion dates (future dates only)
-        if (input.id === 'Tanggal_display' || input.classList.contains('completion-date')) {
-            config.startDate = new Date(); // Today or later only
-        }
+        // Allow backdate for completion dates (no restriction)
+        // Completion dates can be in the past, present, or future
         
         // Special handling for deadline dates (future dates only)
         if (input.name === 'tenggat_waktu' || input.classList.contains('deadline-date')) {
@@ -252,8 +250,8 @@ class ElegantDatePicker {
         let isValid = true;
         let errorMessage = '';
         
-        // Check if date is in the past (for completion and deadline dates)
-        if ((input.classList.contains('completion-date') || input.classList.contains('deadline-date')) && date < today) {
+        // Check if date is in the past (only for deadline dates, not completion dates)
+        if (input.classList.contains('deadline-date') && date < today) {
             isValid = false;
             errorMessage = 'Date cannot be in the past';
         }

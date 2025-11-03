@@ -8,7 +8,6 @@ use App\Mail\ReportEditedMail;
 use App\Mail\ReportAssignedMail;
 use App\Mail\ReportCompletedMail;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 
 trait SWTEmailNotifications
 {

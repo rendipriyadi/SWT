@@ -26,9 +26,9 @@ class MailService
 
     /**
      * Send email using Laravel Mailable with optional digital signature
-     * 
+     *
      * Usage: MailService::to($emails)->send(new ReportAssignedMail(...));
-     * 
+     *
      * @param Mailable $mailable - Laravel Mailable instance
      * @return void
      */
@@ -37,21 +37,27 @@ class MailService
         // ============================================================================
         // DIGITAL SIGNATURE (S/MIME) - Currently disabled
         // Uncomment code below to enable email signing with digital certificate
+        // Path to your PKCS#12 certificate (Ensure it contains BOTH private key & certificate)
         // ============================================================================
         /*
         // Add callback to sign email before sending
         $mailable->withSymfonyMessage(function ($message) {
-            $pkcs12Path = "D:/Apache24/YourCertificate.pem"; // Update path
-            $pkcs12Password = env('CERTIFICATE_PASSWORD');
+            // Path to PKCS#12 certificate
+            // $pkcs12Path = "C:/SoftKeyOneX2025.pem";
+            $pkcs12Path = "D:/Apache24/SoftKeyOneX2025.pem";
+            $pkcs12Password = getenv("ONEX_CERTIFICATE_CREDENTIAL");
 
             try {
+                // Create SMimeSigner instance
                 $signer = new SMimeSigner($pkcs12Path, $pkcs12Path, $pkcs12Password);
+
+                // Sign the Symfony email
                 $signedEmail = $signer->sign($message);
-                
-                // Replace message with signed version
+
+                // Replace the original message with the signed message
                 $message->setBody($signedEmail->getBody());
                 $message->setHeaders($signedEmail->getHeaders());
-                
+
                 Log::info("Email signed successfully with digital signature");
             } catch (\Exception $e) {
                 Log::error("Email signing failed: " . $e->getMessage());

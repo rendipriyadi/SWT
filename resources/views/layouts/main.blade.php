@@ -977,6 +977,19 @@
     </style>
 </head>
 <body class="sb-nav-fixed">
+    <!-- Apply sidebar state immediately to prevent flicker -->
+    <script>
+        (function() {
+            const isDesktop = window.innerWidth >= 992;
+            if (isDesktop) {
+                const shouldBeCollapsed = localStorage.getItem('sidebar-collapsed') === '1';
+                if (shouldBeCollapsed) {
+                    document.body.classList.add('sidebar-collapsed');
+                    document.documentElement.classList.add('sidebar-collapsed');
+                }
+            }
+        })();
+    </script>
     <!-- Navbar -->
     <nav class="sb-topnav navbar navbar-expand navbar-light">
         <div class="container-fluid">
@@ -1257,6 +1270,11 @@
                 if (!isDesktop) {
                     bodyEl.classList.toggle('sb-sidenav-toggled');
                     document.documentElement.classList.toggle('sb-sidenav-toggled');
+                    
+                    // Notify DataTables and other components that sidebar has toggled
+                    try {
+                        window.dispatchEvent(new CustomEvent('sidebar:toggled'));
+                    } catch (e) {}
                 } else {
                     const isCollapsed = bodyEl.classList.contains('sidebar-collapsed');
                     bodyEl.classList.toggle('sidebar-collapsed', !isCollapsed ? true : false);
@@ -1265,6 +1283,11 @@
                     // Ensure any mobile class is cleared on desktop toggle
                     bodyEl.classList.remove('sb-sidenav-toggled');
                     document.documentElement.classList.remove('sb-sidenav-toggled');
+                    
+                    // Notify DataTables and other components that sidebar has toggled
+                    try {
+                        window.dispatchEvent(new CustomEvent('sidebar:toggled'));
+                    } catch (e) {}
                     
                     // Update tooltips after toggle
                     setTimeout(() => {
