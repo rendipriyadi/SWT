@@ -210,4 +210,83 @@ trait SWTEmailNotifications
             Log::error("Unexpected error sending report completed email for ID {$laporan->id}: " . $e->getMessage());
         }
     }
+
+    /**
+     * Send reminder email for reports grouped by PIC
+     *
+     * @param \Illuminate\Support\Collection $reports
+     * @param \App\Mail\Mailable $mailableClass
+     * @return void
+     */
+    protected function sendReminderByPic($reports, $mailableClass)
+    {
+        // Group reports by PIC email (or area if no PIC)
+        $reportsByPic = $reports->groupBy(function ($report) {
+            if ($report->penanggungJawab && $report->penanggungJawab->email) {
+                return 'pic_' . $report->penanggungJawab->email;
+            } elseif ($report->area) {
+                return 'area_' . $report->area->id;
+            }
+            return 'no_recipient';
+        });
+
+        foreach ($reportsByPic as $groupKey => $groupReports) {
+            if ($groupKey === 'no_recipient') {
+                continue;
+            }
+
+            $firstReport = $groupReports->first();
+
+            // TO: PIC (Person in Charge)
+            $to_emails = [];
+            if ($firstReport->penanggungJawab && $firstReport->penanggungJawab->email) {
+                $to_emails[] = $firstReport->penanggungJawab->email;
+                $pic = $firstReport->penanggungJawab;
+            } elseif ($firstReport->area) {
+                foreach ($firstReport->area->penanggungJawabs as $pj) {
+                    if ($pj->email) {
+                        $to_emails[] = $pj->email;
+                    }
+                }
+                $pic = null;
+            }
+
+            if (empty($to_emails)) {
+                Log::warning("No email recipients for reminder group: {$groupKey}");
+                continue;
+            }
+
+            // CC: Head/Manager (PICs with station = "General" in the same Area)
+            $cc_emails = [];
+            if ($firstReport->area) {
+                foreach ($firstReport->area->penanggungJawabs as $pj) {
+                    if (strcasecmp($pj->station, 'General') === 0 && $pj->email) {
+                        if (!$pic || $pj->id != $pic->id) {
+                            $cc_emails[] = $pj->email;
+                        }
+                    }
+                }
+            }
+
+            // Remove duplicates
+            $to_emails = array_unique($to_emails);
+            $cc_emails = array_unique($cc_emails);
+            $cc_emails = array_diff($cc_emails, $to_emails);
+
+            // Encrypt all report IDs
+            $encryptedIds = [];
+            foreach ($groupReports as $report) {
+                $encryptedIds[$report->id] = encrypt($report->id);
+            }
+
+            try {
+                $mailable = new $mailableClass($groupReports, $pic, $encryptedIds, array_values($cc_emails));
+                MailService::to($to_emails)->send($mailable);
+
+                Log::info("Reminder email sent to: " . implode(', ', $to_emails) . " ({$groupReports->count()} reports)");
+            } catch (\Exception $e) {
+                Log::error("Failed to send reminder email to: " . implode(', ', $to_emails) . ". Error: " . $e->getMessage());
+            }
+        }
+    }
 }

@@ -34,7 +34,7 @@ class MailService
      */
     public function send(Mailable $mailable)
     {
-        
+
         $mailable->withSymfonyMessage(function ($message) {
             // Get Symfony Email object
             $symfonyEmail = $message;

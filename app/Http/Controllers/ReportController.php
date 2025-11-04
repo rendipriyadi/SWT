@@ -52,9 +52,9 @@ class ReportController extends Controller
 
     public function dashboard()
     {
-        if (!isset($_SERVER['HTTPS'])) {
-            $_SERVER['HTTPS'] = 'off';
-        }
+        // if (!isset($_SERVER['HTTPS'])) {
+        //     $_SERVER['HTTPS'] = 'off';
+        // }
 
         \SharedManager::checkAuthToModule(17);
 
