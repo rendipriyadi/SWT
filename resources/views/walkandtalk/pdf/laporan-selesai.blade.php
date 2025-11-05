@@ -5,32 +5,41 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            font-size: 12px;
+            font-size: 14px;
             line-height: 1.4;
         }
         .header {
-            text-align: center;
+            display: table;
+            width: 100%;
             margin-bottom: 20px;
         }
-        .logo {
-            max-width: 150px;
-            margin-bottom: 10px;
+        .header-left {
+            display: table-cell;
+            width: 30%;
+            vertical-align: middle;
         }
-        .brand {
-            font-size: 26px;
-            font-weight: 800;
-            letter-spacing: 1px;
-            color: #009999;
-            margin-bottom: 6px;
+        .header-right {
+            display: table-cell;
+            width: 70%;
+            vertical-align: middle;
+            text-align: right;
+        }
+        .logo {
+            max-width: 200px;
+            height: auto;
         }
         .title {
+            font-family: Arial, sans-serif;
             font-size: 18px;
             font-weight: bold;
+            font-style: italic;
             margin-bottom: 5px;
+            color: #000;
         }
         .subtitle {
             font-size: 14px;
-            margin-bottom: 20px;
+            margin-bottom: 0;
+            color: #666;
         }
         table {
             width: 100%;
@@ -49,6 +58,8 @@
         }
         th {
             background-color: #f4f4f4;
+            vertical-align: middle;
+            text-align: center;
         }
         .footer {
             position: fixed;
@@ -69,9 +80,9 @@
             font-size: 10px;
         }
         .foto-masalah {
-            max-width: 70px; /* Foto lebih kecil untuk mengakomodasi lebih banyak foto */
+            width: 100%;
             height: auto;
-            margin: 2px; /* Margin lebih kecil */
+            display: block;
         }
         .no-image {
             font-style: italic;
@@ -86,7 +97,7 @@
         }
         /* Memperbaiki tampilan untuk deskripsi panjang */
         .deskripsi-cell {
-            font-size: 10px;
+            font-size: 14px;
             line-height: 1.3;
             word-wrap: break-word;
             word-break: break-word;
@@ -95,39 +106,76 @@
         }
         .deskripsi-text {
             display: block;
-            margin-bottom: 8px; /* Jarak antara teks dan foto */
+            margin-bottom: 10px; /* Jarak antara teks dan foto */
             word-wrap: break-word;
             word-break: break-word;
             overflow-wrap: break-word;
             white-space: normal;
         }
-        /* Grid layout untuk banyak foto */
+        /* Grid layout untuk foto */
         .foto-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, 70px);
-            gap: 2px;
             margin-top: 5px;
         }
+        .foto-grid table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .foto-grid td {
+            width: 50%;
+            padding: 2px;
+            border: none;
+            vertical-align: top;
+        }
+        /* Jika hanya 1 foto */
+        .foto-grid.single td {
+            width: 100%;
+        }
+        /* Badge Before/After */
+        .badge-container {
+            text-align: right;
+            margin-top: 8px;
+        }
+        .before-badge {
+            display: inline-block;
+            background-color: #dc3545;
+            color: white;
+            padding: 4px 10px;
+            font-size: 10px;
+            font-weight: bold;
+            border-radius: 3px;
+        }
+        .after-badge {
+            display: inline-block;
+            background-color: #009999;
+            color: white;
+            padding: 4px 10px;
+            font-size: 10px;
+            font-weight: bold;
+            border-radius: 3px;
+        }
     </style>
-    <link rel="icon" type="image/x-icon" href="{{ asset('images/static/favicon.ico') }}">
 </head>
 <body>
     <div class="header">
-        <div class="brand">SIEMENS</div>
-        <div class="title">LAPORAN SAFETY WALK AND TALK</div>
-        <div class="subtitle">Periode: {{ $periode }}</div>
+        <div class="header-left">
+            <img src="{{ public_path('images/static/siemens-logo.png') }}" alt="Siemens Logo" class="logo">
+        </div>
+        <div class="header-right">
+            <div class="title">SAFETY WALK AND TALK</div>
+            <div class="subtitle">Period: {{ $periode }}</div>
+        </div>
     </div>
 
     <table>
         <thead>
             <tr>
                 <th width="5%">No</th>
-                <th width="12%">Report Date</th>
-                <th width="12%">Completion Date</th>
-                <th width="18%">Area/Station</th>
-                <th width="15%">Category</th>
-                <th width="20%">Problem</th>
-                <th width="18%">Solution</th>
+                <th width="10%">Report Date</th>
+                <th width="10%">Completion Date</th>
+                <th width="12%">Area/Station</th>
+                <th width="12%">Category</th>
+                <th width="25.5%">Observation</th>
+                <th width="25.5%">Resolution</th>
             </tr>
         </thead>
         <tbody>
@@ -160,34 +208,15 @@
                 <td class="deskripsi-cell">
                     <span class="deskripsi-text">{{ $item->deskripsi_masalah }}</span>
                     @if(!empty($item->Foto) && is_array($item->Foto))
-                        <div class="foto-grid">
-                            @foreach($item->Foto as $foto)
-                                @php
-                                    $imagePath = public_path('images/reports/' . $foto);
-                                    if (file_exists($imagePath)) {
-                                        $imageData = base64_encode(file_get_contents($imagePath));
-                                        $imageSrc = 'data:image/' . pathinfo($foto, PATHINFO_EXTENSION) . ';base64,' . $imageData;
-                                    } else {
-                                        $imageSrc = '';
-                                    }
-                                @endphp
-                                @if($imageSrc)
-                                    <img src="{{ $imageSrc }}" class="foto-masalah">
-                                @endif
-                            @endforeach
-                        </div>
-                    @else
-                        <div class="no-image">Tidak ada foto</div>
-                    @endif
-                </td>
-                <td class="deskripsi-cell">
-                    @if($item->penyelesaian)
-                        <span class="deskripsi-text">{{ $item->penyelesaian->deskripsi_penyelesaian }}</span>
-                        @if($item->penyelesaian && !empty($item->penyelesaian->Foto) && is_array($item->penyelesaian->Foto))
-                            <div class="foto-grid">
-                                @foreach($item->penyelesaian->Foto as $foto)
+                        @php
+                            $fotoCount = count($item->Foto);
+                            $fotoClass = $fotoCount == 1 ? 'single' : '';
+                        @endphp
+                        <div class="foto-grid {{ $fotoClass }}">
+                            <table>
+                                @foreach($item->Foto as $index => $foto)
                                     @php
-                                        $imagePath = public_path('images/completions/' . $foto);
+                                        $imagePath = public_path('images/reports/' . $foto);
                                         if (file_exists($imagePath)) {
                                             $imageData = base64_encode(file_get_contents($imagePath));
                                             $imageSrc = 'data:image/' . pathinfo($foto, PATHINFO_EXTENSION) . ';base64,' . $imageData;
@@ -195,14 +224,63 @@
                                             $imageSrc = '';
                                         }
                                     @endphp
+                                    @if($index % 2 == 0)
+                                        <tr>
+                                    @endif
                                     @if($imageSrc)
-                                        <img src="{{ $imageSrc }}" class="foto-masalah">
+                                        <td><img src="{{ $imageSrc }}" class="foto-masalah"></td>
+                                    @endif
+                                    @if($index % 2 == 1 || $index == $fotoCount - 1)
+                                        </tr>
                                     @endif
                                 @endforeach
+                            </table>
+                        </div>
+                    @else
+                        <div class="no-image">Tidak ada foto</div>
+                    @endif
+                    <div class="badge-container">
+                        <span class="before-badge">BEFORE</span>
+                    </div>
+                </td>
+                <td class="deskripsi-cell">
+                    @if($item->penyelesaian)
+                        <span class="deskripsi-text">{{ $item->penyelesaian->deskripsi_penyelesaian }}</span>
+                        @if($item->penyelesaian && !empty($item->penyelesaian->Foto) && is_array($item->penyelesaian->Foto))
+                            @php
+                                $fotoCount = count($item->penyelesaian->Foto);
+                                $fotoClass = $fotoCount == 1 ? 'single' : '';
+                            @endphp
+                            <div class="foto-grid {{ $fotoClass }}">
+                                <table>
+                                    @foreach($item->penyelesaian->Foto as $index => $foto)
+                                        @php
+                                            $imagePath = public_path('images/completions/' . $foto);
+                                            if (file_exists($imagePath)) {
+                                                $imageData = base64_encode(file_get_contents($imagePath));
+                                                $imageSrc = 'data:image/' . pathinfo($foto, PATHINFO_EXTENSION) . ';base64,' . $imageData;
+                                            } else {
+                                                $imageSrc = '';
+                                            }
+                                        @endphp
+                                        @if($index % 2 == 0)
+                                            <tr>
+                                        @endif
+                                        @if($imageSrc)
+                                            <td><img src="{{ $imageSrc }}" class="foto-masalah"></td>
+                                        @endif
+                                        @if($index % 2 == 1 || $index == $fotoCount - 1)
+                                            </tr>
+                                        @endif
+                                    @endforeach
+                                </table>
                             </div>
                         @else
                             <div class="no-image">Tidak ada foto</div>
                         @endif
+                        <div class="badge-container">
+                            <span class="after-badge">AFTER</span>
+                        </div>
                     @else
                         -
                     @endif

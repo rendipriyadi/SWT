@@ -182,10 +182,10 @@ class HistoryController extends Controller
             }
             $laporan = $query->get();
 
-            $periode = 'Semua Waktu';
+            $periode = 'All Time';
             if ($request->filled('start_date') && $request->filled('end_date')) {
-                $startDate = Carbon::parse($request->start_date)->format('j-n-Y');
-                $endDate = Carbon::parse($request->end_date)->format('j-n-Y');
+                $startDate = Carbon::parse($request->start_date)->format('n/j/Y');
+                $endDate = Carbon::parse($request->end_date)->format('n/j/Y');
                 $periode = $startDate . ' - ' . $endDate;
             }
 
