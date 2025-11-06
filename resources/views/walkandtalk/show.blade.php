@@ -60,15 +60,21 @@
                 <div class="col-md-6">
                     <div class="detail-item">
                         <label class="fw-bold text-muted">Person in Charge:</label>
-                        <p class="mb-0">
+                        <div class="d-flex flex-wrap gap-2 mt-2">
                             @if($laporan->penanggungJawab)
-                                {{ $laporan->penanggungJawab->name }}
+                                <span class="badge bg-secondary">
+                                    <i class="fas fa-user me-1"></i>{{ $laporan->penanggungJawab->name }}
+                                </span>
                             @elseif($laporan->area && $laporan->area->penanggungJawabs && $laporan->area->penanggungJawabs->count() > 0)
-                                {{ $laporan->area->penanggungJawabs->pluck('name')->join(', ') }}
+                                @foreach($laporan->area->penanggungJawabs as $pic)
+                                    <span class="badge bg-secondary">
+                                        <i class="fas fa-user me-1"></i>{{ $pic->name }}
+                                    </span>
+                                @endforeach
                             @else
-                                Not assigned
+                                <span class="text-muted">Not assigned</span>
                             @endif
-                        </p>
+                        </div>
                     </div>
                 </div>
                 <div class="col-md-6">

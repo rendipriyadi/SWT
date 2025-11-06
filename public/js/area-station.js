@@ -3,11 +3,32 @@ document.addEventListener('DOMContentLoaded', function() {
     const areaSelect = document.getElementById('area_id');
     const stationSelect = document.getElementById('penanggung_jawab_id');
     const supervisorInput = document.getElementById('supervisor');
+    const supervisorBadges = document.getElementById('supervisor-badges');
 
     // Cache for API responses
     const stationCache = new Map();
     let fetchedStations = [];
     let currentRequest = null; // Track ongoing request
+    
+    // Helper function to update supervisor display (input or badges)
+    function updateSupervisorDisplay(names) {
+        if (supervisorInput) {
+            // For input field (create report, etc)
+            supervisorInput.value = names.join(', ');
+        }
+        if (supervisorBadges) {
+            // For badge display (edit report)
+            if (names.length === 0) {
+                supervisorBadges.innerHTML = '<span class="text-muted small">No person in charge assigned</span>';
+            } else {
+                supervisorBadges.innerHTML = names.map(name => 
+                    `<span class="badge bg-secondary fs-6 py-2 px-3">
+                        <i class="fas fa-user me-1"></i>${name}
+                    </span>`
+                ).join('');
+            }
+        }
+    }
 
     // Fetch-based population from backend using POST (secure + optimized)
     async function fetchStations(areaId) {
@@ -65,7 +86,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Jika tidak ada area yang dipilih
         if (!areaId) {
             stationSelect.innerHTML = '<option value="">Select Station</option>';
-            supervisorInput.value = '';
+            updateSupervisorDisplay([]);
             stationSelect.disabled = false;
             return;
         }
@@ -80,12 +101,37 @@ document.addEventListener('DOMContentLoaded', function() {
         stationSelect.innerHTML = '<option value="">Select Station</option>';
         stationSelect.disabled = false;
         
-        supervisorInput.value = (data.group_members || []).join(', ');
+        // Area IDs yang harus mengecualikan station "General"
+        // 1 = Manufacture, 2 = Quality Control, 3 = Warehouse
+        const excludeGeneralAreaIds = ['1', '2', '3'];
+        const shouldExcludeGeneral = excludeGeneralAreaIds.includes(String(areaId));
+        
+        // Filter stations dan group_members untuk mengecualikan "General"
         fetchedStations = data.stations || [];
+        let filteredStations = fetchedStations;
+        let filteredGroupMembers = data.group_members || [];
+        
+        if (shouldExcludeGeneral) {
+            // Filter stations untuk exclude "General"
+            filteredStations = fetchedStations.filter(station => 
+                !(station.station && station.station.toLowerCase() === 'general')
+            );
+            
+            // Filter group_members untuk exclude nama dari station "General"
+            const generalStationNames = fetchedStations
+                .filter(station => station.station && station.station.toLowerCase() === 'general')
+                .map(station => station.name);
+            
+            filteredGroupMembers = filteredGroupMembers.filter(name => 
+                !generalStationNames.includes(name)
+            );
+        }
+        
+        updateSupervisorDisplay(filteredGroupMembers);
         
         // Use DocumentFragment for better performance
         const fragment = document.createDocumentFragment();
-        fetchedStations.forEach(station => {
+        filteredStations.forEach(station => {
             const option = document.createElement('option');
             option.value = station.id;
             option.textContent = station.station;
@@ -113,15 +159,34 @@ document.addEventListener('DOMContentLoaded', function() {
             // Ketika "Select Station" dipilih, tampilkan semua PIC dari area
             if (areaId) {
                 const data = await fetchStations(areaId);
-                supervisorInput.value = (data.group_members || []).join(', ');
+                
+                // Area IDs yang harus mengecualikan station "General"
+                const excludeGeneralAreaIds = ['1', '2', '3'];
+                const shouldExcludeGeneral = excludeGeneralAreaIds.includes(String(areaId));
+                
+                let groupMembers = data.group_members || [];
+                
+                if (shouldExcludeGeneral) {
+                    // Filter group_members untuk exclude nama dari station "General"
+                    const allStations = data.stations || [];
+                    const generalStationNames = allStations
+                        .filter(station => station.station && station.station.toLowerCase() === 'general')
+                        .map(station => station.name);
+                    
+                    groupMembers = groupMembers.filter(name => 
+                        !generalStationNames.includes(name)
+                    );
+                }
+                
+                updateSupervisorDisplay(groupMembers);
             } else {
-                supervisorInput.value = '';
+                updateSupervisorDisplay([]);
             }
             return;
         }
         const match = fetchedStations.find(s => String(s.id) === String(stationId));
         if (match) {
-            supervisorInput.value = match.name || '';
+            updateSupervisorDisplay([match.name || '']);
         }
     }
 

@@ -225,21 +225,14 @@ $(document).ready(function() {
         const target = $(this).data('bs-target');
         const isExpanded = $(this).attr('aria-expanded') === 'true';
         
-        // Close all other rows with smooth transition
+        // Close all other rows with smooth transition using Bootstrap collapse
         $('.mobile-table-row').not(this).each(function() {
             const otherTarget = $(this).data('bs-target');
-            $(otherTarget).removeClass('show');
-            $(this).attr('aria-expanded', 'false');
+            $(otherTarget).collapse('hide');
         });
         
-        // Toggle current row
-        if (isExpanded) {
-            $(this).attr('aria-expanded', 'false');
-            $(target).removeClass('show');
-        } else {
-            $(this).attr('aria-expanded', 'true');
-            $(target).addClass('show');
-        }
+        // Toggle current row using Bootstrap collapse method
+        $(target).collapse('toggle');
     });
     // SweetAlert2 handler for department deletes (match /area)
     $(document).on('click', '.delete-dept-btn', function(e) {

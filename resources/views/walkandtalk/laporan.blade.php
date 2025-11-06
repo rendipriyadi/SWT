@@ -8,15 +8,12 @@
 
 @section('content')
 <div class="container-fluid px-4">
-    <div class="page-header mb-4 position-relative">
-        <div class="d-flex justify-content-between align-items-center">
-            <div>
-                <h1 class="mb-2">Add New Report</h1>
-                <p class="text-muted mb-0">Create a new safety walk and talk report</p>
-            </div>
+    <div class="page-header mb-4">
+        <div>
+            <h1 class="mb-2">Add New Report</h1>
+            <p class="text-muted mb-0">Create a new safety walk and talk report</p>
         </div>
-        <!-- Tombol Back di kanan atas -->
-        <div class="position-absolute" style="top: 0; right: 0;">
+        <div>
             <a href="{{ route('laporan.index') }}" class="btn btn-outline-secondary" style="border: 2px solid #6c757d;">
                 <i class="fas fa-arrow-left me-2"></i>Back to Reports
             </a>

@@ -16,92 +16,130 @@
             </nav>
         </div>
         <div>
-            <a href="{{ route('laporan.index') }}" class="btn btn-secondary">
+            <a href="{{ route('laporan.index') }}" class="btn btn-outline-secondary" style="border: 2px solid #6c757d;">
                 <i class="fas fa-arrow-left me-2"></i>Back to Reports
             </a>
         </div>
     </div>
     
-    <!-- Tampilkan detail masalah dengan struktur data baru -->
+    <!-- Report Information Card -->
     <div class="card mb-4">
-        <div class="card-header bg-secondary text-white">
-            <h5 class="mb-0">Problem Details</h5>
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Report Information</h5>
         </div>
         <div class="card-body">
-            <div class="row">
-                <div class="col-md-4">
-                    <h6 class="fw-bold">Report Date:</h6>
-                    <p>{{ $laporan->created_at->format('d/m/Y H:i') }}</p>
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="detail-item">
+                        <label class="fw-bold text-muted">Report Date:</label>
+                        <p class="mb-0">{{ \Carbon\Carbon::parse($laporan->created_at)->locale('en')->isoFormat('dddd, D MMMM YYYY') }}</p>
+                    </div>
                 </div>
-                <div class="col-md-4">
-                    <h6 class="fw-bold">Area:</h6>
-                    <p>{{ $laporan->area->name ?? '-' }}</p>
+                <div class="col-md-6">
+                    <div class="detail-item">
+                        <label class="fw-bold text-muted">Status:</label>
+                        <p class="mb-0">
+                            @if($laporan->status == 'Assigned')
+                                <span class="badge bg-info"><i class="fas fa-circle me-1"></i>Assigned</span>
+                            @elseif($laporan->status == 'Completed')
+                                <span class="badge bg-success"><i class="fas fa-check-circle me-1"></i>Completed</span>
+                            @else
+                                <span class="badge bg-secondary">{{ $laporan->status }}</span>
+                            @endif
+                        </p>
+                    </div>
                 </div>
-                <div class="col-md-4">
-                    <h6 class="fw-bold">Station:</h6>
-                    <p>{{ $laporan->penanggungJawab->station ?? '-' }}</p>
+                <div class="col-md-6">
+                    <div class="detail-item">
+                        <label class="fw-bold text-muted">Area:</label>
+                        <p class="mb-0">{{ $laporan->area->name ?? '-' }}</p>
+                    </div>
                 </div>
-            </div>
-            <div class="row">
-                <div class="col-md-4">
-                    <h6 class="fw-bold">Status:</h6>
-                    <p>{{ $laporan->status }}</p>
+                <div class="col-md-6">
+                    <div class="detail-item">
+                        <label class="fw-bold text-muted">Station:</label>
+                        <p class="mb-0">{{ $laporan->penanggungJawab->station ?? '-' }}</p>
+                    </div>
                 </div>
-                <div class="col-md-4">
-                    <h6 class="fw-bold">Problem Category:</h6>
-                    <p>{{ $laporan->problemCategory->name ?? '-' }}</p>
+                <div class="col-md-6">
+                    <div class="detail-item">
+                        <label class="fw-bold text-muted">Person in Charge:</label>
+                        <div class="d-flex flex-wrap gap-2 mt-2">
+                            @if($laporan->penanggungJawab)
+                                <span class="badge bg-secondary">
+                                    <i class="fas fa-user me-1"></i>{{ $laporan->penanggungJawab->name }}
+                                </span>
+                            @elseif($laporan->area && $laporan->area->penanggungJawabs && $laporan->area->penanggungJawabs->count() > 0)
+                                @foreach($laporan->area->penanggungJawabs as $pic)
+                                    <span class="badge bg-secondary">
+                                        <i class="fas fa-user me-1"></i>{{ $pic->name }}
+                                    </span>
+                                @endforeach
+                            @else
+                                <span class="text-muted">-</span>
+                            @endif
+                        </div>
+                    </div>
                 </div>
-                <div class="col-md-4">
-                    <h6 class="fw-bold">Deadline:</h6>
-                    <p>{{ \Carbon\Carbon::parse($laporan->tenggat_waktu)->format('d/m/Y') }}</p>
+                <div class="col-md-6">
+                    <div class="detail-item">
+                        <label class="fw-bold text-muted">Problem Category:</label>
+                        <p class="mb-0">
+                            @if($laporan->problemCategory)
+                                <span class="badge" style="background-color: {{ $laporan->problemCategory->color }}; color: white;">
+                                    {{ $laporan->problemCategory->name }}
+                                </span>
+                            @else
+                                <span class="text-muted">No Category</span>
+                            @endif
+                        </p>
+                    </div>
                 </div>
-            </div>
-            <div class="row mt-2">
-                <div class="col-12">
-                    <h6 class="fw-bold">Person in Charge:</h6>
-                    <p>
-                        @if($laporan->penanggungJawab)
-                            {{ $laporan->penanggungJawab->name }}
-                        @elseif($laporan->area && $laporan->area->penanggungJawabs && $laporan->area->penanggungJawabs->count() > 0)
-                            {{ $laporan->area->penanggungJawabs->pluck('name')->join(', ') }}
-                        @else
-                            -
-                        @endif
-                    </p>
-                </div>
-            </div>
-            <div class="row mt-2">
-                <div class="col-12">
-                    <strong>Problem Description:</strong>
-                    <p style="white-space: pre-line;">{{ $laporan->deskripsi_masalah }}</p>
-                </div>
-            </div>
-            @if(!empty($laporan->Foto) && is_array($laporan->Foto))
-            <div class="row mt-3">
-                <div class="col-12">
-                    <h6 class="fw-bold">Problem Photos:</h6>
-                    <div class="d-flex flex-wrap gap-2 mt-2">
-                        @foreach($laporan->Foto as $foto)
-                            @php
-                                $photoUrl = asset('images/reports/' . $foto);
-                                $allPhotoUrls = array_map(fn($f) => asset('images/reports/' . $f), $laporan->Foto);
-                            @endphp
-                            <div class="position-relative">
+                
+                <!-- Report Photos -->
+                @if(!empty($laporan->Foto) && is_array($laporan->Foto) && count($laporan->Foto) > 0)
+                <div class="col-md-6">
+                    <div class="detail-item">
+                        <label class="fw-bold text-muted">Report Photos:</label>
+                        <div class="d-flex gap-2 flex-wrap mt-2">
+                            @foreach($laporan->Foto as $foto)
+                                @php
+                                    $photoUrl = asset('images/reports/' . $foto);
+                                    $allPhotoUrls = array_map(fn($f) => asset('images/reports/' . $f), $laporan->Foto);
+                                @endphp
                                 <img 
                                     src="{{ $photoUrl }}" 
-                                    class="img-thumbnail cursor-pointer" 
-                                    style="height: 100px; object-fit: cover;"
+                                    class="img-thumbnail cursor-pointer report-photo-thumb" 
+                                    style="width: 80px; height: 80px; object-fit: cover; cursor: pointer;"
                                     data-bs-toggle="modal"
                                     data-bs-target="#modalFotoFull"
                                     data-photos="{{ json_encode($allPhotoUrls) }}"
-                                    alt="Issue Photo"
+                                    alt="Report Photo"
                                 >
-                            </div>
-                        @endforeach
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+                @else
+                <div class="col-md-6">
+                    <!-- Empty space if no photos -->
+                </div>
+                @endif
+                
+                <div class="col-md-6">
+                    <div class="detail-item">
+                        <label class="fw-bold text-muted">Deadline:</label>
+                        <p class="mb-0">{{ \Carbon\Carbon::parse($laporan->tenggat_waktu)->locale('en')->isoFormat('dddd, D MMMM YYYY') }}</p>
+                    </div>
+                </div>
+                
+                <div class="col-12">
+                    <div class="detail-item">
+                        <label class="fw-bold text-muted">Problem Description:</label>
+                        <p class="mb-0 text-pre-wrap">{{ $laporan->deskripsi_masalah }}</p>
                     </div>
                 </div>
             </div>
-            @endif
         </div>
     </div>
     
@@ -250,6 +288,31 @@ document.addEventListener('DOMContentLoaded', function() {
 .input-group-text { cursor: pointer; }
 /* Completion date input should show pointer cursor (click) not text cursor */
 .completion-date { cursor: pointer !important; }
+
+/* Detail item styling */
+.detail-item {
+    padding: 0.75rem 0;
+}
+.detail-item label {
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+    display: block;
+}
+.detail-item p {
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+.text-pre-wrap {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+.report-photo-thumb {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.report-photo-thumb:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
 </style>
 @endpush
 
