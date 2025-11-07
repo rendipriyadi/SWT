@@ -1,28 +1,35 @@
 # Safety Walk and Talk
 
-Sistem pelaporan masalah safety dan 5S untuk lingkungan produksi Siemens.
+Safety and 5S issue reporting system for Siemens production environment.
 
-## Fitur Utama
+## Key Features
 
-- Pelaporan masalah dengan foto
-- Penugasan otomatis ke supervisor
-- Tracking status penyelesaian
-- Filter dan pencarian laporan
-- Riwayat laporan lengkap
-- Notifikasi email
+- Issue reporting with photos 
+- Automatic assignment to PIC (Person In Charge)
+- Completion status tracking
+- Report filtering and search
+- Complete report history
+- Automatic email notifications
+- Email reminders (H-2 deadline and overdue)
+- Master data management (Area, Department, Problem Category)
+- Export completed reports to PDF
+- Dashboard with statistical charts
 - Responsive design
 
 ## Tech Stack
 
-- Laravel 10
+- Laravel 11
+- PHP 8.2
 - MySQL 8
 - Bootstrap 5
-- DataTables
+- DataTables (Yajra)
 - SweetAlert2
+- DomPDF
+- Chart.js
 
-## Instalasi
+## Installation
 
-### Untuk Setup Baru (Fresh Install)
+### For Fresh Install
 1. Clone repository
 ```bash
 git clone https://github.com/rendipriyadi/SWT.git
@@ -41,7 +48,7 @@ cp .env.example .env
 php artisan key:generate
 ```
 
-4. Konfigurasi database di `.env`
+4. Configure database in `.env`
 ```env
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
@@ -73,8 +80,8 @@ php artisan cache:clear
 php artisan serve
 ```
 
-### Untuk Update dari Git Pull
-1. Pull kode terbaru
+### For Updates from Git Pull
+1. Pull latest code
 ```bash
 git pull origin main
 ```
@@ -85,13 +92,13 @@ composer install
 npm install
 ```
 
-3. Jalankan migration (jika ada)
+3. Run migration (if any)
 ```bash
 php artisan migrate:fresh
 php artisan migrate
 ```
 
-4. Update data dengan seeder
+4. Update data with seeder
 ```bash
 php artisan db:seed
 ```
@@ -103,7 +110,7 @@ php artisan route:clear
 php artisan cache:clear
 ```
 
-6. Build assets (jika ada perubahan)
+6. Build assets (if there are changes)
 ```bash
 npm run build
 ```
@@ -113,8 +120,40 @@ npm run build
 php artisan serve
 ```
 
-## Catatan Penting
-- Database akan otomatis ter-setup dengan data master (departemen, area, problem categories)
-- Tidak ada dummy laporan yang di-generate
-- Seeder menggunakan `updateOrCreate()` sehingga aman dijalankan berulang kali
-- Pastikan MySQL/MariaDB sudah running sebelum menjalankan migration
+## Email Configuration
+
+Setup email in `.env` file:
+
+```env
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=your-email@gmail.com
+MAIL_PASSWORD=your-app-password
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS=your-email@gmail.com
+MAIL_FROM_NAME="Safety Walk and Talk"
+```
+
+**Note**: Use App Password if using Gmail.
+
+## Scheduled Tasks
+
+Setup cron job on server for email reminders:
+
+```bash
+* * * * * cd /path-to-your-project && php artisan schedule:run >> /dev/null 2>&1
+```
+
+Available commands:
+- `php artisan report:reminder-deadline` - Reminder H-2 before deadline
+- `php artisan report:reminder-overdue` - Reminder for overdue reports
+
+## Important Notes
+
+- Database will be automatically setup with master data (departments, areas, problem categories)
+- No dummy reports will be generated
+- Seeder uses `updateOrCreate()` so it's safe to run multiple times
+- Make sure MySQL/MariaDB is running before running migrations
+- Ensure `public/images/reports` and `public/images/completions` folders have write permissions
+- For production: set `APP_ENV=production` and `APP_DEBUG=false` in `.env`
