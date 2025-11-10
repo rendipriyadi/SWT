@@ -14,19 +14,17 @@ class ReportOverdueReminderMail extends Mailable
 
     public $reports;
     public $pic;
-    public $encryptedIds;
-    public $fullUrls;
+    public $fullUrl;
     public $ccEmails;
 
     /**
      * Create a new message instance.
      */
-    public function __construct($reports, $pic, $encryptedIds, $fullUrls, $ccEmails = [])
+    public function __construct($reports, $pic, $fullUrl, $ccEmails = [])
     {
         $this->reports = $reports;
         $this->pic = $pic;
-        $this->encryptedIds = $encryptedIds;
-        $this->fullUrls = $fullUrls;
+        $this->fullUrl = $fullUrl;
         $this->ccEmails = $ccEmails;
     }
 
