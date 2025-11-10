@@ -273,14 +273,16 @@ trait SWTEmailNotifications
             $cc_emails = array_unique($cc_emails);
             $cc_emails = array_diff($cc_emails, $to_emails);
 
-            // Encrypt all report IDs
+            // Encrypt all report IDs and generate full URLs
             $encryptedIds = [];
+            $fullUrls = [];
             foreach ($groupReports as $report) {
                 $encryptedIds[$report->id] = encrypt($report->id);
+                $fullUrls[$report->id] = route('laporan.show', ['id' => $encryptedIds[$report->id]]);
             }
 
             try {
-                $mailable = new $mailableClass($groupReports, $pic, $encryptedIds, array_values($cc_emails));
+                $mailable = new $mailableClass($groupReports, $pic, $encryptedIds, $fullUrls, array_values($cc_emails));
                 MailService::to($to_emails)->send($mailable);
 
                 Log::info("Reminder email sent to: " . implode(', ', $to_emails) . " ({$groupReports->count()} reports)");

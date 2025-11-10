@@ -64,12 +64,7 @@
                                     <li><strong>Status:</strong> {{ $laporan->status ?? '-' }}</li>
                                 </ul>
                                 <p style="margin: 10px 0 0;">
-                                    @php
-                                        $encryptedId = (isset($encryptedIds) && is_array($encryptedIds) && isset($encryptedIds[$laporan->id])) 
-                                            ? $encryptedIds[$laporan->id] 
-                                            : encrypt($laporan->id);
-                                    @endphp
-                                    <a href="{{ route('laporan.show', $encryptedId) }}" 
+                                    <a href="{{ route('laporan.show', $encryptedIds[$laporan->id] ?? encrypt($laporan->id)) }}" 
                                        style="color: navy; text-decoration: underline;">
                                         View Report Details
                                     </a>

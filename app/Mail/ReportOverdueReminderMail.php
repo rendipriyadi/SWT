@@ -15,16 +15,18 @@ class ReportOverdueReminderMail extends Mailable
     public $reports;
     public $pic;
     public $encryptedIds;
+    public $fullUrls;
     public $ccEmails;
 
     /**
      * Create a new message instance.
      */
-    public function __construct($reports, $pic, $encryptedIds, $ccEmails = [])
+    public function __construct($reports, $pic, $encryptedIds, $fullUrls, $ccEmails = [])
     {
         $this->reports = $reports;
         $this->pic = $pic;
         $this->encryptedIds = $encryptedIds;
+        $this->fullUrls = $fullUrls;
         $this->ccEmails = $ccEmails;
     }
 
@@ -52,11 +54,6 @@ class ReportOverdueReminderMail extends Mailable
     {
         return new Content(
             view: 'mails.laporan-reminder-overdue',
-            with: [
-                'reports' => $this->reports,
-                'pic' => $this->pic,
-                'encryptedIds' => $this->encryptedIds,
-            ],
         );
     }
 
