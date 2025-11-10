@@ -70,7 +70,7 @@
                                     <li><strong>Status:</strong> {{ $laporan->status ?? '-' }}</li>
                                 </ul>
                                 <p style="margin: 10px 0 0;">
-                                    <a href="{{ route('laporan.show', $encryptedIds[$laporan->id] ?? encrypt($laporan->id)) }}" 
+                                    <a href="{{ route('laporan.show', encrypt($laporan->id)) }}" 
                                        style="color: navy; text-decoration: underline;">
                                         View Report Details
                                     </a>
