@@ -190,7 +190,7 @@ class HistoryController extends Controller
             }
 
             $pdf = Pdf::loadView('walkandtalk.pdf.laporan-selesai', compact('laporan', 'periode'));
-            $pdf->setPaper('a4', 'landscape');
+            $pdf->setPaper('a4', 'portrait');
 
             \SharedManager::saveLog('log_swt', "Downloaded [Report History] PDF for period: {$periode} swt.");
 

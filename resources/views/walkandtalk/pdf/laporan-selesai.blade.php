@@ -80,9 +80,12 @@
             font-size: 10px;
         }
         .foto-masalah {
-            width: 100%;
+            max-width: 100%;
+            max-height: 200px;
+            width: auto;
             height: auto;
             display: block;
+            object-fit: contain;
         }
         .no-image {
             font-style: italic;
@@ -169,13 +172,13 @@
     <table>
         <thead>
             <tr>
-                <th width="5%">No</th>
-                <th width="10%">Report Date</th>
-                <th width="10%">Completion Date</th>
-                <th width="12%">Area/Station</th>
+                <th width="7%">No</th>
+                <th width="12%">Report Date</th>
+                <th width="12%">Completion Date</th>
+                <th width="15%">Area/Station</th>
                 <th width="12%">Category</th>
-                <th width="25.5%">Observation</th>
-                <th width="25.5%">Resolution</th>
+                <th width="22%">Observation</th>
+                <th width="22%">Resolution</th>
             </tr>
         </thead>
         <tbody>
