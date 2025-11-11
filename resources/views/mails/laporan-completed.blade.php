@@ -48,23 +48,21 @@
 
                             @if($laporan->penyelesaian)
                             <h3 style="margin: 20px 0 10px; color: #28a745;">Completion Details:</h3>
-                            <ul style="padding-left: 20px; margin-top: 10px; color: black;">
                                 <li><strong>Completion Date:</strong> {{ \Carbon\Carbon::parse($laporan->penyelesaian->Tanggal)->locale('en')->isoFormat('dddd, D MMMM YYYY') }}</li>
                                 <li><strong>Completion Description:</strong> {{ $laporan->penyelesaian->deskripsi_penyelesaian }}</li>
                             </ul>
                             @endif
 
-                            <p style="margin: 20px 0 10px;">
+                            <p style="margin: 0 0 10px;">
                                 Please visit the Safety Walk and Talk system to view complete details:
                             </p>
                             <p style="margin: 0 0 10px;">
-                                <a href="{{ route('laporan.show', $encryptedId) }}" style="display: inline-block; background-color: #28a745; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">View Report Details</a>
+                                <a href="{{ $fullUrl }}" style="display: inline-block; background-color: #28a745; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">View Report Details</a>
                             </p>
                             <p style="margin: 20px 0 10px;">
                                 Thank you for your attention and cooperation in maintaining workplace safety.<br />
                                 DO NOT REPLY to this email as it is not monitored.
                             </p>
-                            <p style="margin: 0;">Best regards,<br /><br /><br />PT Siemens Indonesia</p>
                         </td>
                     </tr>
                     <tr>

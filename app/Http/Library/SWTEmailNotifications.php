@@ -59,9 +59,9 @@ trait SWTEmailNotifications
             // Remove TO emails from CC to avoid duplicate
             $cc_emails = array_diff($cc_emails, $to_emails);
 
-            // Generate encrypted URL using Laravel encrypt
+            // Generate encrypted URL using url() helper
             $encryptedId = encrypt($laporan->id);
-            $fullUrl = route('laporan.show', ['id' => $encryptedId]);
+            $fullUrl = url('laporan/' . $encryptedId);
 
             // Send email using Laravel Mailable
             // Send one email with all PICs in TO field
@@ -125,20 +125,20 @@ trait SWTEmailNotifications
             // Remove TO emails from CC to avoid duplicate
             $cc_emails = array_diff($cc_emails, $to_emails);
 
-            // Generate encrypted URL using Laravel encrypt
+            // Generate encrypted URL using url() helper
             $encryptedId = encrypt($laporan->id);
-            $fullUrl = route('laporan.show', ['id' => $encryptedId]);
+            $fullUrl = url('laporan/' . $encryptedId);
 
             // Send email using Laravel Mailable
             // Send one email with all PICs in TO field
             if (count($to_emails) > 0) {
-                MailService::to($to_emails)->send(new ReportEditedMail($laporan, $perubahan, $fullUrl, $encryptedId, array_values($cc_emails)));
+                MailService::to($to_emails)->send(new ReportEditedMail($laporan, $fullUrl, $encryptedId, $perubahan, array_values($cc_emails)));
             }
 
             Log::info("Edit notification email sent for report ID: {$laporan->id}");
 
         } catch (ErrorException $e) {
-            Log::error("Failed to send report edited email for ID {$laporan->id}: " . $e->getMessage());
+            Log::error("Error sending report edited email for ID {$laporan->id}: " . $e->getMessage());
         } catch (\Exception $e) {
             Log::error("Unexpected error sending report edited email for ID {$laporan->id}: " . $e->getMessage());
         }
@@ -192,9 +192,9 @@ trait SWTEmailNotifications
             // Remove TO emails from CC to avoid duplicate
             $cc_emails = array_diff($cc_emails, $to_emails);
 
-            // Generate encrypted URL using Laravel encrypt
+            // Generate encrypted URL using url() helper
             $encryptedId = encrypt($laporan->id);
-            $fullUrl = route('laporan.show', ['id' => $encryptedId]);
+            $fullUrl = url('laporan/' . $encryptedId);
 
             // Send email using Laravel Mailable
             // Send one email with all PICs in TO field
@@ -273,8 +273,8 @@ trait SWTEmailNotifications
             $cc_emails = array_unique($cc_emails);
             $cc_emails = array_diff($cc_emails, $to_emails);
 
-            // Generate full URL (static URL, not per-report)
-            $fullUrl = url('laporan');  // atau route('laporan.index')
+            // Generate full URL 
+            $fullUrl = url('laporan');
 
             try {
                 $mailable = new $mailableClass($groupReports, $pic, $fullUrl, array_values($cc_emails));

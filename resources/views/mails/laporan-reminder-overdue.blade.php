@@ -69,10 +69,13 @@
                                     </li>
                                     <li><strong>Status:</strong> {{ $laporan->status ?? '-' }}</li>
                                 </ul>
-                                <p style="margin: 10px 0 0;">
-                                    <a href="{{ route('laporan.show', encrypt($laporan->id)) }}" 
+                                <p style="margin: 0 0 10px;">
+                                    Please visit the Safety Walk and Talk system to view more details and complete this report:
+                                </p>
+                                <p style="margin: 0 0 10px;">
+                                    <a href="{{ $fullUrl . '/' . encrypt($laporan->id) }}" 
                                        style="color: navy; text-decoration: underline;">
-                                        View Report Details
+                                        Open Safety Walk and Talk Application
                                     </a>
                                 </p>
                             </div>

@@ -65,7 +65,7 @@
 
                             <p style="margin: 0 0 10px;">
                                 Please visit the Safety Walk and Talk system for more details:
-                                <a href="{{ route('laporan.show', $encryptedId) }}" style="color: navy; text-decoration: underline;">Open Safety Walk and Talk Application</a>
+                                <a href="{{ $fullUrl }}" style="color: navy; text-decoration: underline;">Open Safety Walk and Talk Application</a>
                             </p>
                             <p style="margin: 0 0 10px;">
                                 Thank you for your attention and cooperation.<br />DO NOT REPLY to this email as it is not monitored.
