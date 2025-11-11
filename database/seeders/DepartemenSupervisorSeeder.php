@@ -65,7 +65,7 @@ class DepartemenSupervisorSeeder extends Seeder
             [
                 'id' => 9,
                 'departemen' => 'IQC',
-                'supervisor' => 'Abduh Al Agani',
+                'supervisor' => 'Abduh Al Afgani',
                 'workgroup' => 'SI EA O AIS JKT QC',
             ],
             [
