@@ -49,13 +49,15 @@
                             <p style="margin: 10px 0; font-weight: bold;">Changes made:</p>
                             <table width="100%" cellpadding="8" cellspacing="0" style="border: 1px solid #ddd; border-collapse: collapse; margin-bottom: 20px;">
                                 <tr style="background-color: #f5f5f5;">
+                                    <th style="border: 1px solid #ddd; text-align: left;">Field</th>
                                     <th style="border: 1px solid #ddd; text-align: left;">Before</th>
                                     <th style="border: 1px solid #ddd; text-align: left;">After</th>
                                 </tr>
                                 @foreach($perubahan as $change)
                                 <tr>
-                                    <td style="border: 1px solid #ddd;">{{ $change['old'] }}</td>
-                                    <td style="border: 1px solid #ddd;">{{ $change['new'] }}</td>
+                                    <td style="border: 1px solid #ddd;">{{ $change['field'] ?? '-' }}</td>
+                                    <td style="border: 1px solid #ddd;">{{ $change['old'] ?? '-' }}</td>
+                                    <td style="border: 1px solid #ddd;">{{ $change['new'] ?? '-' }}</td>
                                 </tr>
                                 @endforeach
                             </table>
