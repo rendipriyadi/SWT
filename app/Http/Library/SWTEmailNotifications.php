@@ -59,14 +59,10 @@ trait SWTEmailNotifications
             // Remove TO emails from CC to avoid duplicate
             $cc_emails = array_diff($cc_emails, $to_emails);
 
-            // Generate encrypted URL using url() helper
-            $encryptedId = encrypt($laporan->id);
-            $fullUrl = url('laporan/' . $encryptedId);
-
             // Send email using Laravel Mailable
             // Send one email with all PICs in TO field
             if (count($to_emails) > 0) {
-                MailService::to($to_emails)->send(new ReportAssignedMail($laporan, $fullUrl, $encryptedId, array_values($cc_emails)));
+                MailService::to($to_emails)->send(new ReportAssignedMail($laporan, array_values($cc_emails)));
             }
 
             Log::info("Email sent for report ID: {$laporan->id} to " . implode(', ', $to_emails));
@@ -125,14 +121,10 @@ trait SWTEmailNotifications
             // Remove TO emails from CC to avoid duplicate
             $cc_emails = array_diff($cc_emails, $to_emails);
 
-            // Generate encrypted URL using url() helper
-            $encryptedId = encrypt($laporan->id);
-            $fullUrl = url('laporan/' . $encryptedId);
-
             // Send email using Laravel Mailable
             // Send one email with all PICs in TO field
             if (count($to_emails) > 0) {
-                MailService::to($to_emails)->send(new ReportEditedMail($laporan, $fullUrl, $encryptedId, $perubahan, array_values($cc_emails)));
+                MailService::to($to_emails)->send(new ReportEditedMail($laporan, $perubahan, array_values($cc_emails)));
             }
 
             Log::info("Edit notification email sent for report ID: {$laporan->id}");
@@ -192,14 +184,10 @@ trait SWTEmailNotifications
             // Remove TO emails from CC to avoid duplicate
             $cc_emails = array_diff($cc_emails, $to_emails);
 
-            // Generate encrypted URL using url() helper
-            $encryptedId = encrypt($laporan->id);
-            $fullUrl = url('laporan/' . $encryptedId);
-
             // Send email using Laravel Mailable
             // Send one email with all PICs in TO field
             if (count($to_emails) > 0) {
-                MailService::to($to_emails)->send(new ReportCompletedMail($laporan, $fullUrl, $encryptedId, array_values($cc_emails)));
+                MailService::to($to_emails)->send(new ReportCompletedMail($laporan, array_values($cc_emails)));
             }
 
             Log::info("Completion notification email sent for report ID: {$laporan->id}");
@@ -273,11 +261,8 @@ trait SWTEmailNotifications
             $cc_emails = array_unique($cc_emails);
             $cc_emails = array_diff($cc_emails, $to_emails);
 
-            // Generate full URL 
-            $fullUrl = url('laporan');
-
             try {
-                $mailable = new $mailableClass($groupReports, $pic, $fullUrl, array_values($cc_emails));
+                $mailable = new $mailableClass($groupReports, $pic, array_values($cc_emails));
                 MailService::to($to_emails)->send($mailable);
 
                 Log::info("Reminder email sent to: " . implode(', ', $to_emails) . " ({$groupReports->count()} reports)");

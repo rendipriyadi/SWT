@@ -26,15 +26,15 @@
                                 @if($pic)
                                     Hello, {{ $pic->name }}
                                 @else
-                                    Hello Team {{ $reports->first()->area->name ?? 'Area' }},
+                                    Hello Team {{ $areaName }},
                                 @endif
                             </p>
                             <p style="margin: 0 0 10px;">
                                 @if($pic)
-                                    You have <strong>{{ $reports->count() }} report(s)</strong> 
+                                    You have <strong>{{ count($reportsData) }} report(s)</strong> 
                                     with deadlines approaching in 2 working days.
                                 @else
-                                    There are <strong>{{ $reports->count() }} report(s)</strong> in your area
+                                    There are <strong>{{ count($reportsData) }} report(s)</strong> in your area
                                     with deadlines approaching in 2 working days.
                                 @endif
                             </p>
@@ -42,34 +42,26 @@
                                 Please review and complete the following report(s) before the deadline:
                             </p>
 
-                            @foreach($reports as $index => $laporan)
+                            @foreach($reportsData as $index => $report)
                             <div style="background-color: #f5f5f5; padding: 15px; margin-bottom: 15px; border: 1px solid #ddd;">
                                 <p style="margin: 0 0 8px; font-weight: bold;">
                                     Report #{{ $index + 1 }}
                                 </p>
                                 <ul style="padding-left: 20px; margin: 0; color: black;">
-                                    <li><strong>Category:</strong> {{ $laporan->problemCategory->name ?? '-' }}</li>
-                                    <li><strong>Description:</strong> {{ \Illuminate\Support\Str::limit($laporan->deskripsi_masalah ?? '', 150, '...') }}</li>
-                                    <li><strong>Deadline:</strong> {{ $laporan->tenggat_waktu ? \Carbon\Carbon::parse($laporan->tenggat_waktu)->locale('en')->isoFormat('dddd, D MMMM YYYY') : '-' }}</li>
-                                    <li><strong>Area:</strong> {{ $laporan->area->name ?? '-' }}</li>
-                                    <li><strong>PIC:</strong> 
-                                        @if($laporan->penanggungJawab)
-                                            {{ $laporan->penanggungJawab->name }}
-                                        @elseif($laporan->area && $laporan->area->penanggungJawabs->isNotEmpty())
-                                            {{ $laporan->area->penanggungJawabs->pluck('name')->join(', ') }}
-                                        @else
-                                            -
-                                        @endif
-                                    </li>
-                                    <li><strong>Status:</strong> {{ $laporan->status ?? '-' }}</li>
+                                    <li><strong>Category:</strong> {{ $report['category'] }}</li>
+                                    <li><strong>Description:</strong> {{ \Illuminate\Support\Str::limit($report['description'] ?? '', 150, '...') }}</li>
+                                    <li><strong>Deadline:</strong> {{ $report['deadline'] ? \Carbon\Carbon::parse($report['deadline'])->locale('en')->isoFormat('dddd, D MMMM YYYY') : '-' }}</li>
+                                    <li><strong>Area:</strong> {{ $report['area'] }}</li>
+                                    <li><strong>PIC:</strong> {{ $report['pic'] }}</li>
+                                    <li><strong>Status:</strong> {{ $report['status'] }}</li>
                                 </ul>
                                 <p style="margin: 0 0 10px;">
                                     Please visit the Safety Walk and Talk system to view more details and complete this report:
                                 </p>
                                 <p style="margin: 0 0 10px;">
-                                    <a href="{{ $fullUrl . '/' . encrypt($laporan->id) }}" 
+                                    <a href="{{ $report['url'] }}" 
                                        style="color: navy; text-decoration: underline;">
-                                        Open Safety Walk and Talk Application
+                                        View Report Details
                                     </a>
                                 </p>
                             </div>

@@ -14,18 +14,19 @@ class ReportAssignedMail extends Mailable
 
     public $laporan;
     public $fullUrl;
-    public $encryptedId;
     public $ccEmails;
 
     /**
      * Create a new message instance.
      */
-    public function __construct($laporan, $fullUrl, $encryptedId, $ccEmails = [])
+    public function __construct($laporan, $ccEmails = [])
     {
         $this->laporan = $laporan;
-        $this->fullUrl = $fullUrl;
-        $this->encryptedId = $encryptedId;
         $this->ccEmails = $ccEmails;
+        
+        // Generate URL here (same pattern as reminder)
+        $encryptedId = encrypt($laporan->id);
+        $this->fullUrl = url('laporan/' . $encryptedId);
     }
 
     /**

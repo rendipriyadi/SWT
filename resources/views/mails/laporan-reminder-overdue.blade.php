@@ -26,15 +26,15 @@
                                 @if($pic)
                                     Hello, {{ $pic->name }}
                                 @else
-                                    Hello Team {{ $reports->first()->area->name ?? 'Area' }},
+                                    Hello Team {{ $areaName }},
                                 @endif
                             </p>
                             <p style="margin: 0 0 10px;">
                                 @if($pic)
-                                    This is an urgent reminder that you have <strong>{{ $reports->count() }} report(s)</strong> that are overdue 
+                                    This is an urgent reminder that you have <strong>{{ count($reportsData) }} report(s)</strong> that are overdue 
                                     and require immediate attention.
                                 @else
-                                    This is an urgent reminder that there are <strong>{{ $reports->count() }} report(s)</strong> in your area that are overdue 
+                                    This is an urgent reminder that there are <strong>{{ count($reportsData) }} report(s)</strong> in your area that are overdue 
                                     and require immediate attention.
                                 @endif
                             </p>
@@ -42,40 +42,27 @@
                                 Please complete the following report(s) as soon as possible:
                             </p>
 
-                            @foreach($reports as $index => $laporan)
-                            @php
-                                $deadline = $laporan->tenggat_waktu ? \Carbon\Carbon::parse($laporan->tenggat_waktu)->startOfDay() : null;
-                                $today = \Carbon\Carbon::now()->startOfDay();
-                                $daysOverdue = $deadline ? (int) $deadline->diffInDays($today) : 0;
-                            @endphp
+                            @foreach($reportsData as $index => $report)
                             <div style="background-color: #f5f5f5; padding: 15px; margin-bottom: 15px; border: 1px solid #ddd;">
                                 <p style="margin: 0 0 8px; font-weight: bold;">
-                                    Report #{{ $index + 1 }} - Overdue {{ $daysOverdue }} day(s)
+                                    Report #{{ $index + 1 }} - Overdue {{ $report['days_overdue'] }} day(s)
                                 </p>
                                 <ul style="padding-left: 20px; margin: 0; color: black;">
-                                    <li><strong>Category:</strong> {{ $laporan->problemCategory->name ?? '-' }}</li>
-                                    <li><strong>Description:</strong> {{ \Illuminate\Support\Str::limit($laporan->deskripsi_masalah ?? '', 150, '...') }}</li>
-                                    <li><strong>Original Deadline:</strong> {{ $deadline ? $deadline->locale('en')->isoFormat('dddd, D MMMM YYYY') : '-' }}</li>
-                                    <li><strong>Days Overdue:</strong> {{ $daysOverdue }} day(s)</li>
-                                    <li><strong>Area:</strong> {{ $laporan->area->name ?? '-' }}</li>
-                                    <li><strong>PIC:</strong> 
-                                        @if($laporan->penanggungJawab)
-                                            {{ $laporan->penanggungJawab->name }}
-                                        @elseif($laporan->area && $laporan->area->penanggungJawabs->isNotEmpty())
-                                            {{ $laporan->area->penanggungJawabs->pluck('name')->join(', ') }}
-                                        @else
-                                            -
-                                        @endif
-                                    </li>
-                                    <li><strong>Status:</strong> {{ $laporan->status ?? '-' }}</li>
+                                    <li><strong>Category:</strong> {{ $report['category'] }}</li>
+                                    <li><strong>Description:</strong> {{ \Illuminate\Support\Str::limit($report['description'] ?? '', 150, '...') }}</li>
+                                    <li><strong>Original Deadline:</strong> {{ $report['deadline_formatted'] }}</li>
+                                    <li><strong>Days Overdue:</strong> {{ $report['days_overdue'] }} day(s)</li>
+                                    <li><strong>Area:</strong> {{ $report['area'] }}</li>
+                                    <li><strong>PIC:</strong> {{ $report['pic'] }}</li>
+                                    <li><strong>Status:</strong> {{ $report['status'] }}</li>
                                 </ul>
                                 <p style="margin: 0 0 10px;">
                                     Please visit the Safety Walk and Talk system to view more details and complete this report:
                                 </p>
                                 <p style="margin: 0 0 10px;">
-                                    <a href="{{ $fullUrl . '/' . encrypt($laporan->id) }}" 
+                                    <a href="{{ $report['url'] }}" 
                                        style="color: navy; text-decoration: underline;">
-                                        Open Safety Walk and Talk Application
+                                        View Report Details
                                     </a>
                                 </p>
                             </div>

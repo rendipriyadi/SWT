@@ -15,19 +15,20 @@ class ReportEditedMail extends Mailable
     public $laporan;
     public $perubahan;
     public $fullUrl;
-    public $encryptedId;
     public $ccEmails;
 
     /**
      * Create a new message instance.
      */
-    public function __construct($laporan, $perubahan, $fullUrl, $encryptedId, $ccEmails = [])
+    public function __construct($laporan, $perubahan, $ccEmails = [])
     {
         $this->laporan = $laporan;
         $this->perubahan = $perubahan;
-        $this->fullUrl = $fullUrl;
-        $this->encryptedId = $encryptedId;
         $this->ccEmails = $ccEmails;
+        
+        // Generate URL here (same pattern as reminder)
+        $encryptedId = encrypt($laporan->id);
+        $this->fullUrl = url('laporan/' . $encryptedId);
     }
 
     /**

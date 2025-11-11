@@ -12,20 +12,37 @@ class ReportDeadlineReminderMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $reports;
+    public $reportsData;
     public $pic;
-    public $fullUrl;
+    public $areaName;
     public $ccEmails;
 
     /**
      * Create a new message instance.
      */
-    public function __construct($reports, $pic, $fullUrl, $ccEmails = [])
+    public function __construct($reports, $pic, $ccEmails = [])
     {
-        $this->reports = $reports;
         $this->pic = $pic;
-        $this->fullUrl = $fullUrl;
         $this->ccEmails = $ccEmails;
+        $this->areaName = $reports->first()->area->name ?? 'Area';
+        
+        // Prepare reports data with URLs (all logic here, not in blade)
+        $this->reportsData = $reports->map(function($laporan) {
+            $encryptedId = encrypt($laporan->id);
+            
+            return [
+                'id' => $laporan->id,
+                'category' => $laporan->problemCategory->name ?? '-',
+                'description' => $laporan->deskripsi_masalah,
+                'deadline' => $laporan->tenggat_waktu,
+                'area' => $laporan->area ? $laporan->area->name : '-',
+                'pic' => $laporan->penanggungJawab ? $laporan->penanggungJawab->name : 
+                        ($laporan->area && $laporan->area->penanggungJawabs->isNotEmpty() ? 
+                         $laporan->area->penanggungJawabs->pluck('name')->join(', ') : '-'),
+                'status' => $laporan->status ?? '-',
+                'url' => url('laporan/' . $encryptedId), // Same as assigned/edited/completed
+            ];
+        });
     }
 
     /**
