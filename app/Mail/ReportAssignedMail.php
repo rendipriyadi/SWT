@@ -24,9 +24,9 @@ class ReportAssignedMail extends Mailable
         $this->laporan = $laporan;
         $this->ccEmails = $ccEmails;
         
-        // Generate URL here (same pattern as reminder)
+
         $encryptedId = encrypt($laporan->id);
-        $this->fullUrl = url('laporan/' . $encryptedId);
+        $this->fullUrl = config('app.url') . '/laporan/' . $encryptedId;
     }
 
     /**

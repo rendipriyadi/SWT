@@ -40,7 +40,7 @@ class ReportDeadlineReminderMail extends Mailable
                         ($laporan->area && $laporan->area->penanggungJawabs->isNotEmpty() ? 
                          $laporan->area->penanggungJawabs->pluck('name')->join(', ') : '-'),
                 'status' => $laporan->status ?? '-',
-                'url' => url('laporan/' . $encryptedId), // Same as assigned/edited/completed
+                'url' => config('app.url') . '/laporan/' . $encryptedId, // Works in CLI context
             ];
         });
     }

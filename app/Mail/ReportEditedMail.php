@@ -26,9 +26,9 @@ class ReportEditedMail extends Mailable
         $this->perubahan = $perubahan;
         $this->ccEmails = $ccEmails;
         
-        // Generate URL here (same pattern as reminder)
+        // Generate URL here (works in both web and CLI context)
         $encryptedId = encrypt($laporan->id);
-        $this->fullUrl = url('laporan/' . $encryptedId);
+        $this->fullUrl = config('app.url') . '/laporan/' . $encryptedId;
     }
 
     /**
