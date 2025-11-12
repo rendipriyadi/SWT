@@ -99,7 +99,7 @@
                         <label class="fw-bold text-muted">Report Photos:</label>
                         <div class="d-flex gap-2 flex-wrap mt-2">
                             @foreach($laporan->Foto as $index => $foto)
-                                <img src="{{ asset('images/reports/' . $foto) }}" 
+                                <img src="{{ asset('storage/images/reports/' . $foto) }}" 
                                      alt="Report Photo {{ $index + 1 }}" 
                                      class="img-thumbnail report-photo-thumb" 
                                      style="width: 80px; height: 80px; object-fit: cover; cursor: pointer;"
@@ -115,7 +115,7 @@
                                                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                             </div>
                                             <div class="modal-body text-center">
-                                                <img src="{{ asset('images/reports/' . $foto) }}" 
+                                                <img src="{{ asset('storage/images/reports/' . $foto) }}" 
                                                      alt="Report Photo {{ $index + 1 }}" 
                                                      class="img-fluid">
                                             </div>
@@ -192,7 +192,7 @@
                 <div class="row g-3">
                     @foreach($laporan->penyelesaian->Foto as $index => $foto)
                     <div class="col-md-3 col-sm-4 col-6">
-                        <img src="{{ asset('images/completions/' . $foto) }}" 
+                        <img src="{{ asset('storage/images/completions/' . $foto) }}" 
                              alt="Completion Photo {{ $index + 1 }}" 
                              class="img-thumbnail" 
                              style="width: 100%; height: 200px; object-fit: cover; cursor: pointer;"
@@ -209,7 +209,7 @@
                                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                 </div>
                                 <div class="modal-body text-center">
-                                    <img src="{{ asset('images/completions/' . $foto) }}" 
+                                    <img src="{{ asset('storage/images/completions/' . $foto) }}" 
                                          alt="Completion Photo {{ $index + 1 }}" 
                                          class="img-fluid">
                                 </div>

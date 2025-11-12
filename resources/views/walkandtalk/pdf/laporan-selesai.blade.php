@@ -219,7 +219,11 @@
                             <table>
                                 @foreach($item->Foto as $index => $foto)
                                     @php
-                                        $imagePath = public_path('images/reports/' . $foto);
+                                        // Try storage path first, fallback to public path for old images
+                                        $imagePath = storage_path('app/public/images/reports/' . $foto);
+                                        if (!file_exists($imagePath)) {
+                                            $imagePath = public_path('images/reports/' . $foto);
+                                        }
                                         if (file_exists($imagePath)) {
                                             $imageData = base64_encode(file_get_contents($imagePath));
                                             $imageSrc = 'data:image/' . pathinfo($foto, PATHINFO_EXTENSION) . ';base64,' . $imageData;
@@ -258,7 +262,11 @@
                                 <table>
                                     @foreach($item->penyelesaian->Foto as $index => $foto)
                                         @php
-                                            $imagePath = public_path('images/completions/' . $foto);
+                                            // Try storage path first, fallback to public path for old images
+                                            $imagePath = storage_path('app/public/images/completions/' . $foto);
+                                            if (!file_exists($imagePath)) {
+                                                $imagePath = public_path('images/completions/' . $foto);
+                                            }
                                             if (file_exists($imagePath)) {
                                                 $imageData = base64_encode(file_get_contents($imagePath));
                                                 $imageSrc = 'data:image/' . pathinfo($foto, PATHINFO_EXTENSION) . ';base64,' . $imageData;

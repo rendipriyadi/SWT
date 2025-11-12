@@ -104,8 +104,8 @@
                         <div class="d-flex gap-2 flex-wrap mt-2">
                             @foreach($laporan->Foto as $foto)
                                 @php
-                                    $photoUrl = asset('images/reports/' . $foto);
-                                    $allPhotoUrls = array_map(fn($f) => asset('images/reports/' . $f), $laporan->Foto);
+                                    $photoUrl = asset('storage/images/reports/' . $foto);
+                                    $allPhotoUrls = array_map(fn($f) => asset('storage/images/reports/' . $f), $laporan->Foto);
                                 @endphp
                                 <img 
                                     src="{{ $photoUrl }}" 

@@ -67,7 +67,7 @@ class HistoryController extends Controller
 
         // Helper to resolve report photo URL
         $resolveReportUrl = function(string $filename) {
-            return asset('images/reports/' . $filename);
+            return asset('storage/images/reports/' . $filename);
         };
 
         return DataTables::of($query)

@@ -20,7 +20,7 @@ class FileUploadService
      */
     public function uploadReportPhotos(array $files): array
     {
-        return $this->uploadFiles($files, 'images/reports');
+        return $this->uploadFiles($files, 'storage/images/reports');
     }
 
     /**
@@ -31,7 +31,7 @@ class FileUploadService
      */
     public function uploadCompletionPhotos(array $files): array
     {
-        return $this->uploadFiles($files, 'images/completions');
+        return $this->uploadFiles($files, 'storage/images/completions');
     }
 
     /**
@@ -49,7 +49,15 @@ class FileUploadService
             if ($file instanceof UploadedFile && $file->isValid()) {
                 try {
                     $filename = time() . '-' . uniqid() . '.' . $file->getClientOriginalExtension();
-                    $file->move(public_path($directory), $filename);
+                    // Use storage_path instead of public_path
+                    $destinationPath = storage_path('app/public/' . str_replace('storage/', '', $directory));
+                    
+                    // Create directory if not exists
+                    if (!file_exists($destinationPath)) {
+                        mkdir($destinationPath, 0755, true);
+                    }
+                    
+                    $file->move($destinationPath, $filename);
                     $uploadedFiles[] = $filename;
                 } catch (\Exception $e) {
                     Log::error("Failed to upload file: " . $e->getMessage());
@@ -69,18 +77,24 @@ class FileUploadService
      */
     public function deleteFile(string $filename, string $directory): bool
     {
-        $path = public_path($directory . '/' . $filename);
+        // Use storage_path instead of public_path
+        $path = storage_path('app/public/' . str_replace('storage/', '', $directory) . '/' . $filename);
         
         // Try primary directory first
         if (file_exists($path)) {
             return @unlink($path);
         }
 
-        // Fallback to legacy images folder for old reports
-        if ($directory === 'images/reports') {
-            $legacyPath = public_path('images/' . $filename);
+        // Fallback to legacy public/images folder for old reports
+        if ($directory === 'storage/images/reports') {
+            $legacyPath = public_path('images/reports/' . $filename);
             if (file_exists($legacyPath)) {
                 return @unlink($legacyPath);
+            }
+            // Also check old images folder
+            $oldLegacyPath = public_path('images/' . $filename);
+            if (file_exists($oldLegacyPath)) {
+                return @unlink($oldLegacyPath);
             }
         }
 

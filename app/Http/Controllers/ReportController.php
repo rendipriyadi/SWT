@@ -380,7 +380,7 @@ class ReportController extends Controller
 
         // Helper to resolve report photo URL
         $resolveReportUrl = function(string $filename) {
-            return asset('images/reports/' . $filename);
+            return asset('storage/images/reports/' . $filename);
         };
 
         return DataTables::of($query)
@@ -557,7 +557,7 @@ class ReportController extends Controller
 
             // Helper to resolve completion photo URL
             $resolveCompletionUrl = function(string $filename) {
-                return asset('images/completions/' . $filename);
+                return asset('storage/images/completions/' . $filename);
             };
 
             $fotoUrls = [];

@@ -62,7 +62,7 @@
                                 @foreach($laporan->Foto as $key => $foto)
                                     <div class="position-relative">
                                         <input type="hidden" name="existing_photos[]" value="{{ $foto }}" id="existing-photo-{{ $key }}">
-                                        <img src="{{ asset('images/reports/' . $foto) }}" alt="Foto {{ $key+1 }}" class="img-thumbnail" style="width: 100px; height: 100px; object-fit: cover;">
+                                        <img src="{{ asset('storage/images/reports/' . $foto) }}" alt="Foto {{ $key+1 }}" class="img-thumbnail" style="width: 100px; height: 100px; object-fit: cover;">
                                         <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 remove-photo" data-input-id="existing-photo-{{ $key }}">
                                             <i class="fas fa-times"></i>
                                         </button>
