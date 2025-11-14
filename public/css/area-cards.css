@@ -11,9 +11,10 @@
 }
 
 .area-card .card-header {
-    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
-    border: none;
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%) !important;
+    border: none !important;
     border-radius: 0.5rem 0.5rem 0 0 !important;
+    color: white !important;
 }
 
 .area-card .card-body {

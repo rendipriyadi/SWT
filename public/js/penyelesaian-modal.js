@@ -72,6 +72,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>`;
                 }
                 
+                
                 modalBody.html(html);
                 
                 // Inisialisasi carousel secara manual

@@ -78,3 +78,11 @@ Route::post('/api/stations', [ReportController::class, 'getPenanggungJawab'])->n
         // Problem Category Management
         Route::resource('problem-category', ProblemCategoryController::class);
     });
+
+// ============================================================================
+// API Routes for AJAX calls
+// ============================================================================
+Route::prefix('api')->name('api.')->group(function () {
+    Route::get('/users-for-pic', [ReportController::class, 'getUsersForPic'])->name('users-for-pic');
+    Route::get('/all-penanggung-jawab', [ReportController::class, 'getAllPenanggungJawab'])->name('all-penanggung-jawab');
+});

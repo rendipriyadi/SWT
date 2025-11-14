@@ -66,17 +66,30 @@
                         <label class="fw-bold text-muted">Person in Charge:</label>
                         <div class="d-flex flex-wrap gap-2 mt-2">
                             @if($laporan->penanggungJawab)
+                                <!-- Specific PIC assigned -->
                                 <span class="badge bg-secondary">
                                     <i class="fas fa-user me-1"></i>{{ $laporan->penanggungJawab->name }}
                                 </span>
                             @elseif($laporan->area && $laporan->area->penanggungJawabs && $laporan->area->penanggungJawabs->count() > 0)
+                                <!-- Area only - show NON-General PICs -->
                                 @foreach($laporan->area->penanggungJawabs as $pic)
-                                    <span class="badge bg-secondary">
-                                        <i class="fas fa-user me-1"></i>{{ $pic->name }}
-                                    </span>
+                                    @if(strcasecmp($pic->station, 'General') !== 0)
+                                        <span class="badge bg-secondary">
+                                            <i class="fas fa-user me-1"></i>{{ $pic->name }}
+                                        </span>
+                                    @endif
                                 @endforeach
                             @else
                                 <span class="text-muted">-</span>
+                            @endif
+                            
+                            <!-- Additional PICs (same level, different color) -->
+                            @if(!empty($laporan->additional_pics) && count($laporan->additional_pics) > 0)
+                                @foreach($laporan->additional_pics as $additionalPic)
+                                    <span class="badge bg-info">
+                                        <i class="fas fa-user me-1"></i>{{ $additionalPic->name }}
+                                    </span>
+                                @endforeach
                             @endif
                         </div>
                     </div>
@@ -187,6 +200,7 @@
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
             </div>
+
             
             <!-- Hidden status field - always set to Completed -->
             <input type="hidden" name="status" value="Completed">
@@ -281,6 +295,7 @@ document.addEventListener('DOMContentLoaded', function() {
     </script>
 @endif
 @endsection
+
 
 @push('styles')
 <style>

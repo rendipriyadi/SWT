@@ -12,10 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('laporan', function (Blueprint $table) {
-            // Drop deprecated kategori_masalah column (replaced by problem_category_id)
-            if (Schema::hasColumn('laporan', 'kategori_masalah')) {
-                $table->dropColumn('kategori_masalah');
-            }
+            $table->json('additional_pics')->nullable()->after('Foto');
         });
     }
 
@@ -25,7 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('laporan', function (Blueprint $table) {
-            //
+            $table->dropColumn('additional_pics');
         });
     }
 };

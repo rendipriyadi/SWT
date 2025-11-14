@@ -27,7 +27,33 @@ class StoreReportRequest extends FormRequest
             'tenggat_waktu' => 'required|date',
             'Foto' => 'nullable|array',
             'Foto.*' => 'image|mimes:jpg,png,jpeg,gif,svg|max:2048',
+            'additional_pics' => 'nullable|array',
+            'additional_pics.*' => 'nullable|exists:penanggung_jawab,id|distinct',
         ];
+    }
+    
+    /**
+     * Configure the validator instance.
+     */
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            // Check if additional_pics contains the same ID as penanggung_jawab_id
+            $mainPicId = $this->input('penanggung_jawab_id');
+            $additionalPics = $this->input('additional_pics', []);
+            
+            if ($mainPicId && !empty($additionalPics)) {
+                // Filter out empty values
+                $additionalPics = array_filter($additionalPics);
+                
+                if (in_array($mainPicId, $additionalPics)) {
+                    $validator->errors()->add(
+                        'additional_pics',
+                        'Additional Person in Charge cannot be the same as the main Person in Charge.'
+                    );
+                }
+            }
+        });
     }
 
     /**
@@ -46,6 +72,8 @@ class StoreReportRequest extends FormRequest
             'Foto.*.image' => 'File harus berupa gambar.',
             'Foto.*.mimes' => 'Format gambar harus jpg, png, jpeg, gif, atau svg.',
             'Foto.*.max' => 'Ukuran gambar maksimal 2MB.',
+            'additional_pics.*.exists' => 'Person in Charge yang dipilih tidak valid.',
+            'additional_pics.*.distinct' => 'Tidak boleh ada duplikasi Person in Charge pada Additional PICs.',
         ];
     }
 }

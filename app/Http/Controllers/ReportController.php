@@ -2,21 +2,24 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Concerns\HandlesLaporan;
-use App\Http\Library\SWTEmailNotifications;
-use App\Services\ReportService;
-use App\Services\FileUploadService;
-use App\Repositories\ReportRepository;
-use App\Http\Requests\StoreReportRequest;
-use App\Http\Requests\UpdateReportRequest;
-use App\Http\Requests\StoreCompletionRequest;
-use Illuminate\Http\Request;
-use App\Models\Laporan;
+use Carbon\Carbon;
 use App\Models\Area;
+use App\Models\Laporan;
+use Illuminate\Http\Request;
 use App\Models\PenanggungJawab;
 use App\Models\ProblemCategory;
+use App\Services\ReportService;
+use App\Services\FileUploadService;
+use Illuminate\Support\Facades\Log;
+use App\Models\DepartemenSupervisor;
+use App\Repositories\ReportRepository;
 use Yajra\DataTables\Facades\DataTables;
-use Carbon\Carbon;
+use App\Http\Requests\StoreReportRequest;
+use App\Http\Requests\UpdateReportRequest;
+use App\Http\Library\SWTEmailNotifications;
+use App\Http\Requests\StoreCompletionRequest;
+use App\Http\Controllers\Concerns\HandlesLaporan;
+
 class ReportController extends Controller
 {
     use HandlesLaporan, SWTEmailNotifications;
@@ -50,7 +53,7 @@ class ReportController extends Controller
         }
     }
 
-    public function dashboard()
+    public function dashboard(Request $request)
     {
         if (!isset($_SERVER['HTTPS'])) {
             $_SERVER['HTTPS'] = 'off';
@@ -58,13 +61,37 @@ class ReportController extends Controller
 
         \SharedManager::checkAuthToModule(17);
 
-        // Get statistics from service
-        $stats = $this->reportService->getDashboardStats();
+        // Get filters from request
+        $filters = [
+            'category_id' => $request->get('category_id'),
+            'month' => $request->get('month'),
+            'year' => $request->get('year'),
+            'date' => $request->get('date'),
+        ];
+
+        // Get statistics from service with filters
+        $stats = $this->reportService->getDashboardStats($filters);
 
         $areas = Area::all();
-        $laporanPerBulan = $this->reportService->getReportsPerMonth();
-        $areaPerBulan = $this->reportService->getReportsByAreaPerMonth();
-        $categoryPerBulan = $this->reportService->getReportsByCategoryCurrentMonth();
+        $laporanPerBulan = $this->reportService->getReportsPerMonth($filters);
+        $areaPerBulan = $this->reportService->getReportsByAreaPerMonth($filters);
+        $categoryPerBulan = $this->reportService->getReportsByCategoryCurrentMonth($filters);
+
+        // Get recent reports for dashboard cards
+        $recentAssigned = $this->reportService->getRecentReports('Assigned', 5);
+        $recentCompleted = $this->reportService->getRecentReports('Completed', 5);
+
+        // Handle AJAX requests for chart updates
+        if ($request->ajax()) {
+            return response()->json([
+                'stats' => $stats,
+                'charts' => [
+                    'laporanPerBulan' => $laporanPerBulan,
+                    'areaPerBulan' => $areaPerBulan,
+                    'categoryPerBulan' => $categoryPerBulan
+                ]
+            ]);
+        }
 
         \SharedManager::saveLog('log_swt', "Accessed the [Dashboard] page swt.");
 
@@ -76,6 +103,8 @@ class ReportController extends Controller
             'laporanPerBulan' => $laporanPerBulan,
             'areaPerBulan' => $areaPerBulan,
             'categoryPerBulan' => $categoryPerBulan,
+            'recentAssigned' => $recentAssigned,
+            'recentCompleted' => $recentCompleted,
         ]);
     }
 
@@ -95,8 +124,15 @@ class ReportController extends Controller
     public function show($id)
     {
         try {
-            // Use helper method to decrypt and get laporan
-            $laporan = $this->getLaporanFromEncryptedId($id);
+            // Try to handle both encrypted and plain ID
+            if (is_numeric($id)) {
+                // Plain ID from dashboard
+                $laporan = Laporan::findOrFail($id);
+            } else {
+                // Encrypted ID from other sources
+                $laporan = $this->getLaporanFromEncryptedId($id);
+            }
+
             $laporan->load(['area', 'penanggungJawab', 'problemCategory', 'penyelesaian']);
 
             // Return detail view
@@ -131,11 +167,36 @@ class ReportController extends Controller
             // Add default supervisor ID
             $validated['departemen_supervisor_id'] = 1;
 
+            // Handle additional PICs
+            $additionalPics = [];
+            if ($request->has('additional_pics')) {
+                $additionalPics = array_filter($request->input('additional_pics', []), function($pic) {
+                    return !empty($pic);
+                });
+                \Log::info('📝 Additional PICs from request:', [
+                    'raw' => $request->input('additional_pics', []),
+                    'filtered' => $additionalPics
+                ]);
+            }
+
             // Create report using service
             $laporan = $this->reportService->createReport($validated, $photos);
+            \Log::info('📊 Report created with ID: ' . $laporan->id);
 
-            // Send email notification to PIC
-            $this->emailReportAssigned($laporan);
+            // Store additional PICs if any
+            if (!empty($additionalPics)) {
+                $this->storeAdditionalPics($laporan->id, $additionalPics);
+                \Log::info('💾 Additional PICs stored for report ID: ' . $laporan->id, [
+                    'count' => count($additionalPics),
+                    'ids' => $additionalPics
+                ]);
+            } else {
+                \Log::info('ℹ️ No additional PICs for report ID: ' . $laporan->id);
+            }
+
+            // Send email notification to PIC (including additional PICs)
+            \Log::info('📧 Sending email notification for report ID: ' . $laporan->id);
+            $this->emailReportAssigned($laporan, $additionalPics);
 
             \SharedManager::saveLog('log_swt', "Created new report swt.");
 
@@ -256,8 +317,17 @@ class ReportController extends Controller
                 $this->fileUploadService->deleteFiles($photosToDelete, 'images/reports');
             }
 
+            // Handle additional PICs
+            $additionalPics = [];
+            if ($request->has('additional_pics')) {
+                $additionalPics = array_filter($request->input('additional_pics', []), function($pic) {
+                    return !empty($pic);
+                });
+            }
+
             // Update report using service
             $validated['Foto'] = $allPhotos;
+            $validated['additional_pics'] = $additionalPics;
             $laporan = $this->reportService->updateReport($laporan, $validated);
 
             // Detect changes for notifications
@@ -519,11 +589,10 @@ class ReportController extends Controller
                 return response()->json(['success' => true, 'message' => 'Report deleted successfully.']);
             }
 
-            return response()->json(['success' => false, 'message' => 'Failed to delete report.'], 500);
-
+            return response()->json(['success' => false, 'message' => 'Failed to delete report.']);
         } catch (\Exception $e) {
-            \Log::error('Error deleting report: ' . $e->getMessage());
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            Log::error('Error deleting report: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Failed to delete report.']);
         }
     }
 
@@ -546,7 +615,7 @@ class ReportController extends Controller
     {
         try {
             $laporan = $this->getLaporanFromEncryptedId($id);
-            $laporan->load('penyelesaian');
+            $laporan->load(['penyelesaian', 'additionalPicsWithData']);
 
             if (!$laporan->penyelesaian) {
                 return response()->json([
@@ -579,6 +648,114 @@ class ReportController extends Controller
                 'success' => false,
                 'message' => 'Failed to retrieve completion data. Please try again.'
             ], 500);
+        }
+    }
+
+    /**
+     * Get users for additional PIC selection (exclude General PIC)
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getUsersForPic()
+    {
+        try {
+            // Get all users from DepartemenSupervisor (exclude General PIC)
+            $users = DepartemenSupervisor::where('name', '!=', 'General')
+                ->whereNotNull('email')
+                ->where('email', '!=', '')
+                ->select('id', 'name', 'email', 'departemen')
+                ->orderBy('name', 'asc')
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'users' => $users
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error fetching users for PIC: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch users',
+                'users' => []
+            ]);
+        }
+    }
+
+    /**
+     * Store additional PICs for a report
+     *
+     * @param int $reportId
+     * @param array $additionalPics
+     * @return void
+     */
+    private function storeAdditionalPics(int $reportId, array $additionalPics): void
+    {
+        try {
+            // Store additional PICs as JSON in laporan table
+            $laporan = Laporan::find($reportId);
+            if ($laporan) {
+                $laporan->additional_pics = $additionalPics;
+                $laporan->save();
+
+                // Verify the PICs exist and log their details
+                $pics = \App\Models\PenanggungJawab::whereIn('id', $additionalPics)
+                    ->select('id', 'name', 'station', 'email')
+                    ->get();
+
+                Log::info("✅ Additional PICs stored for report {$reportId}", [
+                    'pic_ids' => $additionalPics,
+                    'found_pics' => $pics->map(function($p) {
+                        return [
+                            'id' => $p->id,
+                            'name' => $p->name,
+                            'station' => $p->station,
+                            'has_email' => !empty($p->email),
+                            'email' => $p->email
+                        ];
+                    })->toArray()
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error("❌ Error storing additional PICs: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Get all penanggung jawab from all areas
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getAllPenanggungJawab()
+    {
+        try {
+            // Get all penanggung jawab with their area information
+            $penanggungJawab = PenanggungJawab::with('area')
+                ->select('id', 'name', 'station', 'area_id')
+                ->orderBy('name', 'asc')
+                ->get()
+                ->map(function($pj) {
+                    return [
+                        'id' => $pj->id,
+                        'name' => $pj->name,
+                        'station' => $pj->station,
+                        'area_id' => $pj->area_id,
+                        'area_name' => $pj->area ? $pj->area->name : 'Unknown Area'
+                    ];
+                });
+
+            return response()->json([
+                'success' => true,
+                'penanggung_jawab' => $penanggungJawab
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error fetching all penanggung jawab: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch penanggung jawab',
+                'penanggung_jawab' => []
+            ]);
         }
     }
 }

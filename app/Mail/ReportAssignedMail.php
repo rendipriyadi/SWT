@@ -15,14 +15,16 @@ class ReportAssignedMail extends Mailable
     public $laporan;
     public $fullUrl;
     public $ccEmails;
+    public $toRecipients;
 
     /**
      * Create a new message instance.
      */
-    public function __construct($laporan, $ccEmails = [])
+    public function __construct($laporan, $ccEmails = [], $toRecipients = [])
     {
         $this->laporan = $laporan;
         $this->ccEmails = $ccEmails;
+        $this->toRecipients = $toRecipients;
         
 
         $encryptedId = encrypt($laporan->id);

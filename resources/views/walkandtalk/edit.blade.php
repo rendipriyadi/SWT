@@ -116,6 +116,38 @@
                 <div class="col-md-6">
                     <label for="supervisor" class="form-label fw-semibold">Person in Charge</label>
                     <input type="text" class="form-control" id="supervisor" readonly>
+                    <div class="mt-2">
+                        <button type="button" class="btn btn-outline-primary btn-sm" id="addAdditionalPic">
+                            <i class="fas fa-plus me-1"></i>Add Person in Charge
+                        </button>
+                    </div>
+                    <!-- Additional PICs Container -->
+                    <div id="additionalPicContainer" class="mt-2">
+                        <!-- Existing additional PICs -->
+                        @if(!empty($laporan->additional_pic_ids) && count($laporan->additional_pic_ids) > 0)
+                            @foreach($laporan->additional_pic_ids as $index => $picId)
+                                @php
+                                    $pic = \App\Models\PenanggungJawab::find($picId);
+                                @endphp
+                                @if($pic)
+                                    <div class="additional-pic-item mb-2" data-index="{{ $index + 1 }}">
+                                        <div class="input-group">
+                                            <select class="form-select additional-pic-select" name="additional_pics[{{ $index + 1 }}]" data-selected="{{ $picId }}">
+                                                <option value="">Select Person in Charge</option>
+                                                <!-- Options will be populated by JavaScript -->
+                                            </select>
+                                            <button type="button" class="btn btn-outline-danger remove-additional-pic">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                @endif
+                            @endforeach
+                        @endif
+                    </div>
+                    @error('additional_pics')
+                        <div class="text-danger small mt-1">{{ $message }}</div>
+                    @enderror
                 </div>
 
                 <!-- Problem Category -->
@@ -301,6 +333,114 @@ document.addEventListener('DOMContentLoaded', function() {
                     updateBtn.innerHTML = '<i class="fas fa-save me-2"></i>Update Report';
                 }
             }, 30000);
+        });
+    }
+
+    // ============================================================================
+    // Additional PIC Management for Edit Form
+    // ============================================================================
+    let additionalPicCount = {{ !empty($laporan->additional_pic_ids) ? count($laporan->additional_pic_ids) : 0 }};
+    const additionalPicContainer = document.getElementById('additionalPicContainer');
+    const addAdditionalPicBtn = document.getElementById('addAdditionalPic');
+
+    // Get all penanggung jawab from all areas
+    let allPenanggungJawab = [];
+    
+    // Fetch all penanggung jawab from server
+    fetch('/api/all-penanggung-jawab')
+        .then(response => response.json())
+        .then(data => {
+            allPenanggungJawab = data.penanggung_jawab || [];
+            
+            // Populate existing dropdowns
+            populateExistingDropdowns();
+        })
+        .catch(error => {
+            console.error('Error fetching penanggung jawab:', error);
+            allPenanggungJawab = [];
+        });
+
+    // Populate existing dropdowns with options
+    function populateExistingDropdowns() {
+        const existingSelects = document.querySelectorAll('.additional-pic-select');
+        existingSelects.forEach(select => {
+            const currentValue = select.getAttribute('data-selected') || '';
+            populateSelectOptions(select, currentValue);
+        });
+    }
+
+    // Populate select options
+    function populateSelectOptions(selectElement, selectedValue = '') {
+        let picOptions = '<option value="">Select Person in Charge</option>';
+        allPenanggungJawab.forEach(pj => {
+            const selected = pj.id == selectedValue ? 'selected' : '';
+            picOptions += `<option value="${pj.id}" ${selected}>${pj.name} - ${pj.station} (${pj.area_name})</option>`;
+        });
+        selectElement.innerHTML = picOptions;
+    }
+
+    // Add additional PIC function
+    function addAdditionalPic() {
+        additionalPicCount++;
+        
+        let picOptions = '<option value="">Select Person in Charge</option>';
+        allPenanggungJawab.forEach(pj => {
+            picOptions += `<option value="${pj.id}">${pj.name} - ${pj.station} (${pj.area_name})</option>`;
+        });
+
+        const picHtml = `
+            <div class="additional-pic-item mb-2" data-index="${additionalPicCount}">
+                <div class="input-group">
+                    <select class="form-select additional-pic-select" name="additional_pics[${additionalPicCount}]">
+                        ${picOptions}
+                    </select>
+                    <button type="button" class="btn btn-outline-danger remove-additional-pic">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        additionalPicContainer.insertAdjacentHTML('beforeend', picHtml);
+    }
+
+    // Add additional PIC button click
+    if (addAdditionalPicBtn) {
+        addAdditionalPicBtn.addEventListener('click', function() {
+            addAdditionalPic();
+        });
+    }
+
+    // Remove additional PIC button click (event delegation)
+    if (additionalPicContainer) {
+        additionalPicContainer.addEventListener('click', function(e) {
+            if (e.target.closest('.remove-additional-pic')) {
+                const picItem = e.target.closest('.additional-pic-item');
+                picItem.remove();
+            }
+        });
+    }
+
+    // Prevent duplicate selection
+    if (additionalPicContainer) {
+        additionalPicContainer.addEventListener('change', function(e) {
+            if (e.target.classList.contains('additional-pic-select')) {
+                const selectedValue = e.target.value;
+                const allSelects = document.querySelectorAll('.additional-pic-select');
+                
+                // Check for duplicates
+                let duplicateFound = false;
+                allSelects.forEach(select => {
+                    if (select !== e.target && select.value === selectedValue && selectedValue !== '') {
+                        duplicateFound = true;
+                    }
+                });
+                
+                if (duplicateFound) {
+                    alert('This person is already selected. Please choose a different person.');
+                    e.target.value = '';
+                }
+            }
         });
     }
 });

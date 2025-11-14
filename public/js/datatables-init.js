@@ -209,7 +209,23 @@ $(document).ready(function() {
                         detailContent += '<div class="mb-2"><strong>Status:</strong><br><span class="ms-2">' + (data.status || '-') + '</span></div>';
                         detailContent += '<div class="mb-2"><strong>Completion:</strong><br><span class="ms-2">' + (data.penyelesaian || '-') + '</span></div>';
                         
-                        if (data.aksi) {
+                        // Add View Details button for mobile (same behavior as desktop row click)
+                        if (data.encrypted_id) {
+                            const detailUrl = window.routes && window.routes.laporanShow 
+                                ? window.routes.laporanShow.replace(':id', data.encrypted_id)
+                                : '/laporan/' + data.encrypted_id;
+                            detailContent += '<div class="mt-3 pt-2 border-top">';
+                            detailContent += '<div class="d-flex gap-2 justify-content-between align-items-center flex-wrap">';
+                            detailContent += '<div class="d-flex gap-2 flex-wrap">';
+                            detailContent += '<a href="' + detailUrl + '" class="btn btn-primary btn-sm">';
+                            detailContent += '<i class="fas fa-eye me-1"></i>View Details</a>';
+                            if (data.aksi) {
+                                detailContent += data.aksi;
+                            }
+                            detailContent += '</div>';
+                            detailContent += '<small class="text-muted d-none d-sm-block">Tap to collapse</small>';
+                            detailContent += '</div></div>';
+                        } else if (data.aksi) {
                             detailContent += '<div class="mobile-action-buttons mt-3">' + data.aksi + '</div>';
                         }
                         
@@ -719,7 +735,23 @@ $(document).ready(function() {
                         detailContent += '<div class="mb-2"><strong>Status:</strong><br><span class="ms-2">' + (data.status || '-') + '</span></div>';
                         detailContent += '<div class="mb-2"><strong>Completion:</strong><br><span class="ms-2">' + (data.penyelesaian || '-') + '</span></div>';
                         
-                        if (data.aksi) {
+                        // Add View Details button for mobile (same behavior as desktop row click)
+                        if (data.encrypted_id) {
+                            const detailUrl = window.routes && window.routes.laporanShow 
+                                ? window.routes.laporanShow.replace(':id', data.encrypted_id)
+                                : '/laporan/' + data.encrypted_id;
+                            detailContent += '<div class="mt-3 pt-2 border-top">';
+                            detailContent += '<div class="d-flex gap-2 justify-content-between align-items-center flex-wrap">';
+                            detailContent += '<div class="d-flex gap-2 flex-wrap">';
+                            detailContent += '<a href="' + detailUrl + '" class="btn btn-primary btn-sm">';
+                            detailContent += '<i class="fas fa-eye me-1"></i>View Details</a>';
+                            if (data.aksi) {
+                                detailContent += data.aksi;
+                            }
+                            detailContent += '</div>';
+                            detailContent += '<small class="text-muted d-none d-sm-block">Tap to collapse</small>';
+                            detailContent += '</div></div>';
+                        } else if (data.aksi) {
                             detailContent += '<div class="mobile-action-buttons mt-3">' + data.aksi + '</div>';
                         }
                         

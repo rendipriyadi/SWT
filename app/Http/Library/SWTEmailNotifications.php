@@ -15,20 +15,56 @@ trait SWTEmailNotifications
      * Send email notification when report is assigned to PIC
      *
      * @param object $laporan
+     * @param array $additionalPics
      * @return void
      */
-    protected function emailReportAssigned($laporan)
+    protected function emailReportAssigned($laporan, $additionalPics = [])
     {
         try {
             // TO: PIC (Person in Charge)
             $to_emails = [];
             if ($laporan->penanggungJawab && $laporan->penanggungJawab->email) {
+                // Specific PIC assigned - add to TO
                 $to_emails[] = $laporan->penanggungJawab->email;
             } elseif ($laporan->area) {
-                // If no specific PIC, send to all PICs in the area
+                // If no specific PIC (area only), send to NON-General PICs in the area
                 foreach ($laporan->area->penanggungJawabs as $pj) {
-                    if ($pj->email) {
+                    if ($pj->email && strcasecmp($pj->station, 'General') !== 0) {
                         $to_emails[] = $pj->email;
+                        Log::info("Added area PIC to TO: {$pj->name} ({$pj->station}) - {$pj->email}");
+                    }
+                }
+            }
+
+            // Add additional PICs to TO emails
+            if (!empty($additionalPics)) {
+                Log::info("Processing additional PICs for report ID: {$laporan->id}", [
+                    'additional_pic_ids' => $additionalPics
+                ]);
+                
+                $additionalPenanggungJawabs = \App\Models\PenanggungJawab::whereIn('id', $additionalPics)
+                    ->select('id', 'name', 'station', 'email')
+                    ->get();
+                
+                Log::info("Found additional PICs:", [
+                    'count' => $additionalPenanggungJawabs->count(),
+                    'pics' => $additionalPenanggungJawabs->map(function($pj) {
+                        return [
+                            'id' => $pj->id,
+                            'name' => $pj->name,
+                            'station' => $pj->station,
+                            'email' => $pj->email ? 'present' : 'missing',
+                            'email_address' => $pj->email
+                        ];
+                    })->toArray()
+                ]);
+                
+                foreach ($additionalPenanggungJawabs as $pj) {
+                    if ($pj->email && filter_var($pj->email, FILTER_VALIDATE_EMAIL)) {
+                        $to_emails[] = $pj->email;
+                        Log::info("Added additional PIC to TO: {$pj->name} ({$pj->station}) - {$pj->email}");
+                    } else {
+                        Log::warning("Additional PIC has invalid/missing email: {$pj->name} ({$pj->station}) - Email: {$pj->email}");
                     }
                 }
             }
@@ -40,14 +76,20 @@ trait SWTEmailNotifications
             }
 
             // CC: Head/Manager (PICs with station = "General" in the same Area)
-            // Exclude the assigned PIC from CC to avoid duplicate
+            // Exclude PICs already in TO to avoid duplicate
             $cc_emails = [];
 
             if ($laporan->area) {
                 // Get all PICs with station "General" in the same area (case-insensitive)
                 foreach ($laporan->area->penanggungJawabs as $pj) {
-                    if (strcasecmp($pj->station, 'General') === 0 && $pj->email && $pj->id != $laporan->penanggung_jawab_id) {
-                        $cc_emails[] = $pj->email;
+                    if (strcasecmp($pj->station, 'General') === 0 && $pj->email) {
+                        // Add to CC unless it's already in TO
+                        if (!in_array($pj->email, $to_emails)) {
+                            $cc_emails[] = $pj->email;
+                            Log::info("Added General PIC to CC: {$pj->name} ({$pj->station}) - {$pj->email}");
+                        } else {
+                            Log::info("General PIC already in TO, skipping CC: {$pj->name} ({$pj->station}) - {$pj->email}");
+                        }
                     }
                 }
             }
@@ -59,13 +101,38 @@ trait SWTEmailNotifications
             // Remove TO emails from CC to avoid duplicate
             $cc_emails = array_diff($cc_emails, $to_emails);
 
+            Log::info("Final email recipients for report ID: {$laporan->id}", [
+                'to_count' => count($to_emails),
+                'to_emails' => $to_emails,
+                'cc_count' => count($cc_emails),
+                'cc_emails' => $cc_emails
+            ]);
+
             // Send email using Laravel Mailable
             // Send one email with all PICs in TO field
             if (count($to_emails) > 0) {
-                MailService::to($to_emails)->send(new ReportAssignedMail($laporan, array_values($cc_emails)));
+                // Get TO recipient names for email greeting
+                $toRecipientNames = [];
+                
+                // Get all PenanggungJawab IDs that correspond to TO emails
+                $allPenanggungJawab = \App\Models\PenanggungJawab::whereIn('email', $to_emails)
+                    ->select('id', 'name', 'email')
+                    ->get();
+                    
+                foreach ($allPenanggungJawab as $pj) {
+                    if (in_array($pj->email, $to_emails)) {
+                        $toRecipientNames[] = $pj->name;
+                    }
+                }
+                
+                // Remove duplicates
+                $toRecipientNames = array_unique($toRecipientNames);
+                
+                MailService::to($to_emails)->send(new ReportAssignedMail($laporan, array_values($cc_emails), $toRecipientNames));
+                Log::info("✅ Email successfully sent for report ID: {$laporan->id} to: " . implode(', ', $to_emails));
+            } else {
+                Log::error("❌ No TO recipients for report ID: {$laporan->id}. Email not sent.");
             }
-
-            Log::info("Email sent for report ID: {$laporan->id} to " . implode(', ', $to_emails));
 
         } catch (ErrorException $e) {
             Log::error("Failed to send report assigned email for ID {$laporan->id}: " . $e->getMessage());

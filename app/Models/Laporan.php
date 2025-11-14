@@ -20,10 +20,12 @@ class Laporan extends Model
         'tenggat_waktu',
         'status',
         'Foto',
+        'additional_pics',
     ];
 
     protected $casts = [
         'Foto' => 'array',
+        'additional_pics' => 'array',
         'tenggat_waktu' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
@@ -80,5 +82,45 @@ class Laporan extends Model
     public function penyelesaian()
     {
         return $this->hasOne(Penyelesaian::class, 'laporan_id');
+    }
+
+    // Relasi dengan additional PICs
+    public function additionalPics()
+    {
+        return $this->hasMany(ReportAdditionalPic::class, 'laporan_id');
+    }
+
+    // Get additional PICs with their departemen supervisor data
+    public function additionalPicsWithData()
+    {
+        return $this->additionalPics()->with('departemenSupervisor');
+    }
+
+    // Get additional PICs as PenanggungJawab models
+    public function getAdditionalPicsAttribute($value)
+    {
+        if (empty($value)) {
+            return [];
+        }
+
+        $picIds = is_string($value) ? json_decode($value, true) : $value;
+        
+        if (empty($picIds) || !is_array($picIds)) {
+            return [];
+        }
+
+        return PenanggungJawab::whereIn('id', $picIds)->get();
+    }
+
+    // Get additional PICs IDs only
+    public function getAdditionalPicIdsAttribute()
+    {
+        $additionalPics = $this->attributes['additional_pics'] ?? null;
+        
+        if (empty($additionalPics)) {
+            return [];
+        }
+
+        return is_string($additionalPics) ? json_decode($additionalPics, true) : $additionalPics;
     }
 }

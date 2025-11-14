@@ -24,10 +24,12 @@
                     <tr>
                         <td style="background-color: #ffffff; padding: 30px; font-size: 12px; color: black;">
                             <p style="font-weight: bold; margin: 0 0 10px;">
-                                @if($laporan->penanggungJawab)
+                                @if(!empty($toRecipients))
+                                    Hello, {{ implode(', ', $toRecipients) }}
+                                @elseif($laporan->penanggungJawab)
                                     Hello, {{ $laporan->penanggungJawab->name }}
                                 @else
-                                    Hello, {{ $laporan->area ? implode(', ', $laporan->area->penanggungJawabs->pluck('name')->toArray()) : '' }}
+                                    Hello, {{ $laporan->area ? $laporan->area->name . ' Team' : 'Team' }}
                                 @endif
                             </p>
                             <p style="margin: 0 0 10px;">

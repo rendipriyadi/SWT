@@ -28,6 +28,8 @@ class UpdateReportRequest extends FormRequest
             'status' => 'nullable|in:Assigned,Completed',
             'Foto' => 'nullable|array',
             'Foto.*' => 'image|mimes:jpg,png,jpeg,gif,svg|max:2048',
+            'additional_pics' => 'nullable|array',
+            'additional_pics.*' => 'nullable|exists:penanggung_jawab,id',
         ];
     }
 
@@ -48,6 +50,7 @@ class UpdateReportRequest extends FormRequest
             'Foto.*.image' => 'File harus berupa gambar.',
             'Foto.*.mimes' => 'Format gambar harus jpg, png, jpeg, gif, atau svg.',
             'Foto.*.max' => 'Ukuran gambar maksimal 2MB.',
+            'additional_pics.*.exists' => 'Person in Charge yang dipilih tidak valid.',
         ];
     }
 }

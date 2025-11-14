@@ -91,6 +91,18 @@
                 <div class="col-md-6">
                     <label for="supervisor" class="form-label fw-semibold">Person in Charge</label>
                     <input type="text" class="form-control" id="supervisor" readonly>
+                    <div class="mt-2">
+                        <button type="button" class="btn btn-outline-primary btn-sm" id="addAdditionalPic">
+                            <i class="fas fa-plus me-1"></i>Add Person in Charge
+                        </button>
+                    </div>
+                    <!-- Additional PICs Container -->
+                    <div id="additionalPicContainer" class="mt-2">
+                        <!-- Additional PIC items will be added here -->
+                    </div>
+                    @error('additional_pics')
+                        <div class="text-danger small mt-1">{{ $message }}</div>
+                    @enderror
                 </div>
 
                 <!-- Problem Category -->
@@ -417,6 +429,205 @@ document.addEventListener('DOMContentLoaded', function() {
             }, 30000);
         });
     }
+
+    // ============================================================================
+    // Additional PIC Management (Simplified)
+    // ============================================================================
+    let additionalPicCount = 0;
+    const additionalPicContainer = document.getElementById('additionalPicContainer');
+    const addAdditionalPicBtn = document.getElementById('addAdditionalPic');
+
+    // Get all penanggung jawab from all areas
+    let allPenanggungJawab = [];
+    
+    // Fetch all penanggung jawab from server
+    fetch('/api/all-penanggung-jawab')
+        .then(response => response.json())
+        .then(data => {
+            allPenanggungJawab = data.penanggung_jawab || [];
+        })
+        .catch(error => {
+            console.error('Error fetching penanggung jawab:', error);
+            allPenanggungJawab = [];
+        });
+
+    // Get filtered PIC options (exclude main PICs and selected Additional PICs)
+    function getFilteredPicOptions(currentSelectValue = null) {
+        // Get currently selected area
+        const selectedAreaId = document.getElementById('area_id').value;
+        
+        // Get currently selected Station (if any)
+        const selectedStationId = document.getElementById('penanggung_jawab_id').value;
+        
+        // Get supervisor names (main PICs) from supervisor input
+        const supervisorInput = document.getElementById('supervisor');
+        const mainPicNames = supervisorInput ? supervisorInput.value.split(',').map(name => name.trim()).filter(name => name) : [];
+        
+        // Get already selected Additional PICs (exclude current select to allow keeping its value)
+        const selectedAdditionalPics = Array.from(document.querySelectorAll('.additional-pic-select'))
+            .map(select => select.value)
+            .filter(val => val !== '' && val !== currentSelectValue);
+        
+        let picOptions = '<option value="">Select Person in Charge</option>';
+        allPenanggungJawab.forEach(pj => {
+            // Add null checks to prevent errors
+            if (!pj || !pj.id || !pj.name) {
+                return; // Skip invalid records
+            }
+            
+            const pjId = pj.id.toString();
+            
+            // If area is selected but no station (show all area PICs as main)
+            if (selectedAreaId && !selectedStationId) {
+                // Exclude ALL PICs from same area EXCEPT General
+                if (pj.area_id && pj.area_id.toString() === selectedAreaId.toString()) {
+                    // Only allow General from the same area
+                    if (!pj.station || pj.station.toLowerCase() !== 'general') {
+                        return; // Don't add - they are main PICs or non-General
+                    }
+                    // If it's General from same area, allow it to continue
+                }
+            }
+            
+            // If station is selected, exclude that specific PIC
+            if (selectedStationId && pjId === selectedStationId.toString()) {
+                return; // Don't add this option
+            }
+            
+            // Skip if this PIC is already selected as Additional PIC (except current select)
+            if (selectedAdditionalPics.includes(pjId)) {
+                return; // Don't add this option
+            }
+            
+            // Safe display with fallback values
+            const displayName = pj.name || 'Unknown';
+            const displayStation = pj.station || 'No Station';
+            const displayArea = pj.area_name || 'Unknown Area';
+            
+            picOptions += `<option value="${pj.id}">${displayName} - ${displayStation} (${displayArea})</option>`;
+        });
+        
+        return picOptions;
+    }
+    
+    // Refresh all Additional PIC dropdowns
+    function refreshAllAdditionalPicDropdowns() {
+        const allSelects = document.querySelectorAll('.additional-pic-select');
+        allSelects.forEach(select => {
+            const currentValue = select.value;
+            const newOptions = getFilteredPicOptions(currentValue);
+            select.innerHTML = newOptions;
+            
+            // Try to restore the previous value if it's still valid
+            if (currentValue) {
+                const optionExists = Array.from(select.options).some(opt => opt.value === currentValue);
+                if (optionExists) {
+                    select.value = currentValue;
+                } else {
+                    select.value = '';
+                }
+            }
+        });
+    }
+
+    // Add additional PIC function (with duplicate prevention)
+    function addAdditionalPic() {
+        if (allPenanggungJawab.length === 0) {
+            alert('PIC data not loaded yet. Please wait a moment and try again.');
+            return;
+        }
+        
+        additionalPicCount++;
+        
+        const picOptions = getFilteredPicOptions();
+
+        const picHtml = `
+            <div class="additional-pic-item mb-2" data-index="${additionalPicCount}">
+                <div class="input-group">
+                    <select class="form-select additional-pic-select" name="additional_pics[${additionalPicCount}]">
+                        ${picOptions}
+                    </select>
+                    <button type="button" class="btn btn-outline-danger remove-additional-pic">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        additionalPicContainer.insertAdjacentHTML('beforeend', picHtml);
+    }
+
+    // Add additional PIC button click
+    if (addAdditionalPicBtn) {
+        addAdditionalPicBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            addAdditionalPic();
+        });
+    }
+
+    // Remove additional PIC button click (event delegation)
+    if (additionalPicContainer) {
+        additionalPicContainer.addEventListener('click', function(e) {
+            if (e.target.closest('.remove-additional-pic')) {
+                const picItem = e.target.closest('.additional-pic-item');
+                picItem.remove();
+                // Refresh all remaining dropdowns after removal
+                refreshAllAdditionalPicDropdowns();
+            }
+        });
+    }
+
+    // Handle Additional PIC selection change
+    if (additionalPicContainer) {
+        additionalPicContainer.addEventListener('change', function(e) {
+            if (e.target.classList.contains('additional-pic-select')) {
+                // Refresh all dropdowns to update available options
+                refreshAllAdditionalPicDropdowns();
+            }
+        });
+    }
+    
+    // Listen for changes in Area dropdown
+    const areaSelect = document.getElementById('area_id');
+    if (areaSelect) {
+        areaSelect.addEventListener('change', function() {
+            // Refresh all Additional PIC dropdowns when area changes
+            setTimeout(() => {
+                refreshAllAdditionalPicDropdowns();
+            }, 500); // Wait for area-station.js to finish updating
+        });
+    }
+    
+    // Listen for changes in Station dropdown (Person in Charge)
+    const penanggungJawabSelect = document.getElementById('penanggung_jawab_id');
+    if (penanggungJawabSelect) {
+        penanggungJawabSelect.addEventListener('change', function() {
+            const selectedMainPic = this.value;
+            
+            // If a Person in Charge is selected, check if it's already in Additional PICs
+            if (selectedMainPic) {
+                const additionalPicSelects = document.querySelectorAll('.additional-pic-select');
+                let removedAny = false;
+                
+                additionalPicSelects.forEach(select => {
+                    if (select.value === selectedMainPic) {
+                        select.closest('.additional-pic-item').remove();
+                        removedAny = true;
+                    }
+                });
+                
+                if (removedAny) {
+                    alert('This person was already selected as Additional PIC and has been removed.');
+                }
+            }
+            
+            // Refresh all remaining Additional PIC dropdowns
+            refreshAllAdditionalPicDropdowns();
+        });
+    }
 });
 </script>
+
+<!-- Area-Station Management Script -->
+<script src="{{ asset('js/area-station.js') }}"></script>
 @endpush
