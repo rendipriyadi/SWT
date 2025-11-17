@@ -1,0 +1,112 @@
+@startuml PIC_Resolution_Flow_Detailed
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontSize 13
+
+skinparam activity {
+  BackgroundColor #FF6F00
+  BorderColor #E65100
+  FontColor #FFFFFF
+  FontSize 13
+  FontStyle bold
+}
+
+skinparam activityDiamond {
+  BackgroundColor #FFC107
+  BorderColor #F57C00
+  FontColor #000000
+  FontSize 12
+}
+
+title PIC Flow - Resolve Safety Report (Detailed)
+
+start
+
+:📧 Receive Email Notification;
+note right
+  Email contains:
+  • Report details
+  • Direct link
+  • Deadline
+  • CC: Manager/Head
+end note
+
+:Click Link in Email;
+
+:🔐 Login to System;
+
+:📋 View Report Details;
+
+:📖 Read:
+• Problem Category
+• Description
+• Location/Area
+• Photos
+• Deadline;
+
+if (Understand the Issue?) then (Yes)
+  :🚶 Go to Location;
+  
+  :🔍 Inspect the Problem;
+  
+  if (Can Solve Immediately?) then (Yes)
+    :⚙️ Work on Solution;
+    
+    :📸 Take Solution Photos
+    (Before & After);
+    
+    :📝 Write Solution Description;
+    
+    :✅ Mark as "Completed";
+    
+    :Submit;
+    
+    :📧 System Sends Email
+    to Observer & Manager;
+    
+    :🎉 Report Resolved!;
+    
+    stop
+    
+  else (No - Need More Time)
+    :📝 Update Status to
+    "In Progress";
+    
+    :💬 Add Notes/Comments;
+    
+    :⏰ Continue Working;
+    
+    if (Deadline Approaching?) then (H-2)
+      :📧 Receive Reminder Email;
+    endif
+    
+    if (Past Deadline?) then (Yes)
+      :⚠️ Receive Daily
+      Overdue Email;
+    endif
+    
+    :Complete Work;
+    
+    :📸 Take Solution Photos;
+    
+    :✅ Mark as "Completed";
+    
+    :Submit;
+    
+    :📧 System Sends Email;
+    
+    :🎉 Report Resolved!;
+    
+    stop
+  endif
+  
+else (No - Need Clarification)
+  :💬 Contact Observer;
+  
+  :Get More Information;
+  
+  :Continue Process;
+  
+  stop
+endif
+
+@enduml

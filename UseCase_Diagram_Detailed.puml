@@ -1,0 +1,154 @@
+@startuml Safety Walk and Talk - Use Case Diagram (Detailed)
+!theme plain
+skinparam actorStyle awesome
+skinparam linetype polyline
+scale 1.2
+
+' Actors
+actor "User" as U #lightblue
+actor "Admin" as A #lightgreen
+actor "System\n(Automated)" as S #lightyellow
+
+' System Boundary
+package "Safety Walk and Talk System" {
+  
+  ' ========== USER USE CASES ==========
+  
+  rectangle "Report Management" #aliceblue {
+    usecase "Create Report" as UC1
+    usecase "  - Upload Photos" as UC1a
+    usecase "  - Select Area" as UC1b
+    usecase "  - Select PIC" as UC1c
+    usecase "  - Select Category" as UC1d
+    
+    usecase "View Report List" as UC2
+    usecase "  - Filter & Search" as UC2a
+    
+    usecase "View Report Detail" as UC3
+    
+    usecase "Edit Report" as UC4
+    usecase "  - Modify Photos" as UC4a
+    
+    usecase "Complete Report" as UC5
+    usecase "  - Upload Completion Photos" as UC5a
+    usecase "  - Generate PDF" as UC5b
+    
+    usecase "Update Status" as UC6
+    usecase "Delete Report" as UC7
+  }
+  
+  rectangle "Dashboard & Monitoring" #honeydew {
+    usecase "View Dashboard" as UC8
+    usecase "  - View Statistics" as UC8a
+    usecase "  - Monthly Trends Chart" as UC8b
+    usecase "  - Area Distribution Chart" as UC8c
+    usecase "  - Category Distribution Chart" as UC8d
+  }
+  
+  rectangle "History & Export" #lavender {
+    usecase "View History" as UC9
+    usecase "  - Filter by Period" as UC9a
+    usecase "Export PDF" as UC10
+  }
+  
+  ' ========== ADMIN USE CASES ==========
+  
+  rectangle "Master Data Management" #lightgreen {
+    usecase "Manage Areas" as UC11
+    usecase "  - CRUD Area" as UC11a
+    usecase "  - Manage PICs" as UC11b
+    
+    usecase "Manage Departments" as UC12
+    usecase "  - CRUD Department" as UC12a
+    
+    usecase "Manage Categories" as UC13
+    usecase "  - CRUD Category" as UC13a
+    usecase "  - Set Color" as UC13b
+    usecase "  - Activate/Deactivate" as UC13c
+  }
+  
+  ' ========== SYSTEM USE CASES ==========
+  
+  rectangle "Automated Processes" #lightyellow {
+    usecase "Send Email Notifications" as UC14
+    usecase "  - Assignment Email" as UC14a
+    usecase "  - Edit Email" as UC14b
+    usecase "  - Completion Email (PDF)" as UC14c
+    
+    usecase "Send Reminders (Cron)" as UC15
+    usecase "  - H-2 Deadline Reminder" as UC15a
+    usecase "  - Overdue Reminder" as UC15b
+  }
+}
+
+' ========== RELATIONSHIPS ==========
+
+' User Relationships
+U -down-> UC1
+U -down-> UC2
+U -down-> UC3
+U -down-> UC4
+U -down-> UC5
+U -down-> UC6
+U -down-> UC7
+U -down-> UC8
+U -down-> UC9
+
+' Admin Relationships
+A -down-> UC11
+A -down-> UC12
+A -down-> UC13
+
+' System Relationships
+S -down-> UC14
+S -down-> UC15
+
+' Include Relationships
+UC1 .down.> UC1a : <<include>>
+UC1 .down.> UC1b : <<include>>
+UC1 .down.> UC1c : <<include>>
+UC1 .down.> UC1d : <<include>>
+
+UC2 .down.> UC2a : <<include>>
+UC4 .down.> UC4a : <<include>>
+
+UC5 .down.> UC5a : <<include>>
+UC5 .down.> UC5b : <<include>>
+
+UC8 .down.> UC8a : <<include>>
+UC8 .down.> UC8b : <<include>>
+UC8 .down.> UC8c : <<include>>
+UC8 .down.> UC8d : <<include>>
+
+UC9 .down.> UC9a : <<include>>
+
+UC11 .down.> UC11a : <<include>>
+UC11 .down.> UC11b : <<include>>
+UC12 .down.> UC12a : <<include>>
+UC13 .down.> UC13a : <<include>>
+UC13 .down.> UC13b : <<include>>
+UC13 .down.> UC13c : <<include>>
+
+UC14 .down.> UC14a : <<include>>
+UC14 .down.> UC14b : <<include>>
+UC14 .down.> UC14c : <<include>>
+UC15 .down.> UC15a : <<include>>
+UC15 .down.> UC15b : <<include>>
+
+' Extend Relationship
+UC9 <.left. UC10 : <<extend>>
+
+' ========== NOTES ==========
+
+note right of S
+  **Automated Processes:**
+  - Event-triggered (create/edit/complete)
+  - Scheduled (cron jobs at 08:00 daily)
+end note
+
+note bottom of "Safety Walk and Talk System"
+  **Note**: Current implementation has no authentication system.
+  All features are publicly accessible.
+end note
+
+@enduml

@@ -1,0 +1,68 @@
+@startuml PIC_Resolution_Flow_Modern
+!theme blueprint
+skinparam backgroundColor #FAFAFA
+skinparam defaultFontSize 14
+skinparam defaultFontName Segoe UI
+
+skinparam activity {
+  BackgroundColor #F57C00
+  BorderColor #E65100
+  FontColor #FFFFFF
+  FontSize 14
+  FontStyle bold
+  BorderThickness 3
+  RoundCorner 15
+}
+
+skinparam arrow {
+  Color #F57C00
+  Thickness 2
+}
+
+title **Safety Walk and Talk System**\nPIC Resolution Flow
+
+start
+
+:📧 **Receive Email**
+----
+New report assigned;
+
+:🔗 **Click Link**;
+
+:🔐 **Login to System**;
+
+:📋 **View Report Details**
+----
+• Problem description
+• Photos
+• Location
+• Deadline;
+
+:🚶 **Go to Location**;
+
+:🔍 **Inspect Issue**;
+
+:⚙️ **Work on Solution**;
+
+:📸 **Take Photos**
+----
+Before & After solution;
+
+:📝 **Upload Photos**;
+
+:✍️ **Write Solution**
+----
+Describe what was done;
+
+:✅ **Mark as Completed**;
+
+:📧 **System Sends Email**
+----
+To: Observer
+CC: Manager/Head;
+
+:🎉 **Report Resolved!**;
+
+stop
+
+@enduml

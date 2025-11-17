@@ -1,0 +1,7 @@
+"No","Table Name","Description","Primary Key","Foreign Keys"
+"1","areas","Production areas/stations","id","-"
+"2","penanggung_jawab","Person In Charge (PIC) for each area","id","area_id"
+"3","laporan","Safety/5S issue reports","id","area_id, penanggung_jawab_id, departemen_supervisor_id, problem_category_id"
+"4","penyelesaian","Report completion records","id","laporan_id"
+"5","problem_categories","Problem/issue categories","id","-"
+"6","departemen_supervisors","Department and supervisor information","id","-"
