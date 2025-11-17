@@ -1,0 +1,114 @@
+@startuml Safety Walk and Talk - Use Case Diagram (Clean)
+!theme plain
+skinparam actorStyle awesome
+skinparam packageStyle rectangle
+left to right direction
+
+' Actors
+:User: as U
+:Admin: as A
+:System\n(Automated): as S
+
+' System Boundary
+rectangle "Safety Walk and Talk System" {
+  
+  ' === USER USE CASES ===
+  
+  ' Report Management
+  (Create Report) as UC1
+  (View Report List) as UC2
+  (View Report Detail) as UC3
+  (Edit Report) as UC4
+  (Complete Report) as UC5
+  (Update Status) as UC6
+  (Delete Report) as UC7
+  
+  ' Dashboard
+  (View Dashboard) as UC8
+  
+  ' History
+  (View History) as UC9
+  (Export PDF) as UC10
+  
+  ' === ADMIN USE CASES ===
+  
+  ' Master Data
+  (Manage Areas) as UC11
+  (Manage Departments) as UC12
+  (Manage Categories) as UC13
+  
+  ' === SYSTEM USE CASES ===
+  
+  ' Automated
+  (Send Email\nNotifications) as UC14
+  (Send Reminders) as UC15
+}
+
+' === RELATIONSHIPS ===
+
+' User to Use Cases
+U --> UC1
+U --> UC2
+U --> UC3
+U --> UC4
+U --> UC5
+U --> UC6
+U --> UC7
+U --> UC8
+U --> UC9
+
+' Admin to Use Cases
+A --> UC11
+A --> UC12
+A --> UC13
+
+' System to Use Cases
+S --> UC14
+S --> UC15
+
+' Extend/Include
+UC9 .> UC10 : <<extend>>
+
+' === NOTES ===
+
+note right of UC1
+  Includes:
+  - Upload photos
+  - Select area, PIC, category
+  - Set deadline
+end note
+
+note right of UC5
+  Includes:
+  - Upload completion photos
+  - Generate PDF report
+  - Send notification
+end note
+
+note right of UC8
+  Displays:
+  - Statistics cards
+  - Monthly trends (line chart)
+  - Area distribution (bar chart)
+  - Category distribution (pie chart)
+end note
+
+note right of UC14
+  Triggers:
+  - Assignment email
+  - Edit notification
+  - Completion email (with PDF)
+end note
+
+note right of UC15
+  Cron Jobs:
+  - H-2 deadline reminder (daily 08:00)
+  - Overdue reminder (daily 08:00)
+end note
+
+note bottom of "Safety Walk and Talk System"
+  **Current Implementation**: No authentication system
+  All features are publicly accessible
+end note
+
+@enduml

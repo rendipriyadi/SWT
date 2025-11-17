@@ -30,6 +30,10 @@ class ReminderReportDeadline extends Command
      */
     public function handle()
     {
+        // Force URL for CLI context (workaround for missing HTTP context)
+        // This ensures URL generation uses the correct base URL even in CLI
+        \Illuminate\Support\Facades\URL::forceRootUrl(config('app.url'));
+        
         // Hitung H-2 (2 hari kerja dari sekarang)
         $twoWorkdaysLater = Carbon::now()->addWeekdays(2)->toDateString();
 

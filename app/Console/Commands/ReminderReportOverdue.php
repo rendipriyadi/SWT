@@ -30,6 +30,10 @@ class ReminderReportOverdue extends Command
      */
     public function handle()
     {
+        // Force URL for CLI context (workaround for missing HTTP context)
+        // This ensures URL generation uses the correct base URL even in CLI
+        \Illuminate\Support\Facades\URL::forceRootUrl(config('app.url'));
+        
         // Check if today is Saturday (6) or Sunday (7)
         $dayOfWeek = date('N');
         if (in_array($dayOfWeek, [6, 7])) {

@@ -1,0 +1,50 @@
+@startuml User_Reporting_Flow
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontSize 13
+skinparam defaultFontName Arial
+
+skinparam activity {
+  BackgroundColor #4CAF50
+  BorderColor #2E7D32
+  FontColor #FFFFFF
+  FontSize 13
+  FontStyle bold
+}
+
+skinparam activityDiamond {
+  BackgroundColor #FFC107
+  BorderColor #F57C00
+  FontColor #000000
+}
+
+title User Flow - Create Safety Report
+
+start
+
+:User Login;
+
+:Spot Safety Issue;
+
+:Click "Create Report";
+
+:Fill Report Form:
+• Select Problem Category
+• Write Description
+• Choose Area/Location
+• Upload Photos (max 5)
+• Set Deadline;
+
+:Select PIC
+(Person in Charge);
+
+:Submit Report;
+
+:System Sends Email
+to PIC;
+
+:Report Created
+Successfully;
+
+stop
+
+@enduml
