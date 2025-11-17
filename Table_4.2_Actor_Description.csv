@@ -1,0 +1,4 @@
+"Actor","Description","Responsibilities"
+"User","Any employee who uses the system (no authentication required)","View dashboard and statistics; Create, edit, and complete reports; Upload photos; View history and export PDF; Delete reports"
+"Admin","Administrator who manages master data","Manage production areas; Manage PICs (Person In Charge); Manage departments and supervisors; Manage problem categories"
+"System","Automated system processes","Send email notifications (assignment, edit, completion); Execute scheduled tasks (cron jobs); Generate reminders (H-2 deadline, overdue)"
