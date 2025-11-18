@@ -1,7 +1,0 @@
-"Table","Key Columns","Relationships","Notes"
-"areas","id, name","→ penanggung_jawab (1:N); → laporan (1:N)","Production areas/stations"
-"penanggung_jawab","id, area_id, name, email","← areas (N:1); → laporan (1:N)","Person In Charge for each area"
-"laporan","id, area_id, penanggung_jawab_id, problem_category_id, deskripsi_masalah, tenggat_waktu, status, Foto (JSON)","← areas (N:1); ← penanggung_jawab (N:1); ← problem_categories (N:1); ← departemen_supervisors (N:1); → penyelesaian (1:1)","Main reports table; Status: In Progress / Selesai"
-"penyelesaian","id, laporan_id, Tanggal, Foto (JSON), deskripsi_penyelesaian","← laporan (1:1)","Completion records; One per report"
-"problem_categories","id, name, color, is_active, sort_order","→ laporan (1:N)","Issue categories with color coding"
-"departemen_supervisors","id, departemen, supervisor, workgroup","→ laporan (1:N)","Department information"
