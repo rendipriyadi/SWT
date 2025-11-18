@@ -10,6 +10,8 @@ use Yajra\DataTables\Facades\DataTables;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
+use App\Exports\HistoryExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class HistoryController extends Controller
 {
@@ -19,7 +21,7 @@ class HistoryController extends Controller
     {
         $areas = Area::all();
 
-        // \SharedManager::saveLog('log_swt', "Accessed the [Report History] page swt.");
+        \SharedManager::saveLog('log_swt', "Accessed the [Report History] page swt.");
 
         return view('walkandtalk.sejarah', compact('areas'));
     }
@@ -192,7 +194,7 @@ class HistoryController extends Controller
             $pdf = Pdf::loadView('walkandtalk.pdf.laporan-selesai', compact('laporan', 'periode'));
             $pdf->setPaper('a4', 'portrait');
 
-            // \SharedManager::saveLog('log_swt', "Downloaded [Report History] PDF for period: {$periode} swt.");
+            \SharedManager::saveLog('log_swt', "Downloaded [Report History] PDF for period: {$periode} swt.");
 
             return $pdf->download('Laporan-Safety-Walk-and-Talk-' . date('Y-m-d') . '.pdf');
         } catch (\Exception $e) {
@@ -200,7 +202,27 @@ class HistoryController extends Controller
             return redirect()->back()->with('error', 'Failed to download report: ' . $e->getMessage());
         }
     }
+
+    public function exportExcel(Request $request)
+    {
+        try {
+            $query = Laporan::with(['area', 'penanggungJawab', 'penyelesaian', 'problemCategory'])
+                ->where('status', 'Completed');
+            $query = $this->applyFilters($request, $query);
+
+            // Order like the table: if a date filter is active, oldest -> newest; else newest-first
+            if ($request->filled('start_date') || $request->filled('end_date')) {
+                $query = $query->orderBy('created_at', 'asc');
+            } else {
+                $query = $query->orderBy('created_at', 'desc');
+            }
+
+            $filename = 'Laporan-Safety-Walk-and-Talk-' . date('Y-m-d-His') . '.xlsx';
+
+            return Excel::download(new HistoryExport($query), $filename);
+        } catch (\Exception $e) {
+            Log::error('Excel Export Error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to export report: ' . $e->getMessage());
+        }
+    }
 }
-
-
-

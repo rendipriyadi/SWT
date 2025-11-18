@@ -55,6 +55,7 @@ Route::prefix('sejarah')->name('sejarah.')->group(function () {
     Route::get('/', [HistoryController::class, 'index'])->name('index');
     Route::get('/datatables', [HistoryController::class, 'sejarahDatatables'])->name('datatables');
     Route::get('/download', [HistoryController::class, 'downloadSejarah'])->name('download');
+    Route::get('/export-excel', [HistoryController::class, 'exportExcel'])->name('export-excel');
 });
 
 // ============================================================================

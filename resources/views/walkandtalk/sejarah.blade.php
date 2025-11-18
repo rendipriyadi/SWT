@@ -14,9 +14,14 @@
             <h3 class="mb-1">Report History</h3>
             <p class="text-muted mb-0">Completed and archived reports</p>
         </div>
-        <a href="{{ route('sejarah.download') }}" id="historyExportPdf" class="btn btn-primary">
-            <i class="fas fa-file-pdf me-2"></i>Export PDF
+        <div class="d-flex gap-2">
+            <a href="{{ route('sejarah.export-excel') }}" id="historyExportExcel" class="btn btn-success">
+                <i class="fas fa-file-excel me-2"></i>Export Excel
             </a>
+            <a href="{{ route('sejarah.download') }}" id="historyExportPdf" class="btn btn-primary">
+                <i class="fas fa-file-pdf me-2"></i>Export PDF
+            </a>
+        </div>
     </div>
 
     <div class="card">
@@ -495,6 +500,53 @@ $(document).on('click', '#sejarahTableMobile .mobile-table-row', function(e) {
 // Data for filter dropdowns
 window.areasData = @json(Area::all(['id', 'name']));
 window.categoriesData = @json(ProblemCategory::active()->ordered()->get(['id', 'name']));
+
+// Helper function to get all active filters
+function getHistoryFilters() {
+    const params = new URLSearchParams();
+    
+    // Get date filters from the date inputs or from window.sejarahDateFilter
+    const startDate = $('#history_created_start').val() || (window.sejarahDateFilter && window.sejarahDateFilter.start ? window.sejarahDateFilter.start : '');
+    const endDate = $('#history_created_end').val() || (window.sejarahDateFilter && window.sejarahDateFilter.end ? window.sejarahDateFilter.end : '');
+    
+    if (startDate) params.append('start_date', startDate);
+    if (endDate) params.append('end_date', endDate);
+    
+    // Get other filter values from form inputs (if they exist on the page)
+    const areaId = $('#area_id').val();
+    const penanggungJawabId = $('#penanggung_jawab_id').val();
+    const kategori = $('#kategori').val();
+    const tenggatBulan = $('#tenggat_bulan').val();
+    const status = $('#status').val();
+    const categoryId = $('#category_id').val();
+    
+    if (areaId) params.append('area_id', areaId);
+    if (penanggungJawabId) params.append('penanggung_jawab_id', penanggungJawabId);
+    if (kategori) params.append('kategori', kategori);
+    if (tenggatBulan) params.append('tenggat_bulan', tenggatBulan);
+    if (status) params.append('status', status);
+    if (categoryId) params.append('category_id', categoryId);
+    
+    return params;
+}
+
+// Export Excel with filters
+$(document).on('click', '#historyExportExcel', function(e) {
+    e.preventDefault();
+    
+    const params = getHistoryFilters();
+    const url = '{{ route("sejarah.export-excel") }}' + (params.toString() ? '?' + params.toString() : '');
+    window.location.href = url;
+});
+
+// Export PDF with filters
+$(document).on('click', '#historyExportPdf', function(e) {
+    e.preventDefault();
+    
+    const params = getHistoryFilters();
+    const url = '{{ route("sejarah.download") }}' + (params.toString() ? '?' + params.toString() : '');
+    window.location.href = url;
+});
 </script>
 @endpush
 
