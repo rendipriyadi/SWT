@@ -16,23 +16,23 @@ return new class extends Migration
             $table->id();
             $table->string('departemen');
             $table->string('supervisor');
-            $table->string('workgroup')->nullable();
+            $table->string('email')->nullable(); // HAPUS ->after('supervisor')
             $table->timestamps();
         });
 
         // Data awal departemen dan supervisor
         DB::table('departemen_supervisors')->insert([
-            ['departemen' => 'LV Assembly', 'supervisor' => 'Aris Setiawan'],
-            ['departemen' => 'LV Box', 'supervisor' => 'Rachmad Haryono'],
-            ['departemen' => 'MV Assembly', 'supervisor' => 'Helmy Sundani'],
-            ['departemen' => 'Prefabrication', 'supervisor' => 'Sarifudin Raysan'],
-            ['departemen' => 'Packing', 'supervisor' => 'Bayu Putra Trianto'],
-            ['departemen' => 'Tool Store', 'supervisor' => 'Joni Rahman'],
-            ['departemen' => 'QC LV', 'supervisor' => 'Ishak Marthen'],
-            ['departemen' => 'QC MV', 'supervisor' => 'Sirad Nova Mihardi'],
-            ['departemen' => 'IQC', 'supervisor' => 'Abduh Al Afgani'],
-            ['departemen' => 'LV Module', 'supervisor' => 'Hadi Djohansyah'],
-            ['departemen' => 'Warehouse', 'supervisor' => 'Suhendra']
+            ['departemen' => 'LV Assembly', 'supervisor' => 'Aris Setiawan', 'email' => 'sirjotaro666@gmail.com'],
+            ['departemen' => 'LV Box', 'supervisor' => 'Rachmad Haryono', 'email' => 'sirjotaro666@gmail.com'],
+            ['departemen' => 'MV Assembly', 'supervisor' => 'Helmy Sundani', 'email' => 'sirjotaro666@gmail.com'],
+            ['departemen' => 'Prefabrication', 'supervisor' => 'Sarifudin Raysan', 'email' => 'sirjotaro666@gmail.com'],
+            ['departemen' => 'Packing', 'supervisor' => 'Bayu Putra Trianto', 'email' => 'sirjotaro666@gmail.com'],
+            ['departemen' => 'Tool Store', 'supervisor' => 'Joni Rahman', 'email' => 'sirjotaro666@gmail.com'],
+            ['departemen' => 'QC LV', 'supervisor' => 'Ishak Marthen', 'email' => 'sirjotaro666@gmail.com'],
+            ['departemen' => 'QC MV', 'supervisor' => 'Sirad Nova Mihardi', 'email' => 'sirjotaro666@gmail.com'],
+            ['departemen' => 'IQC', 'supervisor' => 'Abduh Al Agani', 'email' => 'sirjotaro666@gmail.com'],
+            ['departemen' => 'LV Module', 'supervisor' => 'Hadi Djohansyah', 'email' => 'sirjotaro666@gmail.com'],
+            ['departemen' => 'Warehouse', 'supervisor' => 'Suhendra', 'email' => 'sirjotaro666@gmail.com']
         ]);
     }
 
