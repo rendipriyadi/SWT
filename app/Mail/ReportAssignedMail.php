@@ -15,20 +15,21 @@ class ReportAssignedMail extends Mailable
     public $laporan;
     public $fullUrl;
     public $ccEmails;
-    public $toRecipients;
+    public $toNames;
+    public $additionalPicNames;
 
     /**
      * Create a new message instance.
      */
-    public function __construct($laporan, $ccEmails = [], $toRecipients = [])
+    public function __construct($laporan, $ccEmails = [], $toNames = [], $additionalPicNames = [])
     {
         $this->laporan = $laporan;
         $this->ccEmails = $ccEmails;
-        $this->toRecipients = $toRecipients;
+        $this->toNames = $toNames;
+        $this->additionalPicNames = $additionalPicNames;
         
-
         $encryptedId = encrypt($laporan->id);
-        $this->fullUrl = config('app.url') . '/laporan/' . $encryptedId;
+        $this->fullUrl = route('laporan.show', $encryptedId);
     }
 
     /**

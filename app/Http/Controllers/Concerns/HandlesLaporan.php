@@ -50,9 +50,10 @@ trait HandlesLaporan
      * @param string $oldArea
      * @param string $oldPenanggungJawab
      * @param string $oldStation
+     * @param array $oldAdditionalPics
      * @return array
      */
-    private function detectChanges($oldData, $newData, $oldArea, $oldPenanggungJawab, $oldStation = '-')
+    private function detectChanges($oldData, $newData, $oldArea, $oldPenanggungJawab, $oldStation = '-', $oldAdditionalPics = [])
     {
         $perubahan = [];
 
@@ -177,6 +178,43 @@ trait HandlesLaporan
                 'field' => 'Deadline',
                 'old' => Carbon::parse($oldData['tenggat_waktu'])->format('d/m/Y'),
                 'new' => Carbon::parse($newData['tenggat_waktu'])->format('d/m/Y')
+            ];
+        }
+
+        // Check additional PICs change
+        $newAdditionalPics = $newData['additional_pics'] ?? [];
+        
+        // Normalize arrays for comparison
+        $oldPicIds = array_values(array_filter($oldAdditionalPics));
+        $newPicIds = array_values(array_filter($newAdditionalPics));
+        
+        // Sort for consistent comparison
+        sort($oldPicIds);
+        sort($newPicIds);
+        
+        if ($oldPicIds !== $newPicIds) {
+            // Get old additional PIC names
+            $oldPicNames = '-';
+            if (!empty($oldPicIds)) {
+                $oldPics = PenanggungJawab::whereIn('id', $oldPicIds)
+                    ->select('id', 'name')
+                    ->get();
+                $oldPicNames = $oldPics->pluck('name')->implode(', ');
+            }
+            
+            // Get new additional PIC names
+            $newPicNames = '-';
+            if (!empty($newPicIds)) {
+                $newPics = PenanggungJawab::whereIn('id', $newPicIds)
+                    ->select('id', 'name')
+                    ->get();
+                $newPicNames = $newPics->pluck('name')->implode(', ');
+            }
+            
+            $perubahan[] = [
+                'field' => 'Additional Person in Charge',
+                'old' => $oldPicNames,
+                'new' => $newPicNames
             ];
         }
 

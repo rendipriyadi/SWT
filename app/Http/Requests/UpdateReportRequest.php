@@ -15,6 +15,44 @@ class UpdateReportRequest extends FormRequest
     }
 
     /**
+     * Prepare the data for validation.
+     */
+    protected function prepareForValidation()
+    {
+        // Convert deadline date from dd/mm/yyyy to Y-m-d
+        if ($this->has('tenggat_waktu') && $this->tenggat_waktu) {
+            $this->merge([
+                'tenggat_waktu' => $this->convertDateFormat($this->tenggat_waktu),
+            ]);
+        }
+
+        // Convert completion date from dd/mm/yyyy to Y-m-d
+        if ($this->has('Tanggal') && $this->Tanggal) {
+            $this->merge([
+                'Tanggal' => $this->convertDateFormat($this->Tanggal),
+            ]);
+        }
+    }
+
+    /**
+     * Convert date from dd/mm/yyyy to Y-m-d
+     */
+    private function convertDateFormat($date)
+    {
+        // If already in Y-m-d format, return as is
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+            return $date;
+        }
+
+        // Convert from dd/mm/yyyy to Y-m-d
+        if (preg_match('/^(\d{2})\/(\d{2})\/(\d{4})$/', $date, $matches)) {
+            return $matches[3] . '-' . $matches[2] . '-' . $matches[1];
+        }
+
+        return $date;
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      */
     public function rules(): array
@@ -30,6 +68,10 @@ class UpdateReportRequest extends FormRequest
             'Foto.*' => 'image|mimes:jpg,png,jpeg,gif,svg|max:2048',
             'additional_pics' => 'nullable|array',
             'additional_pics.*' => 'nullable|exists:penanggung_jawab,id',
+            'Tanggal' => 'nullable|date',
+            'completion_description' => 'nullable|string',
+            'completion_photos' => 'nullable|array',
+            'completion_photos.*' => 'image|mimes:jpg,png,jpeg,gif,svg|max:2048',
         ];
     }
 

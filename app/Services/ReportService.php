@@ -178,9 +178,14 @@ class ReportService
             $query->where('problem_category_id', $filters['category_id']);
         }
 
-        // Filter by specific date
-        if (!empty($filters['date'])) {
-            $query->whereDate('created_at', $filters['date']);
+        // Filter by date range
+        if (!empty($filters['start_date']) || !empty($filters['end_date'])) {
+            if (!empty($filters['start_date'])) {
+                $query->whereDate('created_at', '>=', $filters['start_date']);
+            }
+            if (!empty($filters['end_date'])) {
+                $query->whereDate('created_at', '<=', $filters['end_date']);
+            }
         }
         // Filter by month and year
         elseif (!empty($filters['month']) || !empty($filters['year'])) {
@@ -211,11 +216,14 @@ class ReportService
         }
         
         // Apply date filters
-        if (!empty($filters['date'])) {
-            // For specific date, only show that month
-            $date = \Carbon\Carbon::parse($filters['date']);
-            $query->whereYear('created_at', $date->year)
-                  ->whereMonth('created_at', $date->month);
+        if (!empty($filters['start_date']) || !empty($filters['end_date'])) {
+            // For date range, show filtered period
+            if (!empty($filters['start_date'])) {
+                $query->whereDate('created_at', '>=', $filters['start_date']);
+            }
+            if (!empty($filters['end_date'])) {
+                $query->whereDate('created_at', '<=', $filters['end_date']);
+            }
         } elseif (!empty($filters['month']) || !empty($filters['year'])) {
             // For month/year filters, show filtered period
             if (!empty($filters['year'])) {
@@ -252,11 +260,14 @@ class ReportService
         }
         
         // Apply date filters
-        if (!empty($filters['date'])) {
-            // For specific date, only show that month
-            $date = \Carbon\Carbon::parse($filters['date']);
-            $query->whereYear('laporan.created_at', $date->year)
-                  ->whereMonth('laporan.created_at', $date->month);
+        if (!empty($filters['start_date']) || !empty($filters['end_date'])) {
+            // For date range, show filtered period
+            if (!empty($filters['start_date'])) {
+                $query->whereDate('laporan.created_at', '>=', $filters['start_date']);
+            }
+            if (!empty($filters['end_date'])) {
+                $query->whereDate('laporan.created_at', '<=', $filters['end_date']);
+            }
         } elseif (!empty($filters['month']) || !empty($filters['year'])) {
             // For month/year filters, show filtered period
             if (!empty($filters['year'])) {
@@ -294,16 +305,23 @@ class ReportService
             $query->where('problem_category_id', $filters['category_id']);
         }
 
-        $hasDateFilter = !empty($filters['date']);
+        $hasStartDate = !empty($filters['start_date']);
+        $hasEndDate = !empty($filters['end_date']);
         $hasMonthFilter = !empty($filters['month']);
         $hasYearFilter = !empty($filters['year']);
         $hasAnyFilter = $this->hasActiveFilters($filters);
 
         // Apply date filters
-        if ($hasDateFilter) {
-            // Specific date filter
-            $query->whereDate('created_at', $filters['date']);
-            \Log::info('🗓️ Applied date filter', ['date' => $filters['date']]);
+        if ($hasStartDate || $hasEndDate) {
+            // Date range filter
+            if ($hasStartDate) {
+                $query->whereDate('created_at', '>=', $filters['start_date']);
+                \Log::info('🗓️ Applied start_date filter', ['start_date' => $filters['start_date']]);
+            }
+            if ($hasEndDate) {
+                $query->whereDate('created_at', '<=', $filters['end_date']);
+                \Log::info('🗓️ Applied end_date filter', ['end_date' => $filters['end_date']]);
+            }
         } elseif ($hasMonthFilter || $hasYearFilter) {
             // Month/Year filters
             if ($hasYearFilter) {
@@ -390,7 +408,8 @@ class ReportService
             $filters['category_id'] ?? null,
             $filters['month'] ?? null,
             $filters['year'] ?? null,
-            $filters['date'] ?? null,
+            $filters['start_date'] ?? null,
+            $filters['end_date'] ?? null,
         ], function ($value) {
             return $value !== null && $value !== '';
         });

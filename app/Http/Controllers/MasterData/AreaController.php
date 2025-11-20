@@ -15,14 +15,14 @@ class AreaController extends Controller
         // Ambil data area dengan penanggung jawab
         $areas = Area::with('penanggungJawabs')->get();
 
-        // \SharedManager::saveLog('log_swt', "Accessed the [Area/Station] page swt.");
+        \SharedManager::saveLog('log_swt', "Accessed the [Area/Station] page swt.");
 
         return view('master-data.area.index', compact('areas'));
     }
 
     public function create()
     {
-        // \SharedManager::saveLog('log_swt', "Accessed the [Create Area/Station] page swt.");
+        \SharedManager::saveLog('log_swt', "Accessed the [Create Area/Station] page swt.");
 
         return view('master-data.area.create');
     }
@@ -66,7 +66,7 @@ class AreaController extends Controller
 
             DB::commit();
 
-            // \SharedManager::saveLog('log_swt', "Created new area/station: {$request->name} swt.");
+            \SharedManager::saveLog('log_swt', "Created new area/station: {$request->name} swt.");
 
             return redirect()->route('master-data.area.index')
                 ->with('success', 'Area created successfully!');
@@ -89,7 +89,7 @@ class AreaController extends Controller
     {
         $area->load('penanggungJawabs');
 
-        // \SharedManager::saveLog('log_swt', "Accessed the [Edit Area/Station] page for ID: {$area->id} swt.");
+        \SharedManager::saveLog('log_swt', "Accessed the [Edit Area/Station] page for ID: {$area->id} swt.");
 
         return view('master-data.area.edit', compact('area'));
     }
@@ -121,22 +121,53 @@ class AreaController extends Controller
                 'name' => $request->name
             ]);
 
-            // Hapus penanggung jawab lama
-            $area->penanggungJawabs()->delete();
+            // Get existing PICs
+            $existingPics = $area->penanggungJawabs()->get();
+            $existingPicIds = $existingPics->pluck('id')->toArray();
+            $updatedPicIds = [];
 
-            // Buat penanggung jawab baru
             foreach ($request->stations as $index => $station) {
-                PenanggungJawab::create([
+                $picData = [
                     'area_id' => $area->id,
                     'station' => $station,
                     'name' => $request->penanggung_jawab[$index],
                     'email' => $request->emails[$index] ?? null,
-                ]);
+                ];
+
+                $existingPic = $existingPics->where('station', $station)->first();
+                
+                if ($existingPic) {
+                    $existingPic->update($picData);
+                    $updatedPicIds[] = $existingPic->id;
+                } else {
+                    $newPic = PenanggungJawab::create($picData);
+                    $updatedPicIds[] = $newPic->id;
+                }
+            }
+
+            $picsToDelete = array_diff($existingPicIds, $updatedPicIds);
+            if (!empty($picsToDelete)) {
+                $reports = DB::table('laporans')
+                    ->whereNotNull('additional_pics')
+                    ->get();
+                
+                foreach ($reports as $report) {
+                    $additionalPics = json_decode($report->additional_pics, true);
+                    if (is_array($additionalPics)) {
+                        $additionalPics = array_values(array_diff($additionalPics, $picsToDelete));
+                        
+                        DB::table('laporans')
+                            ->where('id', $report->id)
+                            ->update(['additional_pics' => json_encode($additionalPics)]);
+                    }
+                }
+                
+                PenanggungJawab::whereIn('id', $picsToDelete)->delete();
             }
 
             DB::commit();
 
-            // \SharedManager::saveLog('log_swt', "Updated area/station ID: {$area->id} swt.");
+            \SharedManager::saveLog('log_swt', "Updated area/station ID: {$area->id} swt.");
 
             return redirect()->route('master-data.area.index')
                 ->with('success', 'Area updated successfully!');
@@ -166,7 +197,7 @@ class AreaController extends Controller
             // Hapus area
             $area->delete();
 
-            // \SharedManager::saveLog('log_swt', "Deleted area/station ID: {$area->id} swt.");
+            \SharedManager::saveLog('log_swt', "Deleted area/station ID: {$area->id} swt.");
 
             return redirect()->route('master-data.area.index')
                 ->with('success', 'Area deleted successfully!');

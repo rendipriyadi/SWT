@@ -55,18 +55,19 @@ class ReportController extends Controller
 
     public function dashboard(Request $request)
     {
-        // if (!isset($_SERVER['HTTPS'])) {
-        //     $_SERVER['HTTPS'] = 'off';
-        // }
+        if (!isset($_SERVER['HTTPS'])) {
+            $_SERVER['HTTPS'] = 'off';
+        }
 
-        // \SharedManager::checkAuthToModule(17);
+        \SharedManager::checkAuthToModule(17);
 
         // Get filters from request
         $filters = [
             'category_id' => $request->get('category_id'),
             'month' => $request->get('month'),
             'year' => $request->get('year'),
-            'date' => $request->get('date'),
+            'start_date' => $request->get('start_date'),
+            'end_date' => $request->get('end_date'),
         ];
 
         // Get statistics from service with filters
@@ -93,7 +94,7 @@ class ReportController extends Controller
             ]);
         }
 
-        // \SharedManager::saveLog('log_swt', "Accessed the [Dashboard] page swt.");
+        \SharedManager::saveLog('log_swt', "Accessed the [Dashboard] page swt.");
 
         return view('walkandtalk.dashboard', [
             'totalLaporan' => $stats['total'],
@@ -148,7 +149,7 @@ class ReportController extends Controller
     {
         $areas = Area::with('penanggungJawabs')->get();
 
-        // \SharedManager::saveLog('log_swt', "Accessed the [Create Report] page swt.");
+        \SharedManager::saveLog('log_swt', "Accessed the [Create Report] page swt.");
 
         return view('walkandtalk.laporan', compact('areas'));
     }
@@ -198,7 +199,7 @@ class ReportController extends Controller
             \Log::info('📧 Sending email notification for report ID: ' . $laporan->id);
             $this->emailReportAssigned($laporan, $additionalPics);
 
-            // \SharedManager::saveLog('log_swt', "Created new report swt.");
+            \SharedManager::saveLog('log_swt', "Created new report swt.");
 
             // Redirect to report list page instead of dashboard
             return redirect()->route('laporan.index')->with('success', 'Report created successfully and notification sent.');
@@ -253,13 +254,31 @@ class ReportController extends Controller
     public function edit($id)
     {
         $laporan = $this->getLaporanFromEncryptedId($id);
-        $laporan->load(['area', 'penanggungJawab', 'problemCategory']);
+        $laporan->load(['area', 'penanggungJawab', 'problemCategory', 'penyelesaian']);
         $areas = Area::with('penanggungJawabs')->get();
         $problemCategories = ProblemCategory::active()->ordered()->get();
 
-        // \SharedManager::saveLog('log_swt', "Accessed the [Edit Report] page for ID: {$laporan->id} swt.");
+        // Format completion date if report is completed
+        if ($laporan->status === 'Completed' && $laporan->penyelesaian) {
+            $laporan->penyelesaian->formatted_date = \Carbon\Carbon::parse($laporan->penyelesaian->Tanggal)->format('Y-m-d');
+        }
 
-        return view('walkandtalk.edit', compact('laporan', 'areas', 'problemCategories'));
+        // Prepare back URL based on report status
+        $backUrl = $laporan->status === 'Completed' ? route('sejarah.index') : route('laporan.index');
+        $backText = $laporan->status === 'Completed' ? 'Back to History' : 'Back to Reports';
+
+        // Load additional PICs with their details
+        $additionalPics = [];
+        if (!empty($laporan->additional_pic_ids) && count($laporan->additional_pic_ids) > 0) {
+            $additionalPics = \App\Models\PenanggungJawab::whereIn('id', $laporan->additional_pic_ids)
+                ->select('id', 'name', 'station', 'area_id')
+                ->get()
+                ->keyBy('id'); // Key by ID for easy lookup
+        }
+
+        \SharedManager::saveLog('log_swt', "Accessed the [Edit Report] page for ID: {$laporan->id} swt.");
+
+        return view('walkandtalk.edit', compact('laporan', 'areas', 'problemCategories', 'backUrl', 'backText', 'additionalPics'));
     }
 
     public function update(UpdateReportRequest $request, $id)
@@ -278,6 +297,9 @@ class ReportController extends Controller
                 'deskripsi_masalah' => $laporan->deskripsi_masalah,
                 'tenggat_waktu' => $laporan->tenggat_waktu,
             ];
+            
+            // Store old additional PICs for change detection
+            $oldAdditionalPics = $laporan->additional_pic_ids ?? [];
 
             $oldArea = $laporan->area ? $laporan->area->name : '-';
 
@@ -331,11 +353,71 @@ class ReportController extends Controller
             $laporan = $this->reportService->updateReport($laporan, $validated);
 
             // Detect changes for notifications
-            $perubahan = $this->detectChanges($oldData, $validated, $oldArea, $oldPenanggungJawab, $oldStation);
+            $perubahan = $this->detectChanges($oldData, $validated, $oldArea, $oldPenanggungJawab, $oldStation, $oldAdditionalPics);
 
             if (!empty($perubahan)) {
                 $this->emailReportEdited($laporan, $perubahan);
             }
+
+            // Handle completion update (only for completed reports)
+            $completionChanges = [];
+            if ($laporan->status === 'Completed' && $laporan->penyelesaian && $request->has('completion_date')) {
+                $penyelesaian = $laporan->penyelesaian;
+                
+                // Track old completion data
+                $oldCompletionDate = $penyelesaian->Tanggal;
+                $oldCompletionDescription = $penyelesaian->deskripsi_penyelesaian;
+                
+                // Update completion date
+                $penyelesaian->Tanggal = $request->input('completion_date');
+                
+                // Update completion description
+                if ($request->has('completion_description')) {
+                    $penyelesaian->deskripsi_penyelesaian = $request->input('completion_description');
+                }
+                
+                // Handle completion photos
+                $existingCompletionPhotos = $penyelesaian->Foto ?: [];
+                $newCompletionPhotos = [];
+                
+                // Delete photos marked for deletion
+                if ($request->has('deleted_completion_photos')) {
+                    $deletedPhotos = json_decode($request->input('deleted_completion_photos'), true);
+                    if (is_array($deletedPhotos)) {
+                        $this->fileUploadService->deleteFiles($deletedPhotos, 'images/completions');
+                        $existingCompletionPhotos = array_diff($existingCompletionPhotos, $deletedPhotos);
+                    }
+                }
+                
+                // Upload new completion photos
+                if ($request->hasFile('completion_photos')) {
+                    $newCompletionPhotos = $this->fileUploadService->uploadCompletionPhotos($request->file('completion_photos'));
+                }
+                
+                // Merge photos
+                $penyelesaian->Foto = array_values(array_merge($existingCompletionPhotos, $newCompletionPhotos));
+                $penyelesaian->save();
+                
+                // Track completion changes
+                if ($oldCompletionDate !== $penyelesaian->Tanggal) {
+                    $completionChanges[] = [
+                        'field' => 'Completion Date (completion)',
+                        'old' => \Carbon\Carbon::parse($oldCompletionDate)->format('Y-m-d'),
+                        'new' => \Carbon\Carbon::parse($penyelesaian->Tanggal)->format('Y-m-d'),
+                    ];
+                }
+                
+                if ($oldCompletionDescription !== $penyelesaian->deskripsi_penyelesaian) {
+                    $completionChanges[] = [
+                        'field' => 'Description (completion)',
+                        'old' => \Illuminate\Support\Str::limit($oldCompletionDescription, 100, '...'),
+                        'new' => \Illuminate\Support\Str::limit($penyelesaian->deskripsi_penyelesaian, 100, '...'),
+                    ];
+                }
+            }
+            
+            // Merge completion changes with report changes
+            $perubahan = array_merge($perubahan, $completionChanges);
 
             $returnUrl = $request->input('return_url', route('laporan.index'));
 
@@ -344,9 +426,10 @@ class ReportController extends Controller
                 $returnUrl = route('laporan.index');
             }
 
-            // \SharedManager::saveLog('log_swt', "Updated report ID: {$laporan->id} swt.");
+            \SharedManager::saveLog('log_swt', "Updated report ID: {$laporan->id} swt.");
 
-            return redirect($returnUrl)->with('success', 'Report updated successfully.');
+            $successMessage = $laporan->status === 'Completed' ? 'Report and completion updated successfully.' : 'Report updated successfully.';
+            return redirect($returnUrl)->with('success', $successMessage);
 
         } catch (\Exception $e) {
             \Log::error('Error updating report: ' . $e->getMessage());
@@ -363,7 +446,7 @@ class ReportController extends Controller
         $laporan = $this->getLaporanFromEncryptedId($id);
         $laporan->load(['area', 'area.penanggungJawabs', 'penanggungJawab', 'problemCategory', 'penyelesaian']);
 
-        // \SharedManager::saveLog('log_swt', "Accessed the [Completion Action] page for ID: {$laporan->id} swt.");
+        \SharedManager::saveLog('log_swt', "Accessed the [Completion Action] page for ID: {$laporan->id} swt.");
 
         return view('walkandtalk.tindakan', compact('laporan'));
     }
@@ -390,7 +473,7 @@ class ReportController extends Controller
                 // Send completion email notification
                 $this->emailReportCompleted($laporan);
 
-                // \SharedManager::saveLog('log_swt', "Completed report ID: {$laporan->id} swt.");
+                \SharedManager::saveLog('log_swt', "Completed report ID: {$laporan->id} swt.");
 
                 return redirect()->route('sejarah.index')
                     ->with('success', 'Report completed successfully and moved to history.');
@@ -399,7 +482,7 @@ class ReportController extends Controller
             // Just update status if not completed
             $this->reportService->updateStatus($laporan, $validated['status']);
 
-            // \SharedManager::saveLog('log_swt', "Updated report status ID: {$laporan->id} swt.");
+            \SharedManager::saveLog('log_swt', "Updated report status ID: {$laporan->id} swt.");
 
             return redirect()->route('laporan.index')
                 ->with('success', 'Report status updated successfully.');
@@ -415,164 +498,170 @@ class ReportController extends Controller
 
     public function dashboardDatatables(Request $request)
     {
-        $query = Laporan::with(['area', 'penanggungJawab', 'penyelesaian', 'problemCategory'])
-            ->where('status', '!=', 'Completed');
+        try {
+            $query = Laporan::with(['area', 'penanggungJawab', 'penyelesaian', 'problemCategory'])
+                ->where('status', '!=', 'Completed');
 
-        // Apply filters
-        if ($request->filled('start_date')) {
-            $query->whereDate('created_at', '>=', $request->start_date);
-        }
-        if ($request->filled('end_date')) {
-            $query->whereDate('created_at', '<=', $request->end_date);
-        }
-        if ($request->filled('area_id')) {
-            $query->where('area_id', $request->area_id);
-        }
-        if ($request->filled('penanggung_jawab_id')) {
-            $query->where('penanggung_jawab_id', $request->penanggung_jawab_id);
-        }
-        if ($request->filled('kategori')) {
-            $query->where('problem_category_id', $request->kategori);
-        }
-        if ($request->filled('tenggat_bulan')) {
-            $query->whereMonth('tenggat_waktu', $request->tenggat_bulan);
-        }
-        if ($request->filled('category_id')) {
-            $query->where('problem_category_id', $request->category_id);
-        }
+            // Apply filters
+            if ($request->filled('start_date')) {
+                $query->whereDate('created_at', '>=', $request->start_date);
+            }
+            if ($request->filled('end_date')) {
+                $query->whereDate('created_at', '<=', $request->end_date);
+            }
+            if ($request->filled('area_id')) {
+                $query->where('area_id', $request->area_id);
+            }
+            if ($request->filled('penanggung_jawab_id')) {
+                $query->where('penanggung_jawab_id', $request->penanggung_jawab_id);
+            }
+            if ($request->filled('kategori')) {
+                $query->where('problem_category_id', $request->kategori);
+            }
+            if ($request->filled('tenggat_bulan')) {
+                $query->whereMonth('tenggat_waktu', $request->tenggat_bulan);
+            }
+            if ($request->filled('category_id')) {
+                $query->where('problem_category_id', $request->category_id);
+            }
 
-        // Ordering: if date filter is applied, sort chronologically (start->end). Otherwise, latest first.
-        if ($request->filled('start_date') || $request->filled('end_date')) {
-            $query->orderBy('created_at', 'asc');
-        } else {
-            $query->orderBy('created_at', 'desc');
-        }
+            // Ordering: if date filter is applied, sort chronologically (start->end). Otherwise, latest first.
+            if ($request->filled('start_date') || $request->filled('end_date')) {
+                $query->orderBy('created_at', 'asc');
+            } else {
+                $query->orderBy('created_at', 'desc');
+            }
 
-        // Helper to resolve report photo URL
-        $resolveReportUrl = function(string $filename) {
-            return asset('storage/images/reports/' . $filename);
-        };
+            // Helper to resolve report photo URL
+            $resolveReportUrl = function(string $filename) {
+                return asset('storage/images/reports/' . $filename);
+            };
 
-        return DataTables::of($query)
-            ->addIndexColumn()
-            ->addColumn('encrypted_id', function ($laporan) {
-                return encrypt($laporan->id);
-            })
-            ->addColumn('Tanggal', function ($laporan) {
-                return Carbon::parse($laporan->created_at)->format('l, j-n-Y');
-            })
-            ->addColumn('deskripsi_masalah_full', function ($laporan) {
-                return $laporan->deskripsi_masalah ?? '';
-            })
-            ->addColumn('person_in_charge', function ($laporan) {
-                if ($laporan->penanggungJawab) {
-                    return $laporan->penanggungJawab->name ?? '';
-                }
-                return '';
-            })
-            ->addColumn('foto', function ($laporan) use ($resolveReportUrl) {
-                if (!empty($laporan->Foto) && is_array($laporan->Foto)) {
-                    $foto = $laporan->Foto[0];
-                    $fotoPath = $resolveReportUrl($foto);
-                    $photoUrls = [];
-                    foreach ($laporan->Foto as $f) {
-                        $photoUrls[] = $resolveReportUrl($f);
-                    }
-                    $photoData = json_encode($photoUrls);
-                    return '<img src="' . $fotoPath . '" alt="Foto Masalah" class="img-thumbnail" style="width: 80px; height: 80px; object-fit: cover; cursor: pointer;" data-bs-toggle="modal" data-bs-target="#modalFotoFull" data-photos=\'' . $photoData . '\'>';
-                }
-                return '<span class="badge bg-secondary">No photo</span>';
-            })
-            ->addColumn('departemen', function ($laporan) {
-                $html = '';
-                if ($laporan->area) {
-                    $areaName = $laporan->area->name;
+            return DataTables::of($query)
+                ->addIndexColumn()
+                ->addColumn('encrypted_id', function ($laporan) {
+                    return encrypt($laporan->id);
+                })
+                ->addColumn('Tanggal', function ($laporan) {
+                    return Carbon::parse($laporan->created_at)->format('l, j-n-Y');
+                })
+                ->addColumn('deskripsi_masalah_full', function ($laporan) {
+                    return $laporan->deskripsi_masalah ?? '';
+                })
+                ->addColumn('person_in_charge', function ($laporan) {
                     if ($laporan->penanggungJawab) {
-                        $stationOrPic = trim((string)($laporan->penanggungJawab->station ?? ''));
-                        if ($stationOrPic === '') {
-                            $stationOrPic = $laporan->penanggungJawab->name ?? '';
-                        }
-                        $html = $stationOrPic !== '' ? '<span class="fw-bold">' . $areaName . ' (' . e($stationOrPic) . ')</span>' : '<span class="fw-bold">' . $areaName . '</span>';
-                    } else {
-                        $html = '<span class="fw-bold">' . $areaName . '</span>';
+                        return $laporan->penanggungJawab->name ?? '';
                     }
-                }
-                return $html;
-            })
-            ->addColumn('problem_category', function ($laporan) {
-                if ($laporan->problemCategory) {
-                    $color = $laporan->problemCategory->color ?? '#6c757d';
-                    $name = $laporan->problemCategory->name;
-                    return '<span class="badge" style="background-color: ' . $color . '; color: white;">' . e($name) . '</span>';
-                }
-                return '<span class="text-muted">No Category</span>';
-            })
-            ->addColumn('deskripsi_masalah', function ($laporan) {
-                $description = $laporan->deskripsi_masalah;
-                $maxLength = 80;
-                $shortDescription = strlen($description) > $maxLength ? substr($description, 0, $maxLength) . '...' : $description;
-                return '<div class="description-container" title="' . e($laporan->deskripsi_masalah) . '">' . e($shortDescription) . '</div>';
-            })
-            ->addColumn('deskripsi_masalah_full', function ($laporan) {
-                return $laporan->deskripsi_masalah ?? '';
-            })
-            ->editColumn('tenggat_waktu', function ($laporan) {
-                return Carbon::parse($laporan->tenggat_waktu)->format('l, j-n-Y');
-            })
-            ->addColumn('status', function ($laporan) {
-                if ($laporan->status == 'Assigned') {
-                    return '<span class="status-badge status-assigned"><i class="fas fa-circle"></i> Assigned</span>';
-                } elseif ($laporan->status == 'Completed') {
-                    return '<span class="status-badge status-completed"><i class="fas fa-check-circle"></i> Completed</span>';
-                } else {
-                    return '<span class="badge bg-secondary">' . $laporan->status . '</span>';
-                }
-            })
-            ->addColumn('penyelesaian', function ($laporan) {
-                $encryptedId = encrypt($laporan->id);
-                return $laporan->penyelesaian
-                    ? '<button class="btn btn-sm btn-info lihat-penyelesaian-btn" data-bs-toggle="modal" data-bs-target="#modalPenyelesaian" data-encrypted-id="' . $encryptedId . '"><i class="fas fa-eye"></i> View</button>'
-                    : '<a href="' . route('laporan.tindakan', ['id' => $encryptedId]) . '" class="btn btn-sm btn-primary"><i class="fas fa-tasks"></i> Action</a>';
-            })
-            ->addColumn('aksi', function ($laporan) {
-                // Use encrypted ID for all routes
-                $encryptedId = encrypt($laporan->id);
-                $returnUrl = route('laporan.index');
-                $editUrl = route('laporan.edit', ['id' => $encryptedId, 'return_url' => $returnUrl]);
-                $deleteUrl = route('laporan.destroy', ['id' => $encryptedId]);
-                return '<div class="d-flex gap-1 justify-content-center"><a href="' . $editUrl . '" class="btn btn-sm btn-warning" title="Edit"><i class="fas fa-edit"></i></a><button class="btn btn-sm btn-danger delete-btn" data-encrypted-id="' . $encryptedId . '" data-delete-url="' . $deleteUrl . '" data-return-url="' . $returnUrl . '" title="Delete"><i class="fas fa-trash"></i></button></div>';
-            })
-            ->filterColumn('area.name', function($query, $keyword) {
-                // Search in area name OR station name OR PIC name (case-insensitive)
-                $keyword = strtolower($keyword);
+                    return '';
+                })
+                ->addColumn('foto', function ($laporan) use ($resolveReportUrl) {
+                    if (!empty($laporan->Foto) && is_array($laporan->Foto)) {
+                        $foto = $laporan->Foto[0];
+                        $fotoPath = $resolveReportUrl($foto);
+                        $photoUrls = [];
+                        foreach ($laporan->Foto as $f) {
+                            $photoUrls[] = $resolveReportUrl($f);
+                        }
+                        $photoData = json_encode($photoUrls);
+                        return '<img src="' . $fotoPath . '" alt="Foto Masalah" class="img-thumbnail" style="width: 80px; height: 80px; object-fit: cover; cursor: pointer;" data-bs-toggle="modal" data-bs-target="#modalFotoFull" data-photos=\'' . $photoData . '\'>';
+                    }
+                    return '<span class="badge bg-secondary">No photo</span>';
+                })
+                ->addColumn('departemen', function ($laporan) {
+                    $html = '';
+                    if ($laporan->area) {
+                        $areaName = $laporan->area->name;
+                        if ($laporan->penanggungJawab) {
+                            $stationOrPic = trim((string)($laporan->penanggungJawab->station ?? ''));
+                            if ($stationOrPic === '') {
+                                $stationOrPic = $laporan->penanggungJawab->name ?? '';
+                            }
+                            $html = $stationOrPic !== '' ? '<span class="fw-bold">' . $areaName . ' (' . e($stationOrPic) . ')</span>' : '<span class="fw-bold">' . $areaName . '</span>';
+                        } else {
+                            $html = '<span class="fw-bold">' . $areaName . '</span>';
+                        }
+                    }
+                    return $html;
+                })
+                ->addColumn('problem_category', function ($laporan) {
+                    if ($laporan->problemCategory) {
+                        $color = $laporan->problemCategory->color ?? '#6c757d';
+                        $name = $laporan->problemCategory->name;
+                        return '<span class="badge" style="background-color: ' . $color . '; color: white;">' . e($name) . '</span>';
+                    }
+                    return '<span class="text-muted">No Category</span>';
+                })
+                ->addColumn('deskripsi_masalah', function ($laporan) {
+                    $description = $laporan->deskripsi_masalah;
+                    $maxLength = 80;
+                    $shortDescription = strlen($description) > $maxLength ? substr($description, 0, $maxLength) . '...' : $description;
+                    return '<div class="description-container" title="' . e($laporan->deskripsi_masalah) . '">' . e($shortDescription) . '</div>';
+                })
+                ->addColumn('deskripsi_masalah_full', function ($laporan) {
+                    return $laporan->deskripsi_masalah ?? '';
+                })
+                ->editColumn('tenggat_waktu', function ($laporan) {
+                    return Carbon::parse($laporan->tenggat_waktu)->format('l, j-n-Y');
+                })
+                ->addColumn('status', function ($laporan) {
+                    if ($laporan->status == 'Assigned') {
+                        return '<span class="status-badge status-assigned"><i class="fas fa-circle"></i> Assigned</span>';
+                    } elseif ($laporan->status == 'Completed') {
+                        return '<span class="status-badge status-completed"><i class="fas fa-check-circle"></i> Completed</span>';
+                    } else {
+                        return '<span class="badge bg-secondary">' . $laporan->status . '</span>';
+                    }
+                })
+                ->addColumn('penyelesaian', function ($laporan) {
+                    $encryptedId = encrypt($laporan->id);
+                    return $laporan->penyelesaian
+                        ? '<button class="btn btn-sm btn-info lihat-penyelesaian-btn" data-bs-toggle="modal" data-bs-target="#modalPenyelesaian" data-encrypted-id="' . $encryptedId . '"><i class="fas fa-eye"></i> View</button>'
+                        : '<a href="' . route('laporan.tindakan', ['id' => $encryptedId]) . '" class="btn btn-sm btn-primary"><i class="fas fa-tasks"></i> Action</a>';
+                })
+                ->addColumn('aksi', function ($laporan) {
+                    // Use encrypted ID for all routes
+                    $encryptedId = encrypt($laporan->id);
+                    $returnUrl = route('laporan.index');
+                    $editUrl = route('laporan.edit', ['id' => $encryptedId, 'return_url' => $returnUrl]);
+                    $deleteUrl = route('laporan.destroy', ['id' => $encryptedId]);
+                    return '<div class="d-flex gap-1 justify-content-center"><a href="' . $editUrl . '" class="btn btn-sm btn-warning" title="Edit"><i class="fas fa-edit"></i></a><button class="btn btn-sm btn-danger delete-btn" data-encrypted-id="' . $encryptedId . '" data-delete-url="' . $deleteUrl . '" data-return-url="' . $returnUrl . '" title="Delete"><i class="fas fa-trash"></i></button></div>';
+                })
+                ->filterColumn('area.name', function($query, $keyword) {
+                    // Search in area name OR station name OR PIC name (case-insensitive)
+                    $keyword = strtolower($keyword);
 
-                $query->where(function($q) use ($keyword) {
-                    // Search in area name
-                    $q->whereHas('area', function($subQ) use ($keyword) {
-                        $subQ->whereRaw('LOWER(name) LIKE ?', ["%{$keyword}%"]);
-                    })
-                    // OR search in PIC station
-                    ->orWhereHas('penanggungJawab', function($subQ) use ($keyword) {
-                        $subQ->whereRaw('LOWER(station) LIKE ?', ["%{$keyword}%"]);
-                    })
-                    // OR search in PIC name
-                    ->orWhereHas('penanggungJawab', function($subQ) use ($keyword) {
-                        $subQ->whereRaw('LOWER(name) LIKE ?', ["%{$keyword}%"]);
+                    $query->where(function($q) use ($keyword) {
+                        // Search in area name
+                        $q->whereHas('area', function($subQ) use ($keyword) {
+                            $subQ->whereRaw('LOWER(name) LIKE ?', ["%{$keyword}%"]);
+                        })
+                        // OR search in PIC station
+                        ->orWhereHas('penanggungJawab', function($subQ) use ($keyword) {
+                            $subQ->whereRaw('LOWER(station) LIKE ?', ["%{$keyword}%"]);
+                        })
+                        // OR search in PIC name
+                        ->orWhereHas('penanggungJawab', function($subQ) use ($keyword) {
+                            $subQ->whereRaw('LOWER(name) LIKE ?', ["%{$keyword}%"]);
+                        });
                     });
-                });
-            })
-            ->filterColumn('problemCategory.name', function($query, $keyword) {
-                // Search in problem category name
-                $query->whereHas('problemCategory', function($q) use ($keyword) {
-                    $q->where('name', 'like', "%{$keyword}%");
-                });
-            })
-            ->filterColumn('deskripsi_masalah', function($query, $keyword) {
-                // Search in full description text (not truncated)
-                $query->where('deskripsi_masalah', 'like', "%{$keyword}%");
-            })
-            ->rawColumns(['foto', 'departemen', 'problem_category', 'deskripsi_masalah', 'status', 'penyelesaian', 'aksi'])
-            ->make(true);
+                })
+                ->filterColumn('problemCategory.name', function($query, $keyword) {
+                    // Search in problem category name
+                    $query->whereHas('problemCategory', function($q) use ($keyword) {
+                        $q->where('name', 'like', "%{$keyword}%");
+                    });
+                })
+                ->filterColumn('deskripsi_masalah', function($query, $keyword) {
+                    // Search in full description text (not truncated)
+                    $query->where('deskripsi_masalah', 'like', "%{$keyword}%");
+                })
+                ->rawColumns(['foto', 'departemen', 'problem_category', 'deskripsi_masalah', 'status', 'penyelesaian', 'aksi'])
+                ->make(true);
+        } catch (\Exception $e) {
+            \Log::error('Error in dashboardDatatables: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     public function destroy($id)
@@ -584,7 +673,7 @@ class ReportController extends Controller
             $deleted = $this->reportService->deleteReport($laporan);
 
             if ($deleted) {
-                // \SharedManager::saveLog('log_swt', "Deleted report ID: {$laporan->id} swt.");
+                \SharedManager::saveLog('log_swt', "Deleted report ID: {$laporan->id} swt.");
 
                 return response()->json(['success' => true, 'message' => 'Report deleted successfully.']);
             }
@@ -615,7 +704,7 @@ class ReportController extends Controller
     {
         try {
             $laporan = $this->getLaporanFromEncryptedId($id);
-            $laporan->load(['penyelesaian', 'additionalPicsWithData']);
+            $laporan->load(['penyelesaian']);
 
             if (!$laporan->penyelesaian) {
                 return response()->json([
@@ -699,7 +788,7 @@ class ReportController extends Controller
                 $laporan->save();
 
                 // Verify the PICs exist and log their details
-                $pics = \App\Models\PenanggungJawab::whereIn('id', $additionalPics)
+                $pics = PenanggungJawab::whereIn('id', $additionalPics)
                     ->select('id', 'name', 'station', 'email')
                     ->get();
 
@@ -723,31 +812,40 @@ class ReportController extends Controller
 
     /**
      * Get all penanggung jawab from all areas
+     * Using the same approach as getPenanggungJawab (through Area relationship)
      *
      * @return \Illuminate\Http\JsonResponse
      */
     public function getAllPenanggungJawab()
     {
         try {
-            // Get all penanggung jawab with their area information
-            $penanggungJawab = PenanggungJawab::with('area')
-                ->select('id', 'name', 'station', 'area_id')
-                ->orderBy('name', 'asc')
-                ->get()
-                ->map(function($pj) {
+            // Get all areas with their penanggung jawab - same approach as getPenanggungJawab
+            $areas = Area::select('id', 'name')
+                ->with(['penanggungJawabs' => function($query) {
+                    $query->select('id', 'area_id', 'station', 'name', 'email')
+                          ->orderBy('station');
+                }])
+                ->get();
+
+            // Flatten all penanggung jawab from all areas
+            $allPenanggungJawab = $areas->flatMap(function($area) {
+                return $area->penanggungJawabs->map(function($pj) use ($area) {
                     return [
                         'id' => $pj->id,
-                        'name' => $pj->name,
                         'station' => $pj->station,
-                        'area_id' => $pj->area_id,
-                        'area_name' => $pj->area ? $pj->area->name : 'Unknown Area'
+                        'name' => $pj->name,
+                        'email' => $pj->email,
+                        'area_id' => $area->id,
+                        'area_name' => $area->name
                     ];
                 });
+            });
 
             return response()->json([
                 'success' => true,
-                'penanggung_jawab' => $penanggungJawab
-            ]);
+                'penanggung_jawab' => $allPenanggungJawab
+            ], 200, [], JSON_UNESCAPED_UNICODE);
+
         } catch (\Exception $e) {
             Log::error('Error fetching all penanggung jawab: ' . $e->getMessage());
 
@@ -755,7 +853,8 @@ class ReportController extends Controller
                 'success' => false,
                 'message' => 'Failed to fetch penanggung jawab',
                 'penanggung_jawab' => []
-            ]);
+            ], 500);
         }
     }
+
 }

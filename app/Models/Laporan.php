@@ -84,18 +84,6 @@ class Laporan extends Model
         return $this->hasOne(Penyelesaian::class, 'laporan_id');
     }
 
-    // Relasi dengan additional PICs
-    public function additionalPics()
-    {
-        return $this->hasMany(ReportAdditionalPic::class, 'laporan_id');
-    }
-
-    // Get additional PICs with their departemen supervisor data
-    public function additionalPicsWithData()
-    {
-        return $this->additionalPics()->with('departemenSupervisor');
-    }
-
     // Get additional PICs as PenanggungJawab models
     public function getAdditionalPicsAttribute($value)
     {
@@ -106,6 +94,16 @@ class Laporan extends Model
         $picIds = is_string($value) ? json_decode($value, true) : $value;
         
         if (empty($picIds) || !is_array($picIds)) {
+            return [];
+        }
+
+        // Flatten and filter to ensure only valid IDs
+        $picIds = \Illuminate\Support\Arr::flatten($picIds);
+        $picIds = array_values(array_filter($picIds, function($item) {
+            return is_numeric($item) && $item > 0;
+        }));
+        
+        if (empty($picIds)) {
             return [];
         }
 
@@ -121,6 +119,28 @@ class Laporan extends Model
             return [];
         }
 
-        return is_string($additionalPics) ? json_decode($additionalPics, true) : $additionalPics;
+        $decoded = is_string($additionalPics) ? json_decode($additionalPics, true) : $additionalPics;
+        
+        if (!is_array($decoded)) {
+            return [];
+        }
+        
+        // Flatten nested arrays and filter to ensure only valid numeric IDs
+        $flattened = \Illuminate\Support\Arr::flatten($decoded);
+        return array_values(array_filter($flattened, function($item) {
+            return is_numeric($item) && $item > 0;
+        }));
+    }
+
+    // Get additional PICs as PenanggungJawab objects
+    public function getAdditionalPicObjectsAttribute()
+    {
+        $picIds = $this->additional_pic_ids;
+        
+        if (empty($picIds)) {
+            return collect([]);
+        }
+
+        return PenanggungJawab::whereIn('id', $picIds)->get();
     }
 }

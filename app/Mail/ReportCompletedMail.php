@@ -15,18 +15,22 @@ class ReportCompletedMail extends Mailable
     public $laporan;
     public $fullUrl;
     public $ccEmails;
+    public $toNames;
+    public $additionalPicNames;
 
     /**
      * Create a new message instance.
      */
-    public function __construct($laporan, $ccEmails = [])
+    public function __construct($laporan, $ccEmails = [], $toNames = [], $additionalPicNames = [])
     {
         $this->laporan = $laporan;
         $this->ccEmails = $ccEmails;
+        $this->toNames = $toNames;
+        $this->additionalPicNames = $additionalPicNames;
         
         // Generate URL here (works in both web and CLI context)
         $encryptedId = encrypt($laporan->id);
-        $this->fullUrl = config('app.url') . '/laporan/' . $encryptedId;
+        $this->fullUrl = route('laporan.show', $encryptedId);
     }
 
     /**

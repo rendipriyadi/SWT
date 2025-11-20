@@ -16,19 +16,23 @@ class ReportEditedMail extends Mailable
     public $perubahan;
     public $fullUrl;
     public $ccEmails;
+    public $toNames;
+    public $additionalPicNames;
 
     /**
      * Create a new message instance.
      */
-    public function __construct($laporan, $perubahan, $ccEmails = [])
+    public function __construct($laporan, $perubahan, $ccEmails = [], $toNames = [], $additionalPicNames = [])
     {
         $this->laporan = $laporan;
         $this->perubahan = $perubahan;
         $this->ccEmails = $ccEmails;
+        $this->toNames = $toNames;
+        $this->additionalPicNames = $additionalPicNames;
         
         // Generate URL here (works in both web and CLI context)
         $encryptedId = encrypt($laporan->id);
-        $this->fullUrl = config('app.url') . '/laporan/' . $encryptedId;
+        $this->fullUrl = route('laporan.show', $encryptedId);
     }
 
     /**

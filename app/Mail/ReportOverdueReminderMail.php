@@ -16,14 +16,16 @@ class ReportOverdueReminderMail extends Mailable
     public $pic;
     public $areaName;
     public $ccEmails;
+    public $toNames;
 
     /**
      * Create a new message instance.
      */
-    public function __construct($reports, $pic, $ccEmails = [])
+    public function __construct($reports, $pic, $ccEmails = [], $toNames = [])
     {
         $this->pic = $pic;
         $this->ccEmails = $ccEmails;
+        $this->toNames = $toNames;
         $this->areaName = $reports->first()->area->name ?? 'Area';
         
         // Prepare reports data with URLs (all logic here, not in blade)
@@ -47,7 +49,7 @@ class ReportOverdueReminderMail extends Mailable
                         ($laporan->area && $laporan->area->penanggungJawabs->isNotEmpty() ? 
                          $laporan->area->penanggungJawabs->pluck('name')->join(', ') : '-'),
                 'status' => $laporan->status ?? '-',
-                'url' => config('app.url') . '/laporan/' . $encryptedId, // Works in CLI context
+                'url' => route('laporan.show', $encryptedId), // Works in CLI context
             ];
         });
     }
