@@ -27,7 +27,7 @@
             <div class="row g-4 mb-4">
                 <!-- Completion Photos -->
                 <div class="col-md-6">
-                    <label for="Foto" class="form-label fw-semibold">Completion Photos:</label>
+                    <label for="Foto" class="form-label fw-semibold">Report Photos:</label>
                     <input type="file" class="form-control @error('Foto.*') is-invalid @enderror" id="Foto" name="Foto[]" accept="image/*" multiple>
                     @error('Foto.*')
                         <div class="invalid-feedback">{{ $message }}</div>
@@ -441,7 +441,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let allPenanggungJawab = [];
     
     // Fetch all penanggung jawab from server
-    fetch('/api/all-penanggung-jawab')
+    fetch(window.routes.allPenanggungJawab)
         .then(response => response.json())
         .then(data => {
             allPenanggungJawab = data.penanggung_jawab || [];

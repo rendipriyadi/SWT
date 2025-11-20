@@ -2,6 +2,7 @@
 
 @section('title', 'Main Dashboard')
 
+
 @section('content')
 <div class="container-fluid">
     <!-- Header -->
@@ -25,17 +26,16 @@
         <div class="collapse" id="filterCollapse">
             <div class="card-body">
                 <form id="dashboardFilters" method="GET" action="{{ route('dashboard') }}">
-                <!-- Filter Row 1: Main Filters -->
-                <div class="row g-3 align-items-end mb-3">
+                <div class="row g-3 align-items-end">
                     <!-- Category Filter -->
-                    <div class="col-lg-4 col-md-6">
+                    <div class="col-lg-2 col-md-3 col-sm-6">
                         <label for="category_filter" class="form-label fw-semibold mb-2">
-                            <i class="fas fa-filter me-1 text-primary"></i>Filter by Category
+                            <i class="fas fa-tag me-1 text-primary"></i>Filter by Category
                         </label>
                         <select class="form-select filter-dropdown" id="category_filter" name="category_id">
                             <option value="">All Categories</option>
                             @foreach(\App\Models\ProblemCategory::active()->ordered()->get() as $category)
-                                <option value="{{ $category->id }}"
+                                <option value="{{ $category->id }}" 
                                         {{ request('category_id') == $category->id ? 'selected' : '' }}>
                                     {{ $category->name }}
                                 </option>
@@ -73,22 +73,66 @@
                         </select>
                     </div>
 
-                    <!-- Date Filter -->
-                    <div class="col-lg-2 col-md-6">
-                        <label for="date_filter" class="form-label fw-semibold mb-2">
-                            <i class="fas fa-calendar-day me-1 text-warning"></i>Specific Date
+                    <!-- Date Range Dropdown -->
+                    <div class="col-lg-3 col-md-6">
+                        <label class="form-label fw-semibold mb-2">
+                            <i class="fas fa-calendar-alt me-1 text-warning"></i>Date Range
                         </label>
-                        <input type="date" class="form-control" id="date_filter" name="date"
-                               value="{{ request('date') }}">
+                        <div class="dropdown">
+                            <button class="btn btn-outline-secondary w-100 text-start text-truncate d-flex justify-content-between align-items-center" type="button" 
+                                    id="dateRangeDropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside" 
+                                    aria-expanded="false" style="overflow: hidden; border: 1px solid #dee2e6; border-radius: 0.375rem;">
+                                <span id="dateRangeLabel" class="flex-grow-1 text-truncate">
+                                    @if(request('start_date') || request('end_date'))
+                                        @if(request('start_date') && request('end_date'))
+                                            {{ \Carbon\Carbon::parse(request('start_date'))->format('d/m/Y') }} - {{ \Carbon\Carbon::parse(request('end_date'))->format('d/m/Y') }}
+                                        @elseif(request('start_date'))
+                                            From {{ \Carbon\Carbon::parse(request('start_date'))->format('d/m/Y') }}
+                                        @else
+                                            Until {{ \Carbon\Carbon::parse(request('end_date'))->format('d/m/Y') }}
+                                        @endif
+                                    @else
+                                        Select date range
+                                    @endif
+                                </span>
+                                <i class="fas fa-chevron-down ms-2"></i>
+                            </button>
+                            <div class="dropdown-menu p-3" aria-labelledby="dateRangeDropdown" style="min-width: 350px;" onclick="event.stopPropagation();">
+                                <h6 class="dropdown-header px-0">Filter by Created Date</h6>
+                                <div class="row g-2 mb-2">
+                                    <div class="col-12 col-md-6">
+                                        <label class="form-label small fw-bold" for="dashboard_start_date">Start</label>
+                                        <input type="date" id="dashboard_start_date" class="form-control form-control-sm" 
+                                               value="{{ request('start_date') }}" 
+                                               data-date-format="dd/mm/yyyy" />
+                                    </div>
+                                    <div class="col-12 col-md-6">
+                                        <label class="form-label small fw-bold" for="dashboard_end_date">End</label>
+                                        <input type="date" id="dashboard_end_date" class="form-control form-control-sm" 
+                                               value="{{ request('end_date') }}" 
+                                               data-date-format="dd/mm/yyyy"
+                                               {{ !request('start_date') ? 'disabled' : '' }} />
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-end gap-2">
+                                    <button type="button" class="btn btn-primary btn-sm" id="dashboard_date_apply">
+                                        <i class="fas fa-filter me-1"></i>Apply
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Filter Actions -->
-                    <div class="col-lg-2 col-md-6">
-                        <div class="d-flex gap-2 h-100 align-items-end">
+                    <div class="col-lg-3 col-md-6">
+                        <div class="d-flex gap-2">
                             <button type="submit" class="btn btn-primary flex-fill">
                                 <i class="fas fa-search me-1"></i>Filter
                             </button>
-                            @if(request()->hasAny(['category_id', 'month', 'year', 'date']))
+                            @php
+                                $hasFilters = request('category_id') || request('month') || request('year') || request('start_date') || request('end_date');
+                            @endphp
+                            @if($hasFilters)
                                 <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary flex-fill">
                                     <i class="fas fa-times me-1"></i>Clear
                                 </a>
@@ -98,7 +142,10 @@
                 </div>
 
                 <!-- Active Filters Display -->
-                @if(request()->hasAny(['category_id', 'month', 'year', 'date']))
+                @php
+                    $hasActiveFilters = request('category_id') || request('month') || request('year') || request('start_date') || request('end_date');
+                @endphp
+                @if($hasActiveFilters)
                     <div class="mt-3 pt-3 border-top">
                         <div class="d-flex align-items-center flex-wrap gap-2">
                             <span class="text-muted fw-semibold">Active Filters:</span>
@@ -126,9 +173,15 @@
                                 </span>
                             @endif
 
-                            @if(request('date'))
+                            @if(request('start_date') || request('end_date'))
                                 <span class="badge bg-warning">
-                                    {{ \Carbon\Carbon::parse(request('date'))->format('M d, Y') }}
+                                    @if(request('start_date') && request('end_date'))
+                                        {{ \Carbon\Carbon::parse(request('start_date'))->format('M d, Y') }} - {{ \Carbon\Carbon::parse(request('end_date'))->format('M d, Y') }}
+                                    @elseif(request('start_date'))
+                                        From: {{ \Carbon\Carbon::parse(request('start_date'))->format('M d, Y') }}
+                                    @else
+                                        Until: {{ \Carbon\Carbon::parse(request('end_date'))->format('M d, Y') }}
+                                    @endif
                                 </span>
                             @endif
                         </div>
@@ -157,12 +210,12 @@
         <div class="col-lg-4 col-md-6">
             <div class="stats-card">
                 <div class="d-flex align-items-center">
-                    <div class="stats-icon bg-primary text-white rounded-circle me-3">
+                    <div class="stats-icon bg-warning text-white rounded-circle me-3">
                         <i class="fas fa-cog fa-spin"></i>
                     </div>
                     <div>
                         <h3 class="mb-1">In Progress Reports</h3>
-                        <div class="number text-primary">{{ $laporanInProgress }}</div>
+                        <div class="number text-warning">{{ $laporanInProgress }}</div>
                     </div>
                 </div>
             </div>
@@ -456,9 +509,14 @@ const laporanPerBulanChart = new Chart(laporanPerBulanCtx, {
 // 2. Grafik Pie - Category per Bulan
 const categoryPerBulanCtx = document.getElementById('categoryPerBulanChart').getContext('2d');
 
+// Destroy existing chart if exists
+if (window.categoryPerBulanChartInstance) {
+    window.categoryPerBulanChartInstance.destroy();
+}
+
 // Check if we have data
 if (categoryPerBulanData && categoryPerBulanData.length > 0) {
-    const categoryPerBulanChart = new Chart(categoryPerBulanCtx, {
+    window.categoryPerBulanChartInstance = new Chart(categoryPerBulanCtx, {
         type: 'doughnut',
         data: {
             labels: categoryPerBulanData.map(item => item.problem_category ? item.problem_category.name : 'No Category'),
@@ -485,7 +543,7 @@ if (categoryPerBulanData && categoryPerBulanData.length > 0) {
     });
 } else {
     // Show "No Data" message
-    const categoryPerBulanChart = new Chart(categoryPerBulanCtx, {
+    window.categoryPerBulanChartInstance = new Chart(categoryPerBulanCtx, {
         type: 'doughnut',
         data: {
             labels: ['No Data'],
@@ -733,22 +791,223 @@ canvas {
 }
 </style>
 
-<!-- Dashboard Filters JavaScript -->
+<!-- Dashboard Routes Configuration -->
+<script>
+    window.dashboardRoutes = {
+        dashboard: "{{ route('dashboard') }}"
+    };
+</script>
+
+<!-- Date Range Dropdown Handler -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const filterCollapse = document.getElementById('filterCollapse');
-    const filterToggleIcon = document.getElementById('filterToggleIcon');
+    const startDateInput = document.getElementById('dashboard_start_date');
+    const endDateInput = document.getElementById('dashboard_end_date');
+    const applyBtn = document.getElementById('dashboard_date_apply');
+    const dateRangeLabel = document.getElementById('dateRangeLabel');
+    const dropdown = document.getElementById('dateRangeDropdown');
+    const monthFilter = document.getElementById('month_filter');
+    const yearFilter = document.getElementById('year_filter');
     
-    if (filterCollapse && filterToggleIcon) {
-        // Handle collapse show/hide events
-        filterCollapse.addEventListener('show.bs.collapse', function() {
-            filterToggleIcon.style.transform = 'rotate(180deg)';
+    // Convert YYYY-MM-DD to DD/MM/YYYY for display after Elegant Datepicker converts
+    function convertToDisplayFormat(yyyymmdd) {
+        if (!yyyymmdd) return '';
+        const parts = yyyymmdd.split('-');
+        if (parts.length === 3) {
+            return parts[2] + '/' + parts[1] + '/' + parts[0];
+        }
+        return yyyymmdd;
+    }
+    
+    // Convert DD/MM/YYYY back to YYYY-MM-DD for server
+    function convertToServerFormat(ddmmyyyy) {
+        if (!ddmmyyyy) return '';
+        const parts = ddmmyyyy.split('/');
+        if (parts.length === 3) {
+            return parts[2] + '-' + parts[1] + '-' + parts[0];
+        }
+        return ddmmyyyy;
+    }
+    
+    // After Elegant Datepicker converts the inputs, set the correct display value
+    setTimeout(function() {
+        if (startDateInput && startDateInput.value && startDateInput.value.includes('-')) {
+            const displayValue = convertToDisplayFormat(startDateInput.value);
+            $(startDateInput).datepicker('update', displayValue);
+        }
+        if (endDateInput && endDateInput.value && endDateInput.value.includes('-')) {
+            const displayValue = convertToDisplayFormat(endDateInput.value);
+            $(endDateInput).datepicker('update', displayValue);
+        }
+    }, 500);
+    
+    // Clear date range when month or year is selected
+    if (monthFilter) {
+        monthFilter.addEventListener('change', function() {
+            if (monthFilter.value) {
+                clearDateRange();
+            }
+        });
+    }
+    
+    if (yearFilter) {
+        yearFilter.addEventListener('change', function() {
+            if (yearFilter.value) {
+                clearDateRange();
+            }
+        });
+    }
+    
+    function clearDateRange() {
+        // Clear dropdown inputs
+        if (startDateInput) {
+            startDateInput.value = '';
+            // Trigger change event for elegant datepicker
+            $(startDateInput).trigger('change');
+        }
+        if (endDateInput) {
+            endDateInput.value = '';
+            endDateInput.disabled = true;
+            $(endDateInput).trigger('change');
+        }
+        
+        // Clear hidden inputs
+        const hiddenStart = document.getElementById('start_date');
+        const hiddenEnd = document.getElementById('end_date');
+        if (hiddenStart) hiddenStart.value = '';
+        if (hiddenEnd) hiddenEnd.value = '';
+        
+        // Reset label
+        dateRangeLabel.textContent = 'Select date range';
+    }
+    
+    // Handle start date change to enable/disable end date
+    if (startDateInput) {
+        // Use jQuery change event to work with Bootstrap Datepicker
+        $(startDateInput).on('change changeDate', function() {
+            const startValue = startDateInput.value;
+            
+            if (startValue) {
+                // Enable end date
+                endDateInput.disabled = false;
+                
+                // Set min date for native HTML5 validation
+                endDateInput.setAttribute('min', startValue);
+                
+                // Set startDate for Bootstrap Datepicker (Elegant Datepicker)
+                if ($(endDateInput).data('datepicker')) {
+                    $(endDateInput).datepicker('setStartDate', new Date(startValue));
+                }
+                
+                // Clear end date if it's before start date
+                if (endDateInput.value && endDateInput.value < startValue) {
+                    endDateInput.value = '';
+                    if ($(endDateInput).data('datepicker')) {
+                        $(endDateInput).datepicker('update', '');
+                    }
+                }
+            } else {
+                // Disable end date if start is empty
+                endDateInput.disabled = true;
+                endDateInput.value = '';
+                endDateInput.removeAttribute('min');
+                
+                // Remove startDate restriction
+                if ($(endDateInput).data('datepicker')) {
+                    $(endDateInput).datepicker('setStartDate', null);
+                    $(endDateInput).datepicker('update', '');
+                }
+            }
         });
         
-        filterCollapse.addEventListener('hide.bs.collapse', function() {
-            filterToggleIcon.style.transform = 'rotate(0deg)';
+        // Trigger on page load if start date has value
+        if (startDateInput.value) {
+            $(startDateInput).trigger('change');
+        }
+    }
+    
+    // Apply button
+    if (applyBtn) {
+        applyBtn.addEventListener('click', function() {
+            // Create or update hidden inputs
+            let hiddenStart = document.getElementById('start_date');
+            let hiddenEnd = document.getElementById('end_date');
+            const form = document.getElementById('dashboardFilters');
+            
+            if (!hiddenStart) {
+                hiddenStart = document.createElement('input');
+                hiddenStart.type = 'hidden';
+                hiddenStart.id = 'start_date';
+                hiddenStart.name = 'start_date';
+                form.appendChild(hiddenStart);
+            }
+            
+            if (!hiddenEnd) {
+                hiddenEnd = document.createElement('input');
+                hiddenEnd.type = 'hidden';
+                hiddenEnd.id = 'end_date';
+                hiddenEnd.name = 'end_date';
+                form.appendChild(hiddenEnd);
+            }
+            
+            // Convert DD/MM/YYYY back to YYYY-MM-DD for server
+            const startValue = startDateInput.value;
+            const endValue = endDateInput.value;
+            
+            const serverStartDate = convertToServerFormat(startValue);
+            const serverEndDate = convertToServerFormat(endValue);
+            
+            hiddenStart.value = serverStartDate;
+            hiddenEnd.value = serverEndDate;
+            
+            // Update label (use server format for consistency)
+            updateDateRangeLabel();
+            
+            // Close dropdown
+            const bsDropdown = bootstrap.Dropdown.getInstance(dropdown);
+            if (bsDropdown) bsDropdown.hide();
+            
+            // Clear month/year filters when date range is applied
+            const monthFilter = document.getElementById('month_filter');
+            const yearFilter = document.getElementById('year_filter');
+            if (monthFilter) monthFilter.value = '';
+            if (yearFilter) yearFilter.value = '';
         });
+    }
+    
+    function updateDateRangeLabel() {
+        const start = startDateInput.value;
+        const end = endDateInput.value;
+        
+        if (start && end) {
+            // Input might be DD/MM/YYYY or YYYY-MM-DD, handle both
+            dateRangeLabel.textContent = formatDateForLabel(start) + ' - ' + formatDateForLabel(end);
+        } else if (start) {
+            dateRangeLabel.textContent = 'From ' + formatDateForLabel(start);
+        } else if (end) {
+            dateRangeLabel.textContent = 'Until ' + formatDateForLabel(end);
+        } else {
+            dateRangeLabel.textContent = 'Select date range';
+        }
+    }
+    
+    function formatDateForLabel(dateStr) {
+        if (!dateStr) return '';
+        
+        // Check if already in DD/MM/YYYY format
+        if (dateStr.includes('/')) {
+            return dateStr; // Already formatted
+        }
+        
+        // Convert from YYYY-MM-DD to DD/MM/YYYY
+        const parts = dateStr.split('-');
+        if (parts.length === 3) {
+            return parts[2] + '/' + parts[1] + '/' + parts[0];
+        }
+        return dateStr;
     }
 });
 </script>
-<script src="{{ asset('js/dashboard-filters.js') }}"></script>
+
+<!-- Dashboard Filters JavaScript -->
+<script src="{{ asset('js/dashboard-filters.js') }}?v={{ time() }}"></script>

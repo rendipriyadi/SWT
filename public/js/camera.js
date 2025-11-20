@@ -34,6 +34,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 video.srcObject = stream;
                 return true;
             } catch (err) {
+                console.error('Camera access error:', err);
                 let reason = 'Tidak dapat mengakses kamera. Pastikan izin kamera diberikan.';
                 if (err && err.name === 'NotAllowedError') reason = 'Akses kamera ditolak. Mohon izinkan akses kamera di browser.';
                 if (err && (err.name === 'NotFoundError' || err.name === 'OverconstrainedError')) reason = 'Kamera tidak ditemukan pada perangkat ini.';

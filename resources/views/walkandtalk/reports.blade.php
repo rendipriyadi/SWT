@@ -37,11 +37,11 @@
                     <div class="row g-2 mb-2">
                         <div class="col-12 col-md-6">
                             <label class="form-label small fw-bold" for="report_created_start">Start</label>
-                            <input type="text" id="report_created_start" class="form-control form-control-sm" placeholder="Start date" />
+                            <input type="text" id="report_created_start" class="form-control form-control-sm elegant-datepicker" placeholder="Select date" readonly />
                         </div>
                         <div class="col-12 col-md-6">
                             <label class="form-label small fw-bold" for="report_created_end">End</label>
-                            <input type="text" id="report_created_end" class="form-control form-control-sm" placeholder="End date" />
+                            <input type="text" id="report_created_end" class="form-control form-control-sm elegant-datepicker" placeholder="Select date" readonly disabled />
                         </div>
                     </div>
                     <div class="d-flex justify-content-end gap-2">
@@ -193,12 +193,13 @@
 @endsection
 
 @push('scripts')
-<!-- Flatpickr for consistent datepicker UI (same as History) -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
-<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
+<!-- Elegant Datepicker will auto-convert input[type="date"] -->
 <style>
-/* Ensure flatpickr overlays above dropdown and table */
-.flatpickr-calendar { z-index: 2005 !important; }
+/* Hide Bootstrap Datepicker checkmark icon */
+.elegant-datepicker.form-control {
+    background-image: none !important;
+    padding-right: 0.75rem !important;
+}
 /* Lebar kolom dipindahkan ke columnDefs DataTables untuk sinkron thead/td */
 
 /* Make table rows look clickable and add hover feedback */

@@ -23,11 +23,11 @@
                     <tr>
                         <td style="background-color: #ffffff; padding: 30px; font-size: 12px; color: black;">
                             <p style="font-weight: bold; margin: 0 0 10px;">
-                                @if($laporan->penanggungJawab)
-                                    Hello, {{ $laporan->penanggungJawab->name }}
-                                @else
-                                    Hello, Safety Team
-                                @endif
+                                @php
+                                    $allNames = $toNames ?? [];
+                                    $greeting = !empty($allNames) ? 'Hello, ' . implode(', ', $allNames) : 'Hello, Safety Team';
+                                @endphp
+                                {{ $greeting }}
                             </p>
                             <p style="margin: 0 0 10px;">
                                 The Safety Walk and Talk report has been completed with the following details:

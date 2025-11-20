@@ -10,11 +10,6 @@
             <p class="text-muted mb-0">Update report details and information</p>
         </div>
         <div>
-            @php
-                // Determine back URL based on report status
-                $backUrl = $laporan->status === 'Completed' ? route('sejarah.index') : route('laporan.index');
-                $backText = $laporan->status === 'Completed' ? 'Back to History' : 'Back to Reports';
-            @endphp
             <a href="{{ $backUrl }}" class="btn btn-outline-secondary" style="border: 2px solid #6c757d;">
                 <i class="fas fa-arrow-left me-2"></i>{{ $backText }}
             </a>
@@ -124,12 +119,10 @@
                     <!-- Additional PICs Container -->
                     <div id="additionalPicContainer" class="mt-2">
                         <!-- Existing additional PICs -->
-                        @if(!empty($laporan->additional_pic_ids) && count($laporan->additional_pic_ids) > 0)
+                        @if(!empty($additionalPics) && count($additionalPics) > 0)
                             @foreach($laporan->additional_pic_ids as $index => $picId)
-                                @php
-                                    $pic = \App\Models\PenanggungJawab::find($picId);
-                                @endphp
-                                @if($pic)
+                                @if(isset($additionalPics[$picId]))
+                                    @php $pic = $additionalPics[$picId]; @endphp
                                     <div class="additional-pic-item mb-2" data-index="{{ $index + 1 }}">
                                         <div class="input-group">
                                             <select class="form-select additional-pic-select" name="additional_pics[{{ $index + 1 }}]" data-selected="{{ $picId }}">
@@ -176,10 +169,90 @@
                 </div>
             </div>
 
+            <!-- Completion Section (Only for Completed Reports) -->
+            @if($laporan->status === 'Completed' && $laporan->penyelesaian)
+            <hr class="my-5">
+            <h4 class="mb-4"><i class="fas fa-check-circle me-2 text-success"></i>Completion Details</h4>
+            
+            <!-- Completion Date -->
+            <div class="mb-3">
+                <label for="Tanggal" class="form-label fw-semibold">Completion Date <span class="text-danger">*</span></label>
+                <div class="input-group">
+                    <input type="text" class="form-control elegant-datepicker completion-date @error('Tanggal') is-invalid @enderror" 
+                           id="Tanggal" name="Tanggal" 
+                           value="{{ old('Tanggal', $laporan->penyelesaian->formatted_date ?? '') }}" 
+                           placeholder="Select date..." required readonly>
+                    <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                </div>
+                @error('Tanggal')
+                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                @enderror
+            </div>
+
+            <!-- Completion Photos -->
+            <div class="mb-3">
+                <label for="completion_photos" class="form-label fw-semibold">Add New Completion Photos:</label>
+                <input type="file" class="form-control @error('completion_photos.*') is-invalid @enderror" 
+                       id="completion_photos" name="completion_photos[]" accept="image/*" multiple>
+                @error('completion_photos.*')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+                <div id="completion-foto-preview-container" class="mt-2 d-flex flex-wrap gap-2"></div>
+                <button type="button" class="btn btn-secondary mt-2" id="openCompletionCameraBtn">
+                    <i class="fas fa-camera me-2"></i>Take Photo
+                </button>
+                <div id="completionCameraContainer" style="display:none; margin-top:10px;">
+                    <video id="completionVideo" autoplay playsinline style="width:100%; max-width:350px; border:1px solid #ccc; border-radius:8px;"></video>
+                    <canvas id="completionCanvas" style="display:none;"></canvas>
+                    <div class="mt-2">
+                        <button type="button" class="btn btn-success" id="captureCompletionBtn">
+                            <i class="fas fa-camera me-1"></i>Take Photo
+                        </button>
+                        <button type="button" class="btn btn-danger" id="closeCompletionCameraBtn">
+                            <i class="fas fa-times me-1"></i>Close Camera
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Existing Completion Photos -->
+            @if(!empty($laporan->penyelesaian->Foto) && is_array($laporan->penyelesaian->Foto))
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Existing Completion Photos:</label>
+                <div class="d-flex flex-wrap gap-2">
+                    @foreach($laporan->penyelesaian->Foto as $index => $foto)
+                    <div class="position-relative">
+                        <img src="{{ asset('storage/images/completions/' . $foto) }}" 
+                             alt="Completion Photo {{ $index + 1 }}" 
+                             class="img-thumbnail" 
+                             style="width: 100px; height: 100px; object-fit: cover;">
+                        <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 delete-existing-completion-photo" 
+                                data-photo="{{ $foto }}">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    @endforeach
+                </div>
+                <input type="hidden" name="deleted_completion_photos" id="deleted_completion_photos" value="">
+            </div>
+            @endif
+
+            <!-- Completion Description -->
+            <div class="mb-3">
+                <label for="completion_description" class="form-label fw-semibold">Completion Description <span class="text-danger">*</span></label>
+                <textarea class="form-control @error('completion_description') is-invalid @enderror" 
+                          id="completion_description" name="completion_description" rows="3" required 
+                          placeholder="Describe how the problem was resolved...">{{ old('completion_description', $laporan->penyelesaian->deskripsi_penyelesaian) }}</textarea>
+                @error('completion_description')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+            @endif
+
             <!-- Submit Button -->
             <div class="d-flex justify-content-end mt-4">
                 <button type="submit" class="btn btn-primary btn-lg px-5" id="updateBtn">
-                    <i class="fas fa-save me-2"></i>Update Report
+                    <i class="fas fa-save me-2"></i>Update Report{{ $laporan->status === 'Completed' ? ' & Completion' : '' }}
                 </button>
             </div>
         </form>
@@ -342,12 +415,44 @@ document.addEventListener('DOMContentLoaded', function() {
     let additionalPicCount = {{ !empty($laporan->additional_pic_ids) ? count($laporan->additional_pic_ids) : 0 }};
     const additionalPicContainer = document.getElementById('additionalPicContainer');
     const addAdditionalPicBtn = document.getElementById('addAdditionalPic');
+    
+    /**
+     * Get main PIC IDs dynamically from supervisor input
+     * The supervisor input is populated by area-station.js based on area/station selection
+     * Handles multiple supervisors separated by commas
+     */
+    function getMainPicIdsFromSupervisor() {
+        const supervisorInput = document.getElementById('supervisor');
+        if (!supervisorInput || !supervisorInput.value) {
+            return [];
+        }
+        
+        // Split by comma to handle multiple supervisors
+        const supervisorNames = supervisorInput.value
+            .split(',')
+            .map(name => name.trim())
+            .filter(name => name);
+        
+        // Find all PICs in allPenanggungJawab that match the supervisor names
+        const mainPicIds = [];
+        supervisorNames.forEach(supervisorName => {
+            const mainPic = allPenanggungJawab.find(pj => 
+                pj.name && pj.name.trim() === supervisorName
+            );
+            if (mainPic) {
+                mainPicIds.push(mainPic.id.toString());
+            }
+        });
+        
+        return mainPicIds;
+    }
+    
 
     // Get all penanggung jawab from all areas
     let allPenanggungJawab = [];
     
     // Fetch all penanggung jawab from server
-    fetch('/api/all-penanggung-jawab')
+    fetch(window.routes.allPenanggungJawab)
         .then(response => response.json())
         .then(data => {
             allPenanggungJawab = data.penanggung_jawab || [];
@@ -369,24 +474,70 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Populate select options
-    function populateSelectOptions(selectElement, selectedValue = '') {
-        let picOptions = '<option value="">Select Person in Charge</option>';
-        allPenanggungJawab.forEach(pj => {
-            const selected = pj.id == selectedValue ? 'selected' : '';
-            picOptions += `<option value="${pj.id}" ${selected}>${pj.name} - ${pj.station} (${pj.area_name})</option>`;
-        });
-        selectElement.innerHTML = picOptions;
-    }
-
-    // Add additional PIC function
-    function addAdditionalPic() {
-        additionalPicCount++;
+    /**
+     * Get filtered PIC options excluding main PICs and already selected Additional PICs
+     * Same logic as Create Report (laporan.blade.php)
+     */
+    function getFilteredPicOptions(currentSelectValue = null) {
+        const excludeMainPicIds = getMainPicIdsFromSupervisor();
+        
+        // Get already selected Additional PICs (exclude current select to allow keeping its value)
+        const selectedAdditionalPics = Array.from(document.querySelectorAll('.additional-pic-select'))
+            .map(select => select.value)
+            .filter(val => val !== '' && val !== currentSelectValue);
         
         let picOptions = '<option value="">Select Person in Charge</option>';
+        
         allPenanggungJawab.forEach(pj => {
-            picOptions += `<option value="${pj.id}">${pj.name} - ${pj.station} (${pj.area_name})</option>`;
+            if (!pj || !pj.id || !pj.name) return;
+            
+            const pjId = pj.id.toString();
+            
+            // Exclude main PICs
+            if (excludeMainPicIds.includes(pjId)) return;
+            
+            // Exclude already selected Additional PICs
+            if (selectedAdditionalPics.includes(pjId)) return;
+            
+            const displayName = pj.name || 'Unknown';
+            const displayStation = pj.station || 'No Station';
+            const displayArea = pj.area_name || 'Unknown Area';
+            
+            picOptions += `<option value="${pj.id}">${displayName} - ${displayStation} (${displayArea})</option>`;
         });
+        
+        return picOptions;
+    }
+    
+    /**
+     * Populate select element with filtered PIC options
+     * Restores previously selected value if still valid
+     */
+    function populateSelectOptions(selectElement, selectedValue = '') {
+        const picOptions = getFilteredPicOptions(selectedValue);
+        selectElement.innerHTML = picOptions;
+        
+        // Restore previous value if still valid
+        if (selectedValue) {
+            const optionExists = Array.from(selectElement.options).some(opt => opt.value === selectedValue);
+            selectElement.value = optionExists ? selectedValue : '';
+        }
+    }
+
+    /**
+     * Add a new Additional PIC dropdown
+     * Uses filtered options to exclude main PICs and already selected PICs
+     */
+    function addAdditionalPic() {
+        if (allPenanggungJawab.length === 0) {
+            alert('PIC data not loaded yet. Please wait a moment and try again.');
+            return;
+        }
+        
+        additionalPicCount++;
+        
+        // Use getFilteredPicOptions to get options with exclusions
+        const picOptions = getFilteredPicOptions();
 
         const picHtml = `
             <div class="additional-pic-item mb-2" data-index="${additionalPicCount}">
@@ -417,6 +568,47 @@ document.addEventListener('DOMContentLoaded', function() {
             if (e.target.closest('.remove-additional-pic')) {
                 const picItem = e.target.closest('.additional-pic-item');
                 picItem.remove();
+                // Refresh all dropdowns after removal
+                refreshAllAdditionalPicDropdowns();
+            }
+        });
+    }
+    
+    /**
+     * Refresh all Additional PIC dropdowns with filtered options
+     * Called when main PIC or any Additional PIC selection changes
+     */
+    function refreshAllAdditionalPicDropdowns() {
+        const allSelects = document.querySelectorAll('.additional-pic-select');
+        allSelects.forEach(select => {
+            const currentValue = select.value;
+            populateSelectOptions(select, currentValue);
+        });
+    }
+    
+    // Event listeners for dynamic dropdown refresh
+    const areaSelect = document.getElementById('area_id');
+    const stationSelect = document.getElementById('penanggung_jawab_id');
+    
+    // Refresh when area changes (supervisor name changes)
+    if (areaSelect) {
+        areaSelect.addEventListener('change', function() {
+            setTimeout(() => refreshAllAdditionalPicDropdowns(), 100);
+        });
+    }
+    
+    // Refresh when station changes (supervisor name changes)
+    if (stationSelect) {
+        stationSelect.addEventListener('change', function() {
+            setTimeout(() => refreshAllAdditionalPicDropdowns(), 100);
+        });
+    }
+    
+    // Refresh when any Additional PIC selection changes
+    if (additionalPicContainer) {
+        additionalPicContainer.addEventListener('change', function(e) {
+            if (e.target.classList.contains('additional-pic-select')) {
+                refreshAllAdditionalPicDropdowns();
             }
         });
     }
@@ -443,6 +635,137 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
+    // Handle Completion Photos Preview and Camera
+    const completionPhotosInput = document.getElementById('completion_photos');
+    const completionPreviewContainer = document.getElementById('completion-foto-preview-container');
+    const openCompletionCameraBtn = document.getElementById('openCompletionCameraBtn');
+    const completionCameraContainer = document.getElementById('completionCameraContainer');
+    const completionVideo = document.getElementById('completionVideo');
+    const completionCanvas = document.getElementById('completionCanvas');
+    const captureCompletionBtn = document.getElementById('captureCompletionBtn');
+    const closeCompletionCameraBtn = document.getElementById('closeCompletionCameraBtn');
+    
+    let completionFileStore = [];
+    let completionStream = null;
+    
+    if (completionPhotosInput && completionPreviewContainer) {
+        completionPhotosInput.addEventListener('change', function(e) {
+            const newFiles = Array.from(e.target.files);
+            addCompletionFiles(newFiles, false);
+        });
+
+        if (openCompletionCameraBtn) {
+            openCompletionCameraBtn.addEventListener('click', async function() {
+                completionCameraContainer.style.display = 'block';
+                openCompletionCameraBtn.style.display = 'none';
+                
+                try {
+                    completionStream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { facingMode: "environment" } 
+                    });
+                } catch (e) {
+                    try {
+                        completionStream = await navigator.mediaDevices.getUserMedia({ 
+                            video: true 
+                        });
+                    } catch (err) {
+                        alert('Cannot access camera. Please ensure browser has camera permission.');
+                        openCompletionCameraBtn.style.display = 'inline-block';
+                        completionCameraContainer.style.display = 'none';
+                    }
+                }
+                
+                if (completionStream) {
+                    completionVideo.srcObject = completionStream;
+                }
+            });
+        }
+
+        if (captureCompletionBtn) {
+            captureCompletionBtn.addEventListener('click', function() {
+                completionCanvas.width = completionVideo.videoWidth;
+                completionCanvas.height = completionVideo.videoHeight;
+                completionCanvas.getContext('2d').drawImage(completionVideo, 0, 0, completionCanvas.width, completionCanvas.height);
+                completionCanvas.toBlob(function(blob) {
+                    const newFile = new File([blob], `completion-camera-${Date.now()}.jpg`, { type: 'image/jpeg' });
+                    addCompletionFiles([newFile]);
+                }, 'image/jpeg', 0.95);
+            });
+        }
+
+        if (closeCompletionCameraBtn) {
+            closeCompletionCameraBtn.addEventListener('click', stopCompletionCamera);
+        }
+
+        function addCompletionFiles(newFiles, isReplacement = false) {
+            let combined = isReplacement ? newFiles : [...completionFileStore, ...newFiles];
+            completionFileStore = combined;
+            updateCompletionFileInput();
+            renderCompletionPreviews();
+            if (openCompletionCameraBtn) openCompletionCameraBtn.style.display = 'inline-block';
+        }
+
+        function stopCompletionCamera() {
+            if (completionStream) {
+                completionStream.getTracks().forEach(track => track.stop());
+                completionStream = null;
+            }
+            completionVideo.srcObject = null;
+            completionCameraContainer.style.display = 'none';
+            if (openCompletionCameraBtn) openCompletionCameraBtn.style.display = 'inline-block';
+        }
+
+        function renderCompletionPreviews() {
+            completionPreviewContainer.innerHTML = '';
+            completionFileStore.forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.createElement('div');
+                    preview.className = 'position-relative';
+                    preview.innerHTML = `
+                        <img src="${e.target.result}" alt="Preview" class="img-thumbnail" 
+                             style="width: 100px; height: 100px; object-fit: cover;">
+                        <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 remove-completion-preview-btn" data-index="${index}">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    `;
+                    completionPreviewContainer.appendChild(preview);
+                    
+                    preview.querySelector('.remove-completion-preview-btn').addEventListener('click', function() {
+                        const idx = this.getAttribute('data-index');
+                        completionFileStore.splice(idx, 1);
+                        updateCompletionFileInput();
+                        renderCompletionPreviews();
+                    });
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function updateCompletionFileInput() {
+            const dataTransfer = new DataTransfer();
+            completionFileStore.forEach(file => dataTransfer.items.add(file));
+            completionPhotosInput.files = dataTransfer.files;
+        }
+    }
+
+    // Handle Delete Existing Completion Photos
+    const deletedCompletionPhotos = [];
+    const deletedCompletionPhotosInput = document.getElementById('deleted_completion_photos');
+    
+    document.querySelectorAll('.delete-existing-completion-photo').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const photo = this.getAttribute('data-photo');
+            const photoContainer = this.closest('.position-relative');
+            
+            if (confirm('Are you sure you want to delete this completion photo?')) {
+                deletedCompletionPhotos.push(photo);
+                deletedCompletionPhotosInput.value = JSON.stringify(deletedCompletionPhotos);
+                photoContainer.remove();
+            }
+        });
+    });
 });
 </script>
 @endpush

@@ -77,6 +77,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             return data;
         } catch (e) {
+            console.error('Error fetching stations for area:', areaId, e);
             return { stations: [], group_members: [] };
         }
     }

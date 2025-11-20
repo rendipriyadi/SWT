@@ -80,8 +80,8 @@
                             @endif
 
                             <!-- Additional PICs (same level, different color) -->
-                            @if(!empty($laporan->additional_pics) && count($laporan->additional_pics) > 0)
-                                @foreach($laporan->additional_pics as $additionalPic)
+                            @if(!empty($laporan->additional_pic_objects) && count($laporan->additional_pic_objects) > 0)
+                                @foreach($laporan->additional_pic_objects as $additionalPic)
                                     <span class="badge bg-info">
                                         <i class="fas fa-user me-1"></i>{{ $additionalPic->name }}
                                     </span>
@@ -162,7 +162,7 @@
         </div>
     </div>
 
-    <!-- Action Buttons (Bottom Left) -->
+    <!-- Action Buttons for Non-Completed Reports -->
     @if($laporan->status != 'Completed')
     <div class="mb-4">
         <div class="d-flex gap-2">
@@ -235,6 +235,20 @@
             @endif
         </div>
     </div>
+
+    <!-- Action Buttons for Completed Reports (After Completion Details) -->
+    <div class="mb-4 mt-3">
+        <div class="d-flex gap-2">
+            <a href="{{ route('laporan.edit', encrypt($laporan->id)) }}" class="btn btn-warning">
+                <i class="fas fa-edit me-2"></i>Edit Report & Completion
+            </a>
+            <button type="button" class="btn btn-danger delete-btn" 
+                    data-delete-url="{{ route('laporan.destroy', encrypt($laporan->id)) }}"
+                    data-return-url="{{ route('sejarah.index') }}">
+                <i class="fas fa-trash me-2"></i>Delete Report
+            </button>
+        </div>
+    </div>
     @endif
 </div>
 
@@ -267,5 +281,105 @@
     box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
 </style>
+@endpush
+
+@push('scripts')
+<script>
+// Helper: Get SweetAlert2 theme options based on current mode
+function getSwalTheme() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    if (isDark) {
+        return {
+            background: '#1e1e1e',
+            color: '#e0e0e0',
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d'
+        };
+    }
+    return {
+        background: '#ffffff',
+        color: '#212529',
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d'
+    };
+}
+
+$(document).ready(function() {
+    $('.delete-btn').on('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const deleteUrl = $(this).data('delete-url');
+        const returnUrl = $(this).data('return-url');
+        
+        const theme = getSwalTheme();
+        Swal.fire({
+            title: 'Delete Confirmation',
+            text: "Are you sure you want to delete this report?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, Delete',
+            cancelButtonText: 'Cancel',
+            reverseButtons: true,
+            ...theme
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire({
+                    title: 'Processing...',
+                    text: 'Deleting report...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    },
+                    ...theme
+                });
+                
+                $.ajax({
+                    url: deleteUrl,
+                    type: 'DELETE',
+                    data: {
+                        _token: $('meta[name="csrf-token"]').attr('content'),
+                        ref: returnUrl.includes('sejarah') ? 'sejarah' : 'dashboard'
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            Swal.fire({
+                                title: 'Success!',
+                                text: response.message,
+                                icon: 'success',
+                                timer: 1500,
+                                showConfirmButton: false,
+                                ...theme
+                            }).then(() => {
+                                window.location.href = returnUrl;
+                            });
+                        } else {
+                            Swal.fire({
+                                title: 'Error!',
+                                text: response.message || 'An error occurred while deleting the report.',
+                                icon: 'error',
+                                ...theme
+                            });
+                        }
+                    },
+                    error: function(xhr) {
+                        let errorMsg = 'An error occurred while deleting the report.';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMsg = xhr.responseJSON.message;
+                        }
+                        
+                        Swal.fire({
+                            title: 'Error!',
+                            text: errorMsg,
+                            icon: 'error',
+                            ...theme
+                        });
+                    }
+                });
+            }
+        });
+    });
+});
+</script>
 @endpush
 @endsection

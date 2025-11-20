@@ -25,11 +25,11 @@
                     <tr>
                         <td style="background-color: #ffffff; padding: 30px; font-size: 12px; color: black;">
                             <p style="font-weight: bold; margin: 0 0 10px;">
-                                @if($laporan->penanggungJawab)
-                                    Hello, {{ $laporan->penanggungJawab->name }}
-                                @else
-                                    Hello, {{ $laporan->area ? implode(', ', $laporan->area->penanggungJawabs->pluck('name')->toArray()) : '' }}
-                                @endif
+                                @php
+                                    $allNames = $toNames ?? [];
+                                    $greeting = 'Hello, ' . implode(', ', $allNames);
+                                @endphp
+                                {{ $greeting }}
                             </p>
                             <p style="margin: 0 0 10px;">
                                 The report assigned to you has been updated with the following details:

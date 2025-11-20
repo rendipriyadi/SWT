@@ -13,15 +13,14 @@ class DashboardFilters {
         
         // Setup filter toggle functionality
         this.setupFilterToggle();
-        
-        console.log('Dashboard filters initialized');
     }
 
     initializeElements() {
         this.categoryFilter = document.getElementById('category_filter');
         this.monthFilter = document.getElementById('month_filter');
         this.yearFilter = document.getElementById('year_filter');
-        this.dateFilter = document.getElementById('date_filter');
+        this.startDateFilter = document.getElementById('start_date');
+        this.endDateFilter = document.getElementById('end_date');
         this.filterForm = document.getElementById('dashboardFilters');
         this.autoSubmitEnabled = false; // Set to true for auto-submit
     }
@@ -29,7 +28,7 @@ class DashboardFilters {
     bindEvents() {
         // Auto-submit on filter change (if enabled)
         if (this.autoSubmitEnabled) {
-            [this.categoryFilter, this.monthFilter, this.yearFilter, this.dateFilter]
+            [this.categoryFilter, this.monthFilter, this.yearFilter, this.startDateFilter, this.endDateFilter]
                 .forEach(filter => {
                     if (filter) {
                         filter.addEventListener('change', () => {
@@ -39,26 +38,38 @@ class DashboardFilters {
                 });
         }
 
-        // Date filter logic - clear month/year when specific date is selected
-        if (this.dateFilter) {
-            this.dateFilter.addEventListener('change', () => {
-                if (this.dateFilter.value) {
-                    if (this.monthFilter) this.monthFilter.value = '';
-                    if (this.yearFilter) this.yearFilter.value = '';
-                }
-            });
-        }
-
-        // Month/Year filter logic - clear specific date when month/year is selected
-        [this.monthFilter, this.yearFilter].forEach(filter => {
-            if (filter) {
-                filter.addEventListener('change', () => {
-                    if (filter.value && this.dateFilter) {
-                        this.dateFilter.value = '';
+        // Date range filter logic - clear month/year when date range is selected
+        [this.startDateFilter, this.endDateFilter].forEach(dateInput => {
+            if (dateInput) {
+                dateInput.addEventListener('change', () => {
+                    if (dateInput.value) {
+                        if (this.monthFilter) this.monthFilter.value = '';
+                        if (this.yearFilter) this.yearFilter.value = '';
                     }
                 });
             }
         });
+
+        // Month/Year filter logic - clear date range when month/year is selected
+        [this.monthFilter, this.yearFilter].forEach(filter => {
+            if (filter) {
+                filter.addEventListener('change', () => {
+                    if (filter.value) {
+                        if (this.startDateFilter) this.startDateFilter.value = '';
+                        if (this.endDateFilter) this.endDateFilter.value = '';
+                    }
+                });
+            }
+        });
+
+        // End date validation - must be >= start date
+        if (this.startDateFilter && this.endDateFilter) {
+            this.startDateFilter.addEventListener('change', () => {
+                if (this.startDateFilter.value) {
+                    this.endDateFilter.min = this.startDateFilter.value;
+                }
+            });
+        }
 
         // Filter form validation and submission
         if (this.filterForm) {
@@ -69,11 +80,10 @@ class DashboardFilters {
         }
 
         // Filter change events - only for UI interactions, no auto-update
-        [this.categoryFilter, this.monthFilter, this.yearFilter, this.dateFilter]
+        [this.categoryFilter, this.monthFilter, this.yearFilter, this.startDateFilter, this.endDateFilter]
             .forEach(filter => {
                 if (filter) {
                     filter.addEventListener('change', (e) => {
-                        console.log('Filter changed:', filter.name || filter.id, 'value:', filter.value);
                         // Note: Charts will only update when Filter button is clicked
                         // No automatic updates on filter change
                     });
@@ -121,19 +131,23 @@ class DashboardFilters {
     }
 
     handleFormSubmit() {
+        // Check hidden inputs for date range
+        const hiddenStartDate = document.getElementById('start_date');
+        const hiddenEndDate = document.getElementById('end_date');
+        
         const hasFilters = this.categoryFilter?.value || 
                           this.monthFilter?.value || 
                           this.yearFilter?.value || 
-                          this.dateFilter?.value;
+                          hiddenStartDate?.value ||
+                          hiddenEndDate?.value;
         
         if (!hasFilters) {
-            // Redirect to clear all filters
+            // Redirect to clear all filters (prevent empty filter submission)
             window.location.href = window.dashboardRoutes.dashboard;
             return false;
         }
 
         // Show loading state and allow form submission to proceed
-        console.log('🔘 Filter button clicked - form will submit with page reload...');
         this.showLoadingState();
         
         // Return true to allow form submission
@@ -171,7 +185,6 @@ class DashboardFilters {
     // Note: AJAX method disabled - using page reload for reliability
     // This ensures active filter badges and all UI elements update correctly
     async updateChartsWithFilters() {
-        console.log('ℹ️ AJAX update disabled - using page reload for better reliability');
         // Page reload ensures:
         // - Active filter badges update correctly
         // - All UI elements sync properly  
@@ -190,26 +203,19 @@ class DashboardFilters {
         if (completedElement) completedElement.textContent = stats.completed;
     }
     updateCharts(chartData) {
-        console.log('Updating charts with data:', chartData);
-        
         // Update monthly reports chart
         if (window.laporanPerBulanChart && chartData.laporanPerBulan) {
-            console.log('💡 Use debugPieChart() in console to check chart state');
             this.updateMonthlyChart(chartData.laporanPerBulan);
         }
 
         // Update area reports chart
         if (window.areaPerBulanChart && chartData.areaPerBulan) {
-            console.log('Updating area chart');
             this.updateAreaChart(chartData.areaPerBulan);
         }
 
         // Update category chart (always update, even with empty data)
         if (window.categoryPerBulanChart) {
-            console.log('Updating category chart');
             this.updateCategoryChart(chartData.categoryPerBulan || []);
-        } else {
-            console.log('Category chart not found!');
         }
     }
 
@@ -348,10 +354,8 @@ class DashboardFilters {
 
     updateCategoryChart(data) {
         const chart = window.categoryPerBulanChart;
-        console.log('Updating category chart with data:', data);
         
         if (!chart) {
-            console.error('Category chart not found!');
             return;
         }
 
@@ -365,16 +369,10 @@ class DashboardFilters {
             );
         } else {
             // No data case
-            console.log('No category data - showing empty state');
             chart.data.labels = ['No Data'];
             chart.data.datasets[0].data = [1];
             chart.data.datasets[0].backgroundColor = ['#e9ecef'];
         }
-        
-        console.log('Category chart updated with:', {
-            labels: chart.data.labels,
-            data: chart.data.datasets[0].data
-        });
         
         chart.update('none');
     }
@@ -387,12 +385,10 @@ class DashboardFilters {
             // Listen for collapse events with smooth rotation
             filterCollapse.addEventListener('show.bs.collapse', () => {
                 toggleIcon.style.transform = 'rotate(180deg)';
-                console.log('Filter section expanded');
             });
             
             filterCollapse.addEventListener('hide.bs.collapse', () => {
                 toggleIcon.style.transform = 'rotate(0deg)';
-                console.log('Filter section collapsed');
             });
             
             // Save collapse state to localStorage
@@ -421,13 +417,57 @@ class DashboardFilters {
         }
     }
 
+    initializeDatePicker() {
+        // Wait for flatpickr to be loaded
+        const initFlatpickr = () => {
+            const dateFilterInput = document.getElementById('date_filter');
+            
+            if (!dateFilterInput) {
+                console.error('Date filter input not found');
+                return;
+            }
+            
+            if (typeof flatpickr === 'undefined') {
+                console.error('Flatpickr library not loaded');
+                return;
+            }
+            
+            try {
+                flatpickr(dateFilterInput, {
+                    dateFormat: 'Y-m-d',
+                    allowInput: false,
+                    disableMobile: true,
+                    maxDate: 'today',
+                    onChange: (selectedDates, dateStr, instance) => {
+                        // Clear month and year filters when date is selected
+                        if (dateStr) {
+                            if (this.monthFilter) this.monthFilter.value = '';
+                            if (this.yearFilter) this.yearFilter.value = '';
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Error initializing Flatpickr:', error);
+            }
+        };
+        
+        // Try to initialize, or wait for flatpickr to load
+        if (typeof flatpickr !== 'undefined') {
+            initFlatpickr();
+        } else {
+            // Wait for flatpickr to load
+            setTimeout(initFlatpickr, 100);
+        }
+    }
+
     // Utility methods
     getCurrentFilters() {
         return {
             category_id: this.categoryFilter?.value || '',
             month: this.monthFilter?.value || '',
             year: this.yearFilter?.value || '',
-            date: this.dateFilter?.value || ''
+            start_date: this.startDateFilter?.value || '',
+            end_date: this.endDateFilter?.value || ''
         };
     }
 

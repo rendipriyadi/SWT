@@ -10,11 +10,11 @@
     <title>@yield('title', 'Safety Walk and Talk')</title>
     
     <!-- Favicon - Must be early in head -->
-    <link rel="icon" type="image/x-icon" href="/favicon.ico?v={{ time() }}">
-    <link rel="shortcut icon" href="/favicon.ico?v={{ time() }}">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.ico?v={{ time() }}">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon.ico?v={{ time() }}">
-    <meta name="msapplication-TileImage" content="/favicon.ico?v={{ time() }}">
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}?v={{ time() }}">
+    <link rel="shortcut icon" href="{{ asset('favicon.ico') }}?v={{ time() }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon.ico') }}?v={{ time() }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon.ico') }}?v={{ time() }}">
+    <meta name="msapplication-TileImage" content="{{ asset('favicon.ico') }}?v={{ time() }}">
     
     <!-- Preload Critical Assets -->
     <link rel="preload" href="{{ asset('css/styles.css') }}" as="style">
@@ -1144,8 +1144,9 @@
     <script>
         window.routes = {
             supervisor: "{{ route('supervisor', ['id' => ':id']) }}",
-            penyelesaian: "{{ route('laporan.penyelesaian', ['id' => ':encryptedId']) }}",
+            penyelesaian: "{{ route('laporan.penyelesaian', ['id' => ':id']) }}".replace(':id', ':encryptedId'),
             stations: "{{ route('penanggung.jawab') }}",
+            allPenanggungJawab: "{{ route('api.all-penanggung-jawab') }}",
             laporanShow: "{{ route('laporan.show', ['id' => ':id']) }}",
             sejarahDownload: "{{ route('sejarah.download') }}"
         };

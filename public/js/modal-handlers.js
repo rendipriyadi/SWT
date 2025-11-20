@@ -209,8 +209,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 `);
             });
         } else {
-            // Fallback if no photos
-            const noPhotoUrl = window.location.origin + '/images/static/nophoto.jpg';
+            // Fallback if no photos - use relative path from public directory
+            const noPhotoUrl = '/images/static/nophoto.jpg';
             carouselInner.append(`
                 <div class="carousel-item active">
                     <img src="${noPhotoUrl}" class="d-block w-100 img-fluid rounded" alt="No photo available">
@@ -235,6 +235,11 @@ document.addEventListener('DOMContentLoaded', function() {
         modalHandlers.register('modalPenyelesaian');
         
         // Use global route configuration
+        if (!window.routes || !window.routes.penyelesaian) {
+            modalBody.html('<div class="alert alert-danger mb-0">Route configuration error. Please refresh the page.</div>');
+            return;
+        }
+        
         const url = window.routes.penyelesaian.replace(':encryptedId', encryptedId);
         
         $.get(url, function(res) {
@@ -338,7 +343,24 @@ document.addEventListener('DOMContentLoaded', function() {
                 modalBody.html('<div class="alert alert-danger mb-0">Completion data not found.</div>');
             }
         }).fail(function(xhr, status, error) {
-            modalBody.html('<div class="alert alert-danger mb-0">Failed to retrieve completion data. Please try again.</div>');
+            console.error('Failed to load completion data:', {
+                status: xhr.status,
+                statusText: xhr.statusText,
+                error: error
+            });
+            
+            let errorMessage = 'Failed to retrieve completion data. Please try again.';
+            
+            // Try to parse error response
+            if (xhr.responseJSON && xhr.responseJSON.message) {
+                errorMessage = xhr.responseJSON.message;
+            } else if (xhr.status === 404) {
+                errorMessage = 'Completion data not found.';
+            } else if (xhr.status === 500) {
+                errorMessage = 'Server error occurred. Please contact administrator.';
+            }
+            
+            modalBody.html('<div class="alert alert-danger mb-0">' + errorMessage + '</div>');
         });
     });
     

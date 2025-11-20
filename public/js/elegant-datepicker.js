@@ -9,7 +9,7 @@ class ElegantDatePicker {
             format: 'dd/mm/yyyy',
             autoclose: true,
             todayHighlight: true,
-            orientation: 'auto',
+            orientation: 'bottom auto',
             container: 'body',
             todayBtn: 'linked',
             clearBtn: true,
@@ -131,19 +131,39 @@ class ElegantDatePicker {
         // Allow backdate for completion dates (no restriction)
         // Completion dates can be in the past, present, or future
         
-        // Special handling for deadline dates (future dates only)
-        if (input.name === 'tenggat_waktu' || input.classList.contains('deadline-date')) {
+        // Special handling for deadline dates in CREATE form (future dates only)
+        // But allow past dates in EDIT form (completion-date class) and edit form
+        if ((input.name === 'tenggat_waktu' && !input.classList.contains('completion-date')) || input.classList.contains('deadline-date')) {
             config.startDate = new Date(); // Today or later only
         }
         
         // Initialize Bootstrap Datepicker
         // Prefer to attach the popup within the input wrapper so it stays aligned while scrolling
-        const wrapper = input.closest('.elegant-date-input, .elegant-date-group');
+        const wrapper = input.closest('.elegant-date-input, .elegant-date-group, .input-group');
         if (wrapper) {
             config.container = wrapper; // keep dropdown within the same scrolling context
         }
 
-        $(input).datepicker(config)
+        const $input = $(input);
+        
+        // Set initial date if value exists (format: Y-m-d)
+        let initialDate = null;
+        if (input.value && input.value.trim()) {
+            try {
+                const dateValue = input.value.trim();
+                // Parse Y-m-d format
+                const dateParts = dateValue.split('-');
+                if (dateParts.length === 3) {
+                    initialDate = new Date(parseInt(dateParts[0]), parseInt(dateParts[1]) - 1, parseInt(dateParts[2]));
+                    config.defaultViewDate = initialDate;
+                }
+            } catch (e) {
+                // Ignore parsing errors
+            }
+        }
+
+        $input.datepicker(config)
+            .datepicker('setDate', initialDate)
             .on('show', (e) => {
                 // Add elegant class to datepicker
                 setTimeout(() => {

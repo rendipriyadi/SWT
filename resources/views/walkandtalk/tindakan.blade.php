@@ -84,8 +84,8 @@
                             @endif
                             
                             <!-- Additional PICs (same level, different color) -->
-                            @if(!empty($laporan->additional_pics) && count($laporan->additional_pics) > 0)
-                                @foreach($laporan->additional_pics as $additionalPic)
+                            @if(!empty($laporan->additional_pic_objects) && count($laporan->additional_pic_objects) > 0)
+                                @foreach($laporan->additional_pic_objects as $additionalPic)
                                     <span class="badge bg-info">
                                         <i class="fas fa-user me-1"></i>{{ $additionalPic->name }}
                                     </span>
@@ -178,7 +178,7 @@
             @endif
             <div class="mb-3">
                 <label for="Foto" class="form-label">Completion Photos:</label>
-                <input type="file" class="form-control @error('Foto.*') is-invalid @enderror" id="Foto" name="Foto[]" multiple>
+                <input type="file" class="form-control @error('Foto.*') is-invalid @enderror" id="Foto" name="Foto[]" accept="image/*" multiple>
                 @error('Foto.*')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
