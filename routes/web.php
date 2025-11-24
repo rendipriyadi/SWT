@@ -44,6 +44,10 @@ Route::prefix('laporan')->name('laporan.')->group(function () {
     // Delete - use {id} for encrypted ID
     Route::delete('/{id}', [ReportController::class, 'destroy'])->name('destroy');
 
+    // Export Reports
+    Route::get('/download-pdf', [ReportController::class, 'downloadReports'])->name('download-pdf');
+    Route::get('/export-excel', [ReportController::class, 'exportReportsExcel'])->name('export-excel');
+
     // Show Detail LAST (catch-all for single parameter)
     Route::get('/{id}', [ReportController::class, 'show'])->name('show');
 });

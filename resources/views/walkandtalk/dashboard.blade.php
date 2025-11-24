@@ -289,7 +289,7 @@
     <div class="row g-4 mb-4">
         <!-- Recent Assigned Reports Card -->
         <div class="col-lg-6 col-md-12">
-            <div class="card h-100 recent-reports-card">
+            <div class="card recent-reports-card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">
                         <i class="fas fa-clipboard-list me-2 text-warning"></i>
@@ -325,7 +325,7 @@
                                 </div>
                             @endforeach
                         </div>
-                        <div class="card-footer text-center">
+                        <div class="card-footer text-center p-2">
                             <a href="{{ route('laporan.index') }}"
                                class="btn btn-outline-primary btn-sm">
                                 <i class="fas fa-list me-1"></i>View All Assigned
@@ -343,7 +343,7 @@
 
         <!-- Recent Completed Reports Card -->
         <div class="col-lg-6 col-md-12">
-            <div class="card h-100 recent-reports-card">
+            <div class="card recent-reports-card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">
                         <i class="fas fa-check-circle me-2 text-success"></i>
@@ -379,7 +379,7 @@
                                 </div>
                             @endforeach
                         </div>
-                        <div class="card-footer text-center">
+                        <div class="card-footer text-center p-2">
                             <a href="{{ route('sejarah.index') }}"
                                class="btn btn-outline-success btn-sm">
                                 <i class="fas fa-list me-1"></i>View All Completed
@@ -751,9 +751,22 @@ canvas {
 }
 
 /* Recent Reports Styling */
+.recent-reports-card {
+    display: flex;
+    flex-direction: column;
+}
+
+.recent-reports-card .card-body {
+    flex: 0 1 auto;
+}
+
 .recent-reports-list {
-    max-height: 400px;
-    overflow-y: auto;
+    max-height: none;
+    overflow-y: visible;
+}
+
+.recent-report-item {
+    padding: 0 !important;
 }
 
 .recent-report-item:last-child {
@@ -762,6 +775,11 @@ canvas {
 
 .recent-report-item:hover {
     background-color: #f8f9fa;
+}
+
+.recent-reports-card .btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
 }
 
 /* Responsive adjustments */

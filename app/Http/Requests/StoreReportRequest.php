@@ -28,7 +28,7 @@ class StoreReportRequest extends FormRequest
             'Foto' => 'nullable|array',
             'Foto.*' => 'image|mimes:jpg,png,jpeg,gif,svg|max:2048',
             'additional_pics' => 'nullable|array',
-            'additional_pics.*' => 'nullable|exists:penanggung_jawab,id|distinct',
+            'additional_pics.*' => 'nullable|integer|exists:penanggung_jawab,id',
         ];
     }
     
@@ -42,11 +42,20 @@ class StoreReportRequest extends FormRequest
             $mainPicId = $this->input('penanggung_jawab_id');
             $additionalPics = $this->input('additional_pics', []);
             
-            if ($mainPicId && !empty($additionalPics)) {
+            if (!empty($additionalPics)) {
                 // Filter out empty values
                 $additionalPics = array_filter($additionalPics);
                 
-                if (in_array($mainPicId, $additionalPics)) {
+                // Check for duplicates within additional_pics
+                if (count($additionalPics) !== count(array_unique($additionalPics))) {
+                    $validator->errors()->add(
+                        'additional_pics',
+                        'Tidak boleh ada duplikasi Person in Charge pada Additional PICs.'
+                    );
+                }
+                
+                // Check if additional_pics contains the same ID as main PIC
+                if ($mainPicId && in_array($mainPicId, $additionalPics)) {
                     $validator->errors()->add(
                         'additional_pics',
                         'Additional Person in Charge cannot be the same as the main Person in Charge.'

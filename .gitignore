@@ -33,3 +33,6 @@ yarn-error.log
 *.pem
 *.p12
 *.pfx
+
+# Ignore documentation folder
+/DOKUM

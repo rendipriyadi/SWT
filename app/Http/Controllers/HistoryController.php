@@ -114,6 +114,12 @@ class HistoryController extends Controller
                 }
                 return '';
             })
+            ->addColumn('additional_pics', function ($laporan) {
+                if (!empty($laporan->additional_pic_objects) && count($laporan->additional_pic_objects) > 0) {
+                    return $laporan->additional_pic_objects->pluck('name')->toArray();
+                }
+                return [];
+            })
             ->addColumn('tenggat_waktu', function ($laporan) { return Carbon::parse($laporan->tenggat_waktu)->format('l, j-n-Y'); })
             ->addColumn('status', function ($laporan) {
                 if ($laporan->status == 'Completed') {
@@ -196,7 +202,7 @@ class HistoryController extends Controller
 
             \SharedManager::saveLog('log_swt', "Downloaded [Report History] PDF for period: {$periode} swt.");
 
-            return $pdf->download('Laporan-Safety-Walk-and-Talk-' . date('Y-m-d') . '.pdf');
+            return $pdf->download('History-Report-Safety-Walk-and-Talk-' . date('Y-m-d') . '.pdf');
         } catch (\Exception $e) {
             Log::error('PDF Generation Error: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Failed to download report: ' . $e->getMessage());
@@ -217,7 +223,7 @@ class HistoryController extends Controller
                 $query = $query->orderBy('created_at', 'desc');
             }
 
-            $filename = 'Laporan-Safety-Walk-and-Talk-' . date('Y-m-d-His') . '.xlsx';
+            $filename = 'History-Report-Safety-Walk-and-Talk-' . date('Y-m-d-His') . '.xlsx';
 
             return Excel::download(new HistoryExport($query), $filename);
         } catch (\Exception $e) {

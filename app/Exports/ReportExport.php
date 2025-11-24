@@ -13,7 +13,7 @@ use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use App\Models\PenanggungJawab;
 
-class HistoryExport implements FromCollection, WithHeadings, WithStyles
+class ReportExport implements FromCollection, WithHeadings, WithStyles
 {
     protected $query;
 
@@ -34,30 +34,23 @@ class HistoryExport implements FromCollection, WithHeadings, WithStyles
         return $laporan->map(function ($item, $index) {
             try {
                 $reportDate = $item->created_at ? Carbon::parse($item->created_at)->format('l, j-n-Y') : '-';
-                $completionDate = $item->penyelesaian && $item->penyelesaian->Tanggal 
-                    ? Carbon::parse($item->penyelesaian->Tanggal)->format('l, j-n-Y') 
-                    : '-';
             } catch (\Exception $e) {
                 $reportDate = $item->created_at ?? '-';
-                $completionDate = '-';
             }
 
             $observation = $item->deskripsi_masalah ?? '-';
-            $resolution = $item->penyelesaian ? ($item->penyelesaian->deskripsi_penyelesaian ?? '-') : '-';
             $personInCharge = $this->getPersonInCharge($item);
-
-            $deadline = $item->tenggat_waktu ? Carbon::parse($item->tenggat_waktu)->format('l, j-n-Y') : '-';
+            $deadline = $item->tenggat_waktu ? \Carbon\Carbon::parse($item->tenggat_waktu)->format('l, j-n-Y') : '-';
 
             return [
                 $index + 1, // No
                 $reportDate, // Report Date
                 $deadline, // Deadline
-                $completionDate, // Completion Date
                 $this->getAreaStation($item), // Area/Station
                 $item->problemCategory?->name ?? '-', // Category
                 $personInCharge, // Person in Charge
                 $observation, // Observation
-                $resolution, // Resolution
+                $item->status ?? '-', // Status
             ];
         });
     }
@@ -68,18 +61,17 @@ class HistoryExport implements FromCollection, WithHeadings, WithStyles
             'No',
             'Report Date',
             'Deadline',
-            'Completion Date',
             'Area/Station',
             'Category',
             'Person in Charge',
             'Observation',
-            'Resolution',
+            'Status',
         ];
     }
 
     public function styles(Worksheet $sheet)
     {
-        $sheet->getStyle('A1:I1')->applyFromArray([
+        $sheet->getStyle('A1:H1')->applyFromArray([
             'font' => [
                 'bold' => true,
                 'color' => ['rgb' => 'FFFFFF'],
@@ -128,7 +120,7 @@ class HistoryExport implements FromCollection, WithHeadings, WithStyles
         $sheet->getColumnDimension('E')->setWidth(20);
         $sheet->getColumnDimension('F')->setWidth(25);
         $sheet->getColumnDimension('G')->setWidth(35);
-        $sheet->getColumnDimension('H')->setWidth(35);
+        $sheet->getColumnDimension('H')->setWidth(15);
 
         // Set row height for header
         $sheet->getRowDimension(1)->setRowHeight(30);

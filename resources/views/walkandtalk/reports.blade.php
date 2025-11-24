@@ -14,9 +14,17 @@
             <h3 class="mb-1">Reports In Progress</h3>
             <p class="text-muted mb-0">Open and assigned reports</p>
         </div>
-        <a href="{{ route('laporan.create') }}" class="btn btn-primary">
-            <i class="fas fa-plus me-2"></i>Create Report
-        </a>
+        <div class="d-flex gap-2">
+            <a href="{{ route('laporan.export-excel') }}" id="reportsExportExcel" class="btn btn-success">
+                <i class="fas fa-file-excel me-2"></i>Export Excel
+            </a>
+            <a href="{{ route('laporan.download-pdf') }}" id="reportsExportPdf" class="btn btn-primary">
+                <i class="fas fa-file-pdf me-2"></i>Export PDF
+            </a>
+            <a href="{{ route('laporan.create') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Create Report
+            </a>
+        </div>
     </div>
 
     
@@ -481,5 +489,37 @@ $('#reportsCreatedBtn').on('click', function() {
 
 // Also adjust on window resize
 $(window).on('resize', adjustDropdownWidth);
+
+// Function to get report filters
+function getReportFilters() {
+    const params = new URLSearchParams();
+    
+    // Get date range filters if they exist
+    const startDate = document.getElementById('report_created_start')?.value;
+    const endDate = document.getElementById('report_created_end')?.value;
+    
+    if (startDate) params.append('start_date', startDate);
+    if (endDate) params.append('end_date', endDate);
+    
+    return params;
+}
+
+// Export Excel with filters
+$(document).on('click', '#reportsExportExcel', function(e) {
+    e.preventDefault();
+    
+    const params = getReportFilters();
+    const url = '{{ route("laporan.export-excel") }}' + (params.toString() ? '?' + params.toString() : '');
+    window.location.href = url;
+});
+
+// Export PDF with filters
+$(document).on('click', '#reportsExportPdf', function(e) {
+    e.preventDefault();
+    
+    const params = getReportFilters();
+    const url = '{{ route("laporan.download-pdf") }}' + (params.toString() ? '?' + params.toString() : '');
+    window.location.href = url;
+});
 </script>
 @endpush

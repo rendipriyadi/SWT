@@ -53,9 +53,12 @@
                 <!-- Deadline -->
                 <div class="col-md-6">
                     <label for="tenggat_waktu" class="form-label fw-semibold">Deadline <span class="text-danger">*</span></label>
-                    <input type="date" class="form-control @error('tenggat_waktu') is-invalid @enderror" id="tenggat_waktu" name="tenggat_waktu" value="{{ old('tenggat_waktu') }}" required>
+                    <div class="elegant-date-input">
+                        <input type="text" class="form-control elegant-datepicker @error('tenggat_waktu') is-invalid @enderror" id="tenggat_waktu" name="tenggat_waktu" value="{{ old('tenggat_waktu') }}" placeholder="Select date..." required>
+                        <i class="fas fa-calendar-alt calendar-icon"></i>
+                    </div>
                     @error('tenggat_waktu')
-                        <div class="invalid-feedback">{{ $message }}</div>
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
                     @enderror
                 </div>
             </div>
@@ -403,6 +406,21 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (form && submitBtn) {
         form.addEventListener('submit', function(e) {
+            // Remove empty additional PIC selects before submission
+            const additionalPicSelects = document.querySelectorAll('.additional-pic-select');
+            let hasEmptySelect = false;
+            
+            additionalPicSelects.forEach(select => {
+                if (!select.value || select.value === '') {
+                    // Remove the entire additional-pic-item if no selection made
+                    const picItem = select.closest('.additional-pic-item');
+                    if (picItem) {
+                        picItem.remove();
+                    }
+                    hasEmptySelect = true;
+                }
+            });
+            
             // Update CSRF token before submission
             const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
             const formToken = document.querySelector('input[name="_token"]');

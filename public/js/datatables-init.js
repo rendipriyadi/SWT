@@ -214,7 +214,7 @@ $(document).ready(function() {
                     if (data.encrypted_id) {
                         const detailUrl = window.routes && window.routes.laporanShow 
                             ? window.routes.laporanShow.replace(':id', data.encrypted_id)
-                            : '/laporan/' + data.encrypted_id;
+                            : window.location.origin + '/laporan/' + data.encrypted_id;
                         detailContent += '<div class="mt-3 pt-2 border-top">';
                         detailContent += '<div class="d-flex gap-2 justify-content-between align-items-center flex-wrap">';
                         detailContent += '<div class="d-flex gap-2 flex-wrap">';
@@ -454,7 +454,7 @@ $(document).ready(function() {
             // Redirect to detail page using route
             const detailUrl = window.routes && window.routes.laporanShow 
                 ? window.routes.laporanShow.replace(':id', rowData.encrypted_id)
-                : '/laporan/' + rowData.encrypted_id;
+                : window.location.origin + '/laporan/' + rowData.encrypted_id;
             window.location.href = detailUrl;
             return;
 
@@ -679,7 +679,7 @@ $(document).ready(function() {
                         if (data.encrypted_id) {
                             const detailUrl = window.routes && window.routes.laporanShow 
                                 ? window.routes.laporanShow.replace(':id', data.encrypted_id)
-                                : '/laporan/' + data.encrypted_id;
+                                : window.location.origin + '/laporan/' + data.encrypted_id;
                             detailContent += '<div class="mt-3 pt-2 border-top">';
                             detailContent += '<div class="d-flex gap-2 justify-content-between align-items-center flex-wrap">';
                             detailContent += '<div class="d-flex gap-2 flex-wrap">';
@@ -797,7 +797,7 @@ $(document).ready(function() {
         function buildHistoryExportUrl() {
             const base = window.routes && window.routes.sejarahDownload 
                 ? window.routes.sejarahDownload 
-                : ((document.getElementById('historyExportPdf') || {}).getAttribute('href') || '/sejarah/download');
+                : ((document.getElementById('historyExportPdf') || {}).getAttribute('href') || window.location.origin + '/sejarah/download');
             const params = new URLSearchParams();
             // Use in-memory state first, fallback to inputs
             const sd = (window.sejarahDateFilter && window.sejarahDateFilter.start) || ($('#history_created_start').val() || '').trim();

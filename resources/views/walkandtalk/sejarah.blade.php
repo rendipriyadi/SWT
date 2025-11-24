@@ -133,6 +133,7 @@
           <div class="col-md-6"><div class="fw-semibold">Date</div><div id="rd_date" class="value"></div></div>
           <div class="col-md-6"><div class="fw-semibold">Area/Station</div><div id="rd_area" class="value"></div></div>
           <div class="col-md-6"><div class="fw-semibold">Person in Charge</div><div id="rd_person_in_charge" class="value"></div></div>
+          <div class="col-md-6"><div class="fw-semibold">Additional PICs</div><div id="rd_additional_pics" class="value"></div></div>
           <div class="col-md-6"><div class="fw-semibold">Problem Category</div><div id="rd_category" class="value"></div></div>
           <div class="col-md-6"><div class="fw-semibold">Status</div><div id="rd_status" class="value"></div></div>
           <div class="col-md-6"><div class="fw-semibold">Deadline</div><div id="rd_deadline" class="value"></div></div>
@@ -444,7 +445,7 @@ $(document).ready(function() {
         // Redirect to detail page using route
         const detailUrl = window.routes && window.routes.laporanShow 
             ? window.routes.laporanShow.replace(':id', data.encrypted_id)
-            : '/laporan/' + data.encrypted_id;
+            : '{{ route("laporan.show", ":id") }}'.replace(':id', data.encrypted_id);
         window.location.href = detailUrl;
         return;
         
@@ -452,6 +453,17 @@ $(document).ready(function() {
         $('#rd_date').text($(this).find('td:eq(1)').text() || '');
         $('#rd_area').html(data.departemen || '');
         $('#rd_person_in_charge').text(data.person_in_charge || 'Not assigned');
+        
+        // Populate Additional PICs
+        if (data.additional_pics && data.additional_pics.length > 0) {
+            const picBadges = data.additional_pics.map(pic => 
+                `<span class="badge bg-info me-1"><i class="fas fa-user me-1"></i>${pic}</span>`
+            ).join('');
+            $('#rd_additional_pics').html(picBadges);
+        } else {
+            $('#rd_additional_pics').text('None');
+        }
+        
         $('#rd_category').html(data.problem_category || '');
         $('#rd_status').html(data.status || '');
         $('#rd_deadline').text($(this).find('td:eq(6)').text() || '');

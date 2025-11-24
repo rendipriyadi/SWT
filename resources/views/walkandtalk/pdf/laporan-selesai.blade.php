@@ -1,7 +1,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Laporan Safety Walk and Talk | Siemens</title>
+    <title>Safety Walk and Talk Report | Siemens</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -172,13 +172,13 @@
     <table>
         <thead>
             <tr>
-                <th width="7%">No</th>
-                <th width="12%">Report Date</th>
-                <th width="12%">Completion Date</th>
+                <th width="5%">No</th>
+                <th width="10%">Report Date</th>
+                <th width="10%">Deadline</th>
                 <th width="15%">Area/Station</th>
-                <th width="12%">Category</th>
-                <th width="22%">Observation</th>
-                <th width="22%">Resolution</th>
+                <th width="10%">Category</th>
+                <th width="18%">Observation</th>
+                <th width="18%">Resolution</th>
             </tr>
         </thead>
         <tbody>
@@ -187,8 +187,8 @@
                 <td>{{ $index + 1 }}</td>
                 <td>{{ $item->created_at->format('l, j-n-Y') }}</td>
                 <td>
-                    @if($item->penyelesaian && $item->penyelesaian->Tanggal)
-                        {{ \Carbon\Carbon::parse($item->penyelesaian->Tanggal)->format('l, j-n-Y') }}
+                    @if($item->tenggat_waktu)
+                        {{ \Carbon\Carbon::parse($item->tenggat_waktu)->format('l, j-n-Y') }}
                     @else
                         -
                     @endif
@@ -201,7 +201,24 @@
                             {{ $item->area->name }}
                         @endif
                         @if($item->penanggungJawab)
-                        <br><small>{{ $item->penanggungJawab->name }}</small>
+                            <br><small>{{ $item->penanggungJawab->name }}</small>
+                        @else
+                            {{-- Jika tidak ada penanggungJawab, tampilkan semua PIC dari area (kecuali station General) --}}
+                            @php
+                                $areaPics = \App\Models\PenanggungJawab::where('area_id', $item->area_id)
+                                    ->where('station', '!=', 'General')
+                                    ->get();
+                            @endphp
+                            @if($areaPics && count($areaPics) > 0)
+                                @foreach($areaPics as $pic)
+                                <br><small>{{ $pic->name }}</small>
+                                @endforeach
+                            @endif
+                        @endif
+                        @if(!empty($item->additional_pic_objects) && count($item->additional_pic_objects) > 0)
+                            @foreach($item->additional_pic_objects as $pic)
+                            <br><small>{{ $pic->name }}</small>
+                            @endforeach
                         @endif
                     @else
                         -

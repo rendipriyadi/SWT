@@ -159,42 +159,67 @@
     <div class="card p-4">
         <form action="{{ route('laporan.storeTindakan', $laporan) }}" method="POST" enctype="multipart/form-data">
             @csrf
-            <div class="mb-3">
-                <label for="Tanggal" class="form-label fw-semibold">Completion Date <span class="text-danger">*</span></label>
-                <div class="input-group">
-                    <input type="text" class="form-control elegant-datepicker completion-date @error('Tanggal') is-invalid @enderror" id="Tanggal" name="Tanggal" value="{{ old('Tanggal') }}" placeholder="Select date..." required readonly>
-                    <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
-                </div>
-                @error('Tanggal')
-                    <div class="invalid-feedback d-block">{{ $message }}</div>
-                @enderror
-            </div>
-            <!-- Jika menampilkan tanggal yang sudah ada: -->
-            @if(isset($penyelesaian) && $penyelesaian->Tanggal)
-                <div class="mb-3">
-                    <label class="form-label">Completion Date:</label>
-                    <p>{{ \Carbon\Carbon::parse($penyelesaian->Tanggal)->locale('en')->isoFormat('dddd, D MMMM YYYY') }}</p>
-                </div>
-            @endif
-            <div class="mb-3">
-                <label for="Foto" class="form-label">Completion Photos:</label>
-                <input type="file" class="form-control @error('Foto.*') is-invalid @enderror" id="Foto" name="Foto[]" accept="image/*" multiple>
-                @error('Foto.*')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
-                <div id="foto-preview-container" class="mt-2 d-flex flex-wrap gap-2"></div>
-                <button type="button" class="btn btn-secondary mt-2" id="openCameraBtn">Take Photo</button>
-                <div id="cameraContainer" style="display:none; margin-top:10px;">
-                    <video id="video" autoplay playsinline style="width:100%; max-width:350px; border:1px solid #ccc; border-radius:8px;"></video>
-                    <canvas id="canvas" style="display:none;"></canvas>
-                    <div class="mt-2">
-                        <button type="button" class="btn btn-success" id="captureBtn">Take Photo</button>
-                        <button type="button" class="btn btn-danger" id="closeCameraBtn">Close Camera</button>
+            <!-- Two Column Layout: Completion Photos (Left) & Completion Date (Right) -->
+            <div class="row g-4 mb-4">
+                <!-- Completion Photos -->
+                <div class="col-md-6">
+                    <label for="Foto" class="form-label fw-semibold">Add New Completion Photos:</label>
+                    <input type="file" class="form-control @error('Foto.*') is-invalid @enderror" id="Foto" name="Foto[]" accept="image/*" multiple style="min-height: auto;">
+                    @error('Foto.*')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                    <button type="button" class="btn btn-outline-secondary mt-2" id="openCameraBtn" style="border: 2px solid #6c757d;">
+                        <i class="fas fa-camera me-2"></i>Take Photo
+                    </button>
+                    <div id="cameraContainer" style="display:none; margin-top:10px;">
+                        <video id="video" autoplay playsinline style="width:100%; max-width:350px; border:1px solid #ccc; border-radius:8px;"></video>
+                        <canvas id="canvas" style="display:none;"></canvas>
+                        <div class="mt-2">
+                            <button type="button" class="btn btn-primary" id="captureBtn">
+                                <i class="fas fa-camera me-1"></i>Take Photo
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" id="closeCameraBtn">
+                                <i class="fas fa-times me-1"></i>Close Camera
+                            </button>
+                        </div>
                     </div>
+                    <div id="foto-preview-container" class="mt-3 d-flex flex-wrap gap-2"></div>
+                </div>
+
+                <!-- Completion Date -->
+                <div class="col-md-6">
+                    <label for="Tanggal" class="form-label fw-semibold">Completion Date <span class="text-danger">*</span></label>
+                    <div class="elegant-date-input">
+                        <input type="text" class="form-control elegant-datepicker @error('Tanggal') is-invalid @enderror" id="Tanggal" name="Tanggal" value="{{ old('Tanggal') }}" placeholder="Select date..." required>
+                        <i class="fas fa-calendar-alt calendar-icon"></i>
+                    </div>
+                    @error('Tanggal')
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                    @enderror
                 </div>
             </div>
-            <div class="mb-3">
-                <label for="deskripsi_penyelesaian" class="form-label">Completion Description:</label>
+
+            <!-- Existing Completion Photos -->
+            @if(isset($penyelesaian) && !empty($penyelesaian->Foto) && is_array($penyelesaian->Foto))
+            <div class="mb-4">
+                <label class="form-label fw-semibold">Existing Completion Photos:</label>
+                <div class="d-flex flex-wrap gap-2">
+                    @foreach($penyelesaian->Foto as $key => $foto)
+                        <div class="position-relative">
+                            <input type="hidden" name="existing_photos[]" value="{{ $foto }}" id="existing-photo-{{ $key }}">
+                            <img src="{{ asset('storage/images/penyelesaian/' . $foto) }}" alt="Foto {{ $key+1 }}" class="img-thumbnail" style="width: 100px; height: 100px; object-fit: cover;">
+                            <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 remove-photo" data-input-id="existing-photo-{{ $key }}">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+            @endif
+
+            <!-- Completion Description -->
+            <div class="mb-4">
+                <label for="deskripsi_penyelesaian" class="form-label fw-semibold">Completion Description:</label>
                 <textarea class="form-control @error('deskripsi_penyelesaian') is-invalid @enderror" id="deskripsi_penyelesaian" name="deskripsi_penyelesaian" rows="3" required>{{ old('deskripsi_penyelesaian') }}</textarea>
                 @error('deskripsi_penyelesaian')
                     <div class="invalid-feedback">{{ $message }}</div>

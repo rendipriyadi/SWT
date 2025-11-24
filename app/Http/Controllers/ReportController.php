@@ -19,6 +19,8 @@ use App\Http\Requests\UpdateReportRequest;
 use App\Http\Library\SWTEmailNotifications;
 use App\Http\Requests\StoreCompletionRequest;
 use App\Http\Controllers\Concerns\HandlesLaporan;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ReportController extends Controller
 {
@@ -355,24 +357,22 @@ class ReportController extends Controller
             // Detect changes for notifications
             $perubahan = $this->detectChanges($oldData, $validated, $oldArea, $oldPenanggungJawab, $oldStation, $oldAdditionalPics);
 
-            if (!empty($perubahan)) {
-                $this->emailReportEdited($laporan, $perubahan);
-            }
-
             // Handle completion update (only for completed reports)
             $completionChanges = [];
-            if ($laporan->status === 'Completed' && $laporan->penyelesaian && $request->has('completion_date')) {
+            if ($laporan->status === 'Completed' && $laporan->penyelesaian) {
                 $penyelesaian = $laporan->penyelesaian;
                 
                 // Track old completion data
                 $oldCompletionDate = $penyelesaian->Tanggal;
                 $oldCompletionDescription = $penyelesaian->deskripsi_penyelesaian;
                 
-                // Update completion date
-                $penyelesaian->Tanggal = $request->input('completion_date');
+                // Update completion date if provided
+                if ($request->has('completion_date') && !empty($request->input('completion_date'))) {
+                    $penyelesaian->Tanggal = $request->input('completion_date');
+                }
                 
-                // Update completion description
-                if ($request->has('completion_description')) {
+                // Update completion description if provided
+                if ($request->has('completion_description') && !empty($request->input('completion_description'))) {
                     $penyelesaian->deskripsi_penyelesaian = $request->input('completion_description');
                 }
                 
@@ -396,14 +396,19 @@ class ReportController extends Controller
                 
                 // Merge photos
                 $penyelesaian->Foto = array_values(array_merge($existingCompletionPhotos, $newCompletionPhotos));
+                
+                // Always save completion data
                 $penyelesaian->save();
                 
                 // Track completion changes
-                if ($oldCompletionDate !== $penyelesaian->Tanggal) {
+                $oldCompletionDateFormatted = \Carbon\Carbon::parse($oldCompletionDate)->format('Y-m-d');
+                $newCompletionDateFormatted = \Carbon\Carbon::parse($penyelesaian->Tanggal)->format('Y-m-d');
+                
+                if ($oldCompletionDateFormatted !== $newCompletionDateFormatted) {
                     $completionChanges[] = [
                         'field' => 'Completion Date (completion)',
-                        'old' => \Carbon\Carbon::parse($oldCompletionDate)->format('Y-m-d'),
-                        'new' => \Carbon\Carbon::parse($penyelesaian->Tanggal)->format('Y-m-d'),
+                        'old' => $oldCompletionDateFormatted,
+                        'new' => $newCompletionDateFormatted,
                     ];
                 }
                 
@@ -418,6 +423,11 @@ class ReportController extends Controller
             
             // Merge completion changes with report changes
             $perubahan = array_merge($perubahan, $completionChanges);
+
+            // Send email notification with all changes (report + completion)
+            if (!empty($perubahan)) {
+                $this->emailReportEdited($laporan, $perubahan);
+            }
 
             $returnUrl = $request->input('return_url', route('laporan.index'));
 
@@ -854,6 +864,77 @@ class ReportController extends Controller
                 'message' => 'Failed to fetch penanggung jawab',
                 'penanggung_jawab' => []
             ], 500);
+        }
+    }
+
+    public function downloadReports(Request $request)
+    {
+        try {
+            $query = Laporan::with(['area', 'penanggungJawab', 'problemCategory'])
+                ->where('status', 'Assigned');
+            
+            // Apply filters if any
+            if ($request->filled('start_date')) {
+                $query->whereDate('created_at', '>=', $request->start_date);
+            }
+            if ($request->filled('end_date')) {
+                $query->whereDate('created_at', '<=', $request->end_date);
+            }
+            if ($request->filled('area_id')) {
+                $query->where('area_id', $request->area_id);
+            }
+            if ($request->filled('category_id')) {
+                $query->where('problem_category_id', $request->category_id);
+            }
+            
+            $query = $query->orderBy('created_at', 'desc');
+            $laporan = $query->get();
+
+            $periode = 'All Time';
+            if ($request->filled('start_date') && $request->filled('end_date')) {
+                $startDate = Carbon::parse($request->start_date)->format('n/j/Y');
+                $endDate = Carbon::parse($request->end_date)->format('n/j/Y');
+                $periode = $startDate . ' - ' . $endDate;
+            }
+
+            $pdf = Pdf::loadView('walkandtalk.pdf.laporan-selesai', compact('laporan', 'periode'));
+            $pdf->setPaper('a4', 'portrait');
+
+            return $pdf->download('Report-Safety-Walk-and-Talk-' . date('Y-m-d') . '.pdf');
+        } catch (\Exception $e) {
+            Log::error('PDF Generation Error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to download report: ' . $e->getMessage());
+        }
+    }
+
+    public function exportReportsExcel(Request $request)
+    {
+        try {
+            $query = Laporan::with(['area', 'penanggungJawab', 'problemCategory'])
+                ->where('status', 'Assigned');
+            
+            // Apply filters if any
+            if ($request->filled('start_date')) {
+                $query->whereDate('created_at', '>=', $request->start_date);
+            }
+            if ($request->filled('end_date')) {
+                $query->whereDate('created_at', '<=', $request->end_date);
+            }
+            if ($request->filled('area_id')) {
+                $query->where('area_id', $request->area_id);
+            }
+            if ($request->filled('category_id')) {
+                $query->where('problem_category_id', $request->category_id);
+            }
+
+            $query = $query->orderBy('created_at', 'desc');
+
+            $filename = 'Report-Safety-Walk-and-Talk-' . date('Y-m-d-His') . '.xlsx';
+
+            return Excel::download(new \App\Exports\ReportExport($query), $filename);
+        } catch (\Exception $e) {
+            Log::error('Excel Export Error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to export report: ' . $e->getMessage());
         }
     }
 

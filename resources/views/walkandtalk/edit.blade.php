@@ -19,7 +19,7 @@
         <form action="{{ route('laporan.update', $laporan) }}" method="POST" enctype="multipart/form-data" id="editForm">
             @csrf
             @method('PUT')
-            <input type="hidden" name="return_url" value="{{ request('return_url', route('laporan.index')) }}">
+            <input type="hidden" name="return_url" value="{{ $backUrl }}">
 
             <!-- Photos and Deadline side by side -->
             <div class="row g-4 mb-4">
@@ -29,9 +29,6 @@
                     <input type="file" class="form-control @error('Foto.*') is-invalid @enderror" id="Foto" name="Foto[]" accept="image/*" multiple>
                     @error('Foto.*')
                         <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
-                    @error('Foto')
-                         <div class="invalid-feedback d-block">{{ $message }}</div>
                     @enderror
                     <button type="button" class="btn btn-outline-secondary mt-2" id="openCameraBtn" style="border: 2px solid #6c757d;">
                         <i class="fas fa-camera me-2"></i>Take Photo
@@ -49,36 +46,38 @@
                         </div>
                     </div>
                     <div id="foto-preview-container" class="mt-3 d-flex flex-wrap gap-2"></div>
-                    
-                    <div class="mt-3">
-                        <label class="form-label fw-semibold">Existing Photos:</label>
-                        <div class="d-flex flex-wrap gap-2">
-                            @if(!empty($laporan->Foto) && is_array($laporan->Foto))
-                                @foreach($laporan->Foto as $key => $foto)
-                                    <div class="position-relative">
-                                        <input type="hidden" name="existing_photos[]" value="{{ $foto }}" id="existing-photo-{{ $key }}">
-                                        <img src="{{ asset('storage/images/reports/' . $foto) }}" alt="Foto {{ $key+1 }}" class="img-thumbnail" style="width: 100px; height: 100px; object-fit: cover;">
-                                        <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 remove-photo" data-input-id="existing-photo-{{ $key }}">
-                                            <i class="fas fa-times"></i>
-                                        </button>
-                                    </div>
-                                @endforeach
-                            @else
-                                <p class="text-muted">No photos</p>
-                            @endif
-                        </div>
-                    </div>
                 </div>
 
                 <!-- Deadline -->
                 <div class="col-md-6">
                     <label for="tenggat_waktu" class="form-label fw-semibold">Deadline <span class="text-danger">*</span></label>
-                    <input type="date" class="form-control deadline-date @error('tenggat_waktu') is-invalid @enderror" id="tenggat_waktu" name="tenggat_waktu" value="{{ \Carbon\Carbon::parse($laporan->tenggat_waktu)->format('Y-m-d') }}" required>
+                    <div class="elegant-date-input">
+                        <input type="text" class="form-control elegant-datepicker @error('tenggat_waktu') is-invalid @enderror" id="tenggat_waktu" name="tenggat_waktu" value="{{ \Carbon\Carbon::parse($laporan->tenggat_waktu)->format('Y-m-d') }}" placeholder="Select date..." required>
+                        <i class="fas fa-calendar-alt calendar-icon"></i>
+                    </div>
                     @error('tenggat_waktu')
-                        <div class="invalid-feedback">{{ $message }}</div>
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
                     @enderror
                 </div>
             </div>
+
+            <!-- Existing Photos -->
+            @if(!empty($laporan->Foto) && is_array($laporan->Foto))
+            <div class="mb-4">
+                <label class="form-label fw-semibold">Existing Photos:</label>
+                <div class="d-flex flex-wrap gap-2">
+                    @foreach($laporan->Foto as $key => $foto)
+                        <div class="position-relative">
+                            <input type="hidden" name="existing_photos[]" value="{{ $foto }}" id="existing-photo-{{ $key }}">
+                            <img src="{{ asset('storage/images/reports/' . $foto) }}" alt="Foto {{ $key+1 }}" class="img-thumbnail" style="width: 100px; height: 100px; object-fit: cover;">
+                            <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 remove-photo" data-input-id="existing-photo-{{ $key }}">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+            @endif
 
             <!-- Form Fields in Grid Layout -->
             <div class="row g-4">
@@ -174,50 +173,53 @@
             <hr class="my-5">
             <h4 class="mb-4"><i class="fas fa-check-circle me-2 text-success"></i>Completion Details</h4>
             
-            <!-- Completion Date -->
-            <div class="mb-3">
-                <label for="Tanggal" class="form-label fw-semibold">Completion Date <span class="text-danger">*</span></label>
-                <div class="input-group">
-                    <input type="text" class="form-control elegant-datepicker completion-date @error('Tanggal') is-invalid @enderror" 
-                           id="Tanggal" name="Tanggal" 
-                           value="{{ old('Tanggal', $laporan->penyelesaian->formatted_date ?? '') }}" 
-                           placeholder="Select date..." required readonly>
-                    <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
-                </div>
-                @error('Tanggal')
-                    <div class="invalid-feedback d-block">{{ $message }}</div>
-                @enderror
-            </div>
-
-            <!-- Completion Photos -->
-            <div class="mb-3">
-                <label for="completion_photos" class="form-label fw-semibold">Add New Completion Photos:</label>
-                <input type="file" class="form-control @error('completion_photos.*') is-invalid @enderror" 
-                       id="completion_photos" name="completion_photos[]" accept="image/*" multiple>
-                @error('completion_photos.*')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
-                <div id="completion-foto-preview-container" class="mt-2 d-flex flex-wrap gap-2"></div>
-                <button type="button" class="btn btn-secondary mt-2" id="openCompletionCameraBtn">
-                    <i class="fas fa-camera me-2"></i>Take Photo
-                </button>
-                <div id="completionCameraContainer" style="display:none; margin-top:10px;">
-                    <video id="completionVideo" autoplay playsinline style="width:100%; max-width:350px; border:1px solid #ccc; border-radius:8px;"></video>
-                    <canvas id="completionCanvas" style="display:none;"></canvas>
-                    <div class="mt-2">
-                        <button type="button" class="btn btn-success" id="captureCompletionBtn">
-                            <i class="fas fa-camera me-1"></i>Take Photo
-                        </button>
-                        <button type="button" class="btn btn-danger" id="closeCompletionCameraBtn">
-                            <i class="fas fa-times me-1"></i>Close Camera
-                        </button>
+            <!-- Two Column Layout: Completion Photos (Left) & Completion Date (Right) -->
+            <div class="row g-4 mb-4">
+                <!-- Completion Photos -->
+                <div class="col-md-6">
+                    <label for="completion_photos" class="form-label fw-semibold">Add New Completion Photos:</label>
+                    <input type="file" class="form-control @error('completion_photos.*') is-invalid @enderror" 
+                           id="completion_photos" name="completion_photos[]" accept="image/*" multiple>
+                    @error('completion_photos.*')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                    <div id="completion-foto-preview-container" class="mt-2 d-flex flex-wrap gap-2"></div>
+                    <button type="button" class="btn btn-secondary mt-2" id="openCompletionCameraBtn">
+                        <i class="fas fa-camera me-2"></i>Take Photo
+                    </button>
+                    <div id="completionCameraContainer" style="display:none; margin-top:10px;">
+                        <video id="completionVideo" autoplay playsinline style="width:100%; max-width:350px; border:1px solid #ccc; border-radius:8px;"></video>
+                        <canvas id="completionCanvas" style="display:none;"></canvas>
+                        <div class="mt-2">
+                            <button type="button" class="btn btn-success" id="captureCompletionBtn">
+                                <i class="fas fa-camera me-1"></i>Take Photo
+                            </button>
+                            <button type="button" class="btn btn-danger" id="closeCompletionCameraBtn">
+                                <i class="fas fa-times me-1"></i>Close Camera
+                            </button>
+                        </div>
                     </div>
+                </div>
+
+                <!-- Completion Date -->
+                <div class="col-md-6">
+                    <label for="completion_date" class="form-label fw-semibold">Completion Date <span class="text-danger">*</span></label>
+                    <div class="elegant-date-input">
+                        <input type="text" class="form-control elegant-datepicker @error('completion_date') is-invalid @enderror" 
+                               id="completion_date" name="completion_date" 
+                               value="{{ old('completion_date', $laporan->penyelesaian->formatted_date ?? '') }}" 
+                               placeholder="Select date..." required>
+                        <i class="fas fa-calendar-alt calendar-icon"></i>
+                    </div>
+                    @error('completion_date')
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                    @enderror
                 </div>
             </div>
 
             <!-- Existing Completion Photos -->
             @if(!empty($laporan->penyelesaian->Foto) && is_array($laporan->penyelesaian->Foto))
-            <div class="mb-3">
+            <div class="mb-4">
                 <label class="form-label fw-semibold">Existing Completion Photos:</label>
                 <div class="d-flex flex-wrap gap-2">
                     @foreach($laporan->penyelesaian->Foto as $index => $foto)
@@ -237,7 +239,7 @@
             </div>
             @endif
 
-            <!-- Completion Description -->
+            <!-- Completion Description (Full Width Below) -->
             <div class="mb-3">
                 <label for="completion_description" class="form-label fw-semibold">Completion Description <span class="text-danger">*</span></label>
                 <textarea class="form-control @error('completion_description') is-invalid @enderror" 
@@ -390,6 +392,19 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (updateForm && updateBtn) {
         updateForm.addEventListener('submit', function(e) {
+            // Remove empty additional PIC selects before submission
+            const additionalPicSelects = document.querySelectorAll('.additional-pic-select');
+            
+            additionalPicSelects.forEach(select => {
+                if (!select.value || select.value === '') {
+                    // Remove the entire additional-pic-item if no selection made
+                    const picItem = select.closest('.additional-pic-item');
+                    if (picItem) {
+                        picItem.remove();
+                    }
+                }
+            });
+            
             // Show loading state
             updateBtn.disabled = true;
             updateBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Updating...';
